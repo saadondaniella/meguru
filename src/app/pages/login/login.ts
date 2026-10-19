@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../services/auth';
 
 @Component({
@@ -18,6 +18,8 @@ export class Login {
 
   private auth = inject(Auth);
 
+  private router = inject(Router);
+
   async onSubmit() {
     this.errorMessage.set('');
     this.successMessage.set('');
@@ -30,7 +32,7 @@ export class Login {
         return;
       }
 
-      this.successMessage.set('You are now logged in!');
+      await this.router.navigate(['/']);
     } catch {
       this.errorMessage.set('Something went wrong. Please try again.');
     }
