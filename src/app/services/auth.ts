@@ -50,4 +50,8 @@ export class Auth {
       }
     });
   }
+
+  async signOut() {
+    return await supabase.auth.signOut();
+  }
 }
