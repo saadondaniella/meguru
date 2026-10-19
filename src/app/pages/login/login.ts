@@ -15,26 +15,37 @@ export class Login {
 
   errorMessage = signal('');
   successMessage = signal('');
+  isLoading = signal(false);
+  showPassword = signal(false);
 
   private auth = inject(Auth);
 
   private router = inject(Router);
 
   async onSubmit() {
+    if (this.isLoading()) return;
+
     this.errorMessage.set('');
     this.successMessage.set('');
+    this.isLoading.set(true);
 
     try {
-      const { error } = await this.auth.signIn(this.email, this.password);
+      const { error } = await this.auth.signIn(this.email.trim(), this.password);
 
       if (error) {
-        this.errorMessage.set(error.message);
+        this.errorMessage.set(
+          error.message === 'Invalid login credentials'
+            ? 'Incorrect email or password. Please try again.'
+            : 'Unable to log in right now. Please try again later.',
+        );
         return;
       }
 
       await this.router.navigate(['/']);
     } catch {
       this.errorMessage.set('Something went wrong. Please try again.');
+    } finally {
+      this.isLoading.set(false);
     }
   }
 }

@@ -5,36 +5,169 @@
   <form #registerForm="ngForm" (ngSubmit)="onSubmit()">
     <div>
       <label for="email">Email</label>
+
       <input
         type="email"
         id="email"
         name="email"
         [(ngModel)]="email"
         placeholder="Your email"
+        autocomplete="email"
         required
+        email
       />
     </div>
 
     <div>
       <label for="password">Password</label>
-      <input
-        type="password"
-        id="password"
-        name="password"
-        [(ngModel)]="password"
-        placeholder="Your password"
-        required
-      />
+
+      <div class="password-wrapper">
+        <input
+          [type]="showPassword() ? 'text' : 'password'"
+          id="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="Your password"
+          minlength="8"
+          autocomplete="new-password"
+          required
+        />
+
+        <button
+          type="button"
+          class="password-toggle"
+          (click)="showPassword.set(!showPassword())"
+          [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+          [attr.aria-pressed]="showPassword()"
+        >
+          @if (showPassword()) {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 3l18 18" />
+              <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+              <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c5 0 9 4 10 7a12.8 12.8 0 0 1-4 4.9" />
+              <path d="M6.2 6.2A12.7 12.7 0 0 0 2 12c1 3 5 7 10 7a10.6 10.6 0 0 0 4.2-.9" />
+            </svg>
+          } @else {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          }
+        </button>
+      </div>
     </div>
 
-    <button type="submit" [disabled]="registerForm.invalid">Create account</button>
+    <div>
+      <label for="confirmPassword">Confirm password</label>
+
+      <div class="password-wrapper">
+        <input
+          [type]="showConfirmPassword() ? 'text' : 'password'"
+          id="confirmPassword"
+          name="confirmPassword"
+          [(ngModel)]="confirmPassword"
+          #confirmControl="ngModel"
+          placeholder="Confirm your password"
+          autocomplete="new-password"
+          aria-describedby="password-match-error"
+          required
+        />
+
+        <button
+          type="button"
+          class="password-toggle"
+          (click)="showConfirmPassword.set(!showConfirmPassword())"
+          [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'"
+          [attr.aria-pressed]="showConfirmPassword()"
+        >
+          @if (showConfirmPassword()) {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 3l18 18" />
+              <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+              <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c5 0 9 4 10 7a12.8 12.8 0 0 1-4 4.9" />
+              <path d="M6.2 6.2A12.7 12.7 0 0 0 2 12c1 3 5 7 10 7a10.6 10.6 0 0 0 4.2-.9" />
+            </svg>
+          } @else {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          }
+        </button>
+      </div>
+
+      @if (confirmControl.touched && confirmPassword && password !== confirmPassword) {
+        <p id="password-match-error" class="error-message" role="alert">Passwords do not match.</p>
+      }
+    </div>
+
+    <div class="submit-wrapper">
+      <button
+        type="submit"
+        [disabled]="registerForm.invalid || password !== confirmPassword || isLoading()"
+      >
+        {{ isLoading() ? 'Creating account...' : 'Create account' }}
+      </button>
+
+      @if (confirmPassword && password !== confirmPassword) {
+        <span class="submit-tooltip">Passwords do not match</span>
+      }
+    </div>
   </form>
 
   @if (errorMessage()) {
-    <p class="error-message">{{ errorMessage() }}</p>
+    <p class="error-message" role="alert">
+      {{ errorMessage() }}
+    </p>
   }
 
   @if (successMessage()) {
-    <p class="success-message">{{ successMessage() }}</p>
+    <p class="success-message" role="status">
+      {{ successMessage() }}
+    </p>
   }
 </section>

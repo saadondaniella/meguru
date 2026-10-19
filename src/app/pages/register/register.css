@@ -1,0 +1,24 @@
+.submit-wrapper {
+  position: relative;
+  width: fit-content;
+}
+
+.submit-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 8px 12px;
+  background: #222;
+  color: white;
+  font-size: 12px;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.submit-wrapper:hover .submit-tooltip {
+  opacity: 1;
+}

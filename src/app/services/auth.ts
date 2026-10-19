@@ -9,6 +9,9 @@ export class Auth {
     return await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
     });
   }
 
@@ -47,6 +50,10 @@ export class Auth {
     supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         this.isPasswordRecovery.set(true);
+      }
+
+      if (event === 'SIGNED_OUT') {
+        this.isPasswordRecovery.set(false);
       }
     });
   }
