@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Auth } from '../../services/auth';
@@ -12,16 +12,30 @@ import { Auth } from '../../services/auth';
 export class ForgotPassword {
   email = '';
 
+  successMessage = signal('');
+  errorMessage = signal('');
+
   private auth = inject(Auth);
 
   async onSubmit() {
-    const { error } = await this.auth.resetPassword(this.email);
+    this.successMessage.set('');
+    this.errorMessage.set('');
 
-    if (error) {
-      console.error('Password reset error:', error.message);
-      return;
+    try {
+      const { error } = await this.auth.resetPassword(this.email.trim());
+
+      if (error) {
+        this.errorMessage.set(
+          'We could not send the reset link right now. Please try again later.',
+        );
+        return;
+      }
+
+      this.successMessage.set(
+        "If an account exists with this email, you'll receive a password reset link.",
+      );
+    } catch {
+      this.errorMessage.set('Something went wrong. Please try again later.');
     }
-
-    console.log('Password reset email requested!');
   }
 }

@@ -27,6 +27,16 @@ export class UpdatePassword implements OnInit {
       this.verificationError.set(
         'This password reset link is invalid or has expired. Please request a new one.',
       );
+      return;
+    }
+
+    const hasRecoveryLink =
+      params.has('access_token') ||
+      params.has('token_hash') ||
+      new URLSearchParams(window.location.search).has('code');
+
+    if (!hasRecoveryLink && !this.isRecoveryMode()) {
+      this.verificationError.set('No password reset link was found. Please request a new one.');
     }
   }
 
@@ -47,5 +57,6 @@ export class UpdatePassword implements OnInit {
     }
 
     this.successMessage.set('Your password has been updated successfully!');
+    this.auth.isPasswordRecovery.set(false);
   }
 }
