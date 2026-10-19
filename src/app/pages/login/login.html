@@ -1,0 +1,46 @@
+<section class="login">
+  <h1>Welcome back</h1>
+  <p>Log in to your MEGURU account.</p>
+
+  <form #loginForm="ngForm" (ngSubmit)="onSubmit()">
+    <div>
+      <label for="email">Email</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        [(ngModel)]="email"
+        placeholder="Your email"
+        required
+      />
+    </div>
+
+    <div>
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        [(ngModel)]="password"
+        placeholder="Your password"
+        required
+      />
+    </div>
+
+    <a routerLink="/forgot-password"> Forgot password? </a>
+
+    <button type="submit" [disabled]="loginForm.invalid">Log in</button>
+  </form>
+  @if (errorMessage()) {
+    <p class="error-message">{{ errorMessage() }}</p>
+  }
+
+  @if (successMessage()) {
+    <p class="success-message">{{ successMessage() }}</p>
+  }
+
+  <p>
+    New to MEGURU?
+    <a routerLink="/register">Create an account</a>
+  </p>
+</section>
