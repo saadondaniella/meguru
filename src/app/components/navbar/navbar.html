@@ -1,7 +1,15 @@
 <nav>
-  <a href="/">MEGURU</a>
+  <a routerLink="/">MEGURU</a>
+
   <ul>
-    <li><a href="/">Explore</a></li>
-    <li><a href="/login">Log in</a></li>
+    <li><a routerLink="/">Explore</a></li>
+
+    @if (isLoggedIn()) {
+      <li>
+        <button type="button" (click)="onLogout()">Log out</button>
+      </li>
+    } @else {
+      <li><a routerLink="/login">Log in</a></li>
+    }
   </ul>
 </nav>
