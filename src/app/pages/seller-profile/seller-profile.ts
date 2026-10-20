@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Profile } from '../../services/profile';
-import { supabase } from '../../services/supabase';
+import { SUPABASE_CLIENT } from '../../services/supabase';
 
 @Component({
   imports: [ReactiveFormsModule],
@@ -12,6 +12,7 @@ import { supabase } from '../../services/supabase';
 export class SellerProfile implements OnInit {
   private fb = inject(FormBuilder);
   private profileService = inject(Profile);
+  private supabase = inject(SUPABASE_CLIENT);
 
   hasProfile = signal(false);
   successMessage = signal('');
@@ -29,7 +30,7 @@ export class SellerProfile implements OnInit {
   });
 
   async getCurrentUserId(): Promise<string | null> {
-    const { data, error } = await supabase.auth.getUser();
+    const { data, error } = await this.supabase.auth.getUser();
 
     if (error || !data.user) {
       return null;
@@ -62,9 +63,9 @@ export class SellerProfile implements OnInit {
         return;
       }
 
-      if (data) {
-        this.hasProfile.set(true);
+      this.hasProfile.set(!!data);
 
+      if (data) {
         this.profileForm.patchValue({
           display_name: data.display_name,
           bio: data.bio ?? '',
@@ -87,7 +88,8 @@ export class SellerProfile implements OnInit {
     this.successMessage.set('');
     this.errorMessage.set('');
 
-    if (this.profileForm.invalid) {
+    if (this.profileForm.invalid || !this.profileForm.controls.display_name.value?.trim()) {
+      this.errorMessage.set('Please enter a valid display name.');
       return;
     }
 
@@ -116,6 +118,7 @@ export class SellerProfile implements OnInit {
         : await this.profileService.createProfile(profileData);
 
       if (error) {
+        console.error('Error saving profile:', error.message);
         this.errorMessage.set('Something went wrong. Please try again.');
         return;
       }

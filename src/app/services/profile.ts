@@ -1,12 +1,13 @@
-import { Injectable } from '@angular/core';
-import { supabase } from './supabase';
+import { Injectable, inject } from '@angular/core';
+import { SUPABASE_CLIENT } from './supabase';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Profile {
+  private supabase = inject(SUPABASE_CLIENT);
   async getProfile(userId: string) {
-    return await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+    return await this.supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
   }
 
   async createProfile(profile: {
@@ -16,7 +17,7 @@ export class Profile {
     contact_email: string | null;
     instagram: string | null;
   }) {
-    return await supabase.from('profiles').insert(profile);
+    return await this.supabase.from('profiles').insert(profile);
   }
 
   async updateProfile(
@@ -29,7 +30,6 @@ export class Profile {
       instagram: string | null;
     },
   ) {
-    return await supabase.from('profiles').update(profile).eq('id', userId);
+    return await this.supabase.from('profiles').update(profile).eq('id', userId).select().single();
   }
-  
 }
