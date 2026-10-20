@@ -35,16 +35,22 @@ export class Register {
     this.isLoading.set(true);
 
     try {
-      const { error } = await this.auth.signUp(this.email.trim(), this.password);
+      const { data, error } = await this.auth.signUp(this.email.trim(), this.password);
 
       if (error) {
-        this.errorMessage.set(error.message);
+        this.errorMessage.set(
+          'We could not create your account. Please check your details and try again.',
+        );
         return;
       }
 
-      this.successMessage.set(
-        'If email confirmation is required, please check your inbox for a confirmation link.',
-      );
+      if (data.session) {
+        this.successMessage.set('Your account has been created and you are now logged in.');
+      } else {
+        this.successMessage.set(
+          'If email confirmation is required, please check your inbox for a confirmation link.',
+        );
+      }
     } catch {
       this.errorMessage.set('Something went wrong. Please try again.');
     } finally {
