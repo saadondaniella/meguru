@@ -1,5 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject, signal, effect } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../services/auth';
 
 @Component({
@@ -10,11 +10,25 @@ import { Auth } from '../../services/auth';
 })
 export class Navbar {
   private auth = inject(Auth);
+  private router = inject(Router);
 
   readonly isLoggedIn = this.auth.isLoggedIn;
   readonly logoutError = signal('');
   readonly logoutSuccess = signal('');
   readonly isLoggingOut = signal(false);
+
+  constructor() {
+    effect(() => {
+      if (this.isLoggedIn()) {
+        this.logoutSuccess.set('');
+      }
+    });
+  }
+
+  clearLogoutMessage() {
+    this.logoutSuccess.set('');
+    this.logoutError.set('');
+  }
 
   async onLogout() {
     if (this.isLoggingOut()) return;
@@ -32,6 +46,7 @@ export class Navbar {
       }
 
       this.logoutSuccess.set('You have been logged out successfully.');
+      await this.router.navigate(['/']);
     } catch {
       this.logoutError.set('Something went wrong. Please try again.');
     } finally {

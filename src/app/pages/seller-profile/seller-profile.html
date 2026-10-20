@@ -1,0 +1,80 @@
+<section class="seller-profile">
+  <h1>Your seller profile</h1>
+  <p>Tell buyers a little about yourself.</p>
+
+  @if (isLoading()) {
+    <p role="status">Loading your profile...</p>
+  }
+
+  @if (loadError()) {
+    <p role="alert">
+      {{ errorMessage() }}
+    </p>
+
+    <button type="button" (click)="loadProfile()">Try again</button>
+  }
+
+  @if (!isLoading() && !loadError()) {
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+      <div>
+        <label for="display_name">Display name *</label>
+        <input id="display_name" type="text" formControlName="display_name" maxlength="50" />
+      </div>
+
+      <div>
+        <label for="bio">About you</label>
+        <textarea id="bio" formControlName="bio" maxlength="500"></textarea>
+        <small> {{ profileForm.controls.bio.value?.length ?? 0 }} / 500 </small>
+      </div>
+
+      <div>
+        <label for="city">City</label>
+        <input id="city" type="text" formControlName="city" maxlength="50" />
+      </div>
+
+      <div>
+        <label for="contact_email">Contact email</label>
+        <input id="contact_email" type="email" formControlName="contact_email" maxlength="254" />
+      </div>
+
+      <div>
+        <label for="instagram">Instagram</label>
+
+        <span class="info-tooltip">
+          <button
+            type="button"
+            class="info-icon"
+            aria-label="Instagram username requirements"
+            aria-describedby="instagram-help"
+          >
+            ⓘ
+          </button>
+
+          <span id="instagram-help" class="tooltip-text" role="tooltip">
+            Max 30 characters. Letters, numbers, periods and underscores. @ is optional.
+          </span>
+        </span>
+
+        <input
+          id="instagram"
+          type="text"
+          formControlName="instagram"
+          placeholder="@username"
+          maxlength="31"
+        />
+      </div>
+
+      @if (successMessage()) {
+        <p role="status">{{ successMessage() }}</p>
+      }
+
+      @if (errorMessage()) {
+        <p role="alert">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" [disabled]="profileForm.invalid || isSaving()">
+        {{ isSaving() ? 'Saving...' : 'Save profile' }}
+      </button>
+    </form>
+  }
+</section>

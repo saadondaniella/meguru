@@ -11,7 +11,9 @@
         </button>
       </li>
     } @else {
-      <li><a routerLink="/login">Log in</a></li>
+      <li>
+        <a routerLink="/login" (click)="clearLogoutMessage()">Log in</a>
+      </li>
     }
   </ul>
 </nav>
