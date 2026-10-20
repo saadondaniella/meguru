@@ -11,6 +11,8 @@ import { Auth } from '../../services/auth';
 })
 export class UpdatePassword implements OnInit {
   password = '';
+  confirmPassword = '';
+  confirmPasswordTouched = false;
 
   private auth = inject(Auth);
 
@@ -19,6 +21,7 @@ export class UpdatePassword implements OnInit {
   errorMessage = signal('');
   successMessage = signal('');
   verificationError = signal('');
+  isLoading = signal(false);
 
   ngOnInit() {
     const params = new URLSearchParams(window.location.hash.slice(1));
@@ -41,22 +44,39 @@ export class UpdatePassword implements OnInit {
   }
 
   async onSubmit() {
+    if (this.isLoading()) return;
+
     this.errorMessage.set('');
     this.successMessage.set('');
+
+    if (this.password !== this.confirmPassword) {
+      this.errorMessage.set('Passwords do not match.');
+      return;
+    }
 
     if (!this.isRecoveryMode()) {
       this.errorMessage.set('Invalid or expired password reset link.');
       return;
     }
 
-    const { error } = await this.auth.updatePassword(this.password);
+    this.isLoading.set(true);
 
-    if (error) {
-      this.errorMessage.set(error.message);
-      return;
+    try {
+      const { error } = await this.auth.updatePassword(this.password);
+
+      if (error) {
+        this.errorMessage.set(
+          'Unable to update your password. Please request a new reset link and try again.',
+        );
+        return;
+      }
+
+      this.successMessage.set('Your password has been updated successfully!');
+      this.auth.isPasswordRecovery.set(false);
+    } catch {
+      this.errorMessage.set('Something went wrong. Please try again.');
+    } finally {
+      this.isLoading.set(false);
     }
-
-    this.successMessage.set('Your password has been updated successfully!');
-    this.auth.isPasswordRecovery.set(false);
   }
 }

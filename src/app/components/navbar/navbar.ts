@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Auth } from '../../services/auth';
 
@@ -8,32 +8,34 @@ import { Auth } from '../../services/auth';
   styleUrl: './navbar.css',
   templateUrl: './navbar.html',
 })
-export class Navbar implements OnInit {
+export class Navbar {
   private auth = inject(Auth);
 
-  isLoggedIn = signal(false);
-
-  async ngOnInit() {
-    const { data } = await this.auth.getSession();
-    this.isLoggedIn.set(!!data.session);
-
-    this.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        this.isLoggedIn.set(true);
-      }
-
-      if (event === 'SIGNED_OUT') {
-        this.isLoggedIn.set(false);
-      }
-    });
-  }
+  readonly isLoggedIn = this.auth.isLoggedIn;
+  readonly logoutError = signal('');
+  readonly logoutSuccess = signal('');
+  readonly isLoggingOut = signal(false);
 
   async onLogout() {
-    const { error } = await this.auth.signOut();
+    if (this.isLoggingOut()) return;
 
-    if (error) {
-      console.error('Logout failed:', error.message);
-      return;
+    this.logoutError.set('');
+    this.logoutSuccess.set('');
+    this.isLoggingOut.set(true);
+
+    try {
+      const { error } = await this.auth.signOut();
+
+      if (error) {
+        this.logoutError.set('Could not log out. Please try again.');
+        return;
+      }
+
+      this.logoutSuccess.set('You have been logged out successfully.');
+    } catch {
+      this.logoutError.set('Something went wrong. Please try again.');
+    } finally {
+      this.isLoggingOut.set(false);
     }
   }
 }

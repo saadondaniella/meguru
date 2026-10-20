@@ -4,6 +4,7 @@ import { supabase } from './supabase';
 @Service()
 export class Auth {
   readonly isPasswordRecovery = signal(false);
+  readonly isLoggedIn = signal(false);
 
   async signUp(email: string, password: string) {
     return await supabase.auth.signUp({
@@ -47,7 +48,9 @@ export class Auth {
   private recoveryConfirmed = false;
 
   constructor() {
-    supabase.auth.onAuthStateChange((event) => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      this.isLoggedIn.set(!!session);
+
       if (event === 'PASSWORD_RECOVERY') {
         this.isPasswordRecovery.set(true);
       }

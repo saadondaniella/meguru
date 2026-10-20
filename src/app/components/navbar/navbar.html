@@ -6,10 +6,24 @@
 
     @if (isLoggedIn()) {
       <li>
-        <button type="button" (click)="onLogout()">Log out</button>
+        <button type="button" (click)="onLogout()" [disabled]="isLoggingOut()">
+          {{ isLoggingOut() ? 'Logging out...' : 'Log out' }}
+        </button>
       </li>
     } @else {
       <li><a routerLink="/login">Log in</a></li>
     }
   </ul>
 </nav>
+
+@if (logoutError()) {
+  <p class="error-message" role="alert">
+    {{ logoutError() }}
+  </p>
+}
+
+@if (logoutSuccess()) {
+  <p class="success-message" role="status">
+    {{ logoutSuccess() }}
+  </p>
+}

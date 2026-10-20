@@ -91,7 +91,11 @@
           #confirmControl="ngModel"
           placeholder="Confirm your password"
           autocomplete="new-password"
-          aria-describedby="password-match-error"
+          [attr.aria-describedby]="
+            confirmControl.touched && confirmPassword && password !== confirmPassword
+              ? 'password-match-error'
+              : null
+          "
           required
         />
 
@@ -152,10 +156,6 @@
       >
         {{ isLoading() ? 'Creating account...' : 'Create account' }}
       </button>
-
-      @if (confirmPassword && password !== confirmPassword) {
-        <span class="submit-tooltip">Passwords do not match</span>
-      }
     </div>
   </form>
 
