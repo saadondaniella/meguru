@@ -57,4 +57,8 @@ export class ListingService {
 
     return data.publicUrl;
   }
+
+  async deleteListingImage(imagePath: string) {
+    return await this.supabase.storage.from('listing-images').remove([imagePath]);
+  }
 }

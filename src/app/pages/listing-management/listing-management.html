@@ -61,6 +61,7 @@
     <div>
       <label for="image">Listing image</label>
       <input
+        #imageInput
         id="image"
         type="file"
         accept="image/jpeg,image/png,image/webp"
@@ -93,6 +94,8 @@
             <h3>{{ listing.title }}</h3>
             <p>{{ listing.price }} SEK</p>
             <p>{{ listing.condition }}</p>
+
+            <button type="button" (click)="onDeleteListing(listing.id)">Delete listing</button>
           </article>
         }
       </div>

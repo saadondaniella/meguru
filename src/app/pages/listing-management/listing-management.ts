@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, viewChild, ElementRef } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ListingService } from '../../services/listing';
 import { SUPABASE_CLIENT } from '../../services/supabase';
@@ -27,6 +27,7 @@ export class ListingManagement implements OnInit {
 
   listings = signal<Listing[]>([]);
   isUploading = signal(false);
+  imageInput = viewChild<ElementRef<HTMLInputElement>>('imageInput');
 
   // IMAGE SELECTION
   onImageSelected(event: Event) {
@@ -147,6 +148,20 @@ export class ListingManagement implements OnInit {
 
       // Refresh listings
       await this.loadListings();
+
+      this.listingForm.reset({
+        title: '',
+        description: '',
+        price: null,
+        category: 'budget',
+        condition: 'good',
+      });
+
+      this.selectedImage = null;
+      const input = this.imageInput();
+      if (input) {
+        input.nativeElement.value = '';
+      }
     } catch (error) {
       console.error('Unexpected error creating listing:', error);
       alert('Something went wrong. Please try again.');
@@ -154,6 +169,40 @@ export class ListingManagement implements OnInit {
       // Always stop loading, even if something fails
       this.isUploading.set(false);
     }
+  }
+
+  async onDeleteListing(listingId: string) {
+    const confirmed = confirm('Are you sure you want to delete this listing?');
+
+    if (!confirmed) return;
+
+    // Find the listing before deleting it
+    const listing = this.listings().find((item) => item.id === listingId);
+
+    if (!listing) return;
+
+    // Delete listing from database
+    const { error } = await this.listingService.deleteListing(listingId);
+
+    if (error) {
+      console.error('Error deleting listing:', error);
+      alert('Could not delete listing.');
+      return;
+    }
+
+    // Delete associated image from Storage
+    if (listing.image_path) {
+      const { error: imageError } = await this.listingService.deleteListingImage(
+        listing.image_path,
+      );
+
+      if (imageError) {
+        console.error('Error deleting listing image:', imageError);
+      }
+    }
+
+    // Refresh listings
+    await this.loadListings();
   }
 
   // INITIAL LOAD
