@@ -30,4 +30,11 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/seller-profile/seller-profile').then((m) => m.SellerProfile),
   },
+
+  {
+    path: 'listing-management',
+    loadComponent: () =>
+      import('./pages/listing-management/listing-management').then((m) => m.ListingManagement),
+    canActivate: [authGuard],
+  },
 ];

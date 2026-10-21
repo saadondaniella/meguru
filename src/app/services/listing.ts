@@ -1,0 +1,60 @@
+import { Injectable, inject } from '@angular/core';
+import { SUPABASE_CLIENT } from './supabase';
+import { Listing } from '../models/listing';
+
+type CreateListing = Pick<
+  Listing,
+  'seller_id' | 'title' | 'description' | 'price' | 'category' | 'condition' | 'image_path'
+>;
+
+@Injectable({
+  providedIn: 'root',
+})
+export class ListingService {
+  private supabase = inject(SUPABASE_CLIENT);
+
+  async createListing(listing: CreateListing) {
+    return await this.supabase.from('listings').insert(listing).select().single();
+  }
+
+  async getListingsBySeller(sellerId: string) {
+    return await this.supabase
+      .from('listings')
+      .select('*')
+      .eq('seller_id', sellerId)
+      .order('created_at', { ascending: false });
+  }
+
+  async updateListing(
+    listingId: string,
+    updates: Partial<Omit<Listing, 'id' | 'seller_id' | 'created_at'>>,
+  ) {
+    return await this.supabase
+      .from('listings')
+      .update(updates)
+      .eq('id', listingId)
+      .select()
+      .single();
+  }
+
+  async deleteListing(listingId: string) {
+    return await this.supabase.from('listings').delete().eq('id', listingId).select().single();
+  }
+
+  async uploadListingImage(userId: string, file: File) {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+
+    const filePath = `${userId}/${crypto.randomUUID()}.${extension}`;
+
+    return await this.supabase.storage.from('listing-images').upload(filePath, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+  }
+
+  getListingImageUrl(imagePath: string): string {
+    const { data } = this.supabase.storage.from('listing-images').getPublicUrl(imagePath);
+
+    return data.publicUrl;
+  }
+}
