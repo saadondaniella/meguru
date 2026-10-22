@@ -1,1 +1,65 @@
 /* You can add global styles to this file, and also import other style files */
+/* TEMPORARY FORM STYLING */
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 500px;
+  margin: 30px 0;
+}
+
+form > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+form label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+form input,
+form textarea,
+form select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #222;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+form input:focus,
+form textarea:focus,
+form select:focus {
+  outline: 2px solid #4d5d46;
+  outline-offset: 1px;
+}
+
+form button {
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 6px;
+  background: #4d5d46;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+form button:hover {
+  opacity: 0.9;
+}
+
+form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+form small {
+  color: #777;
+  font-size: 12px;
+}
