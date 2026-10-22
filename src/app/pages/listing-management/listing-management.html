@@ -70,8 +70,11 @@
       <small>Choose an image of your item (max 5 MB).</small>
     </div>
     <button type="submit" [disabled]="listingForm.invalid || isUploading()">
-      {{ isUploading() ? 'Uploading...' : 'Create listing' }}
+      {{ isUploading() ? 'Saving...' : editingListing() ? 'Save changes' : 'Create listing' }}
     </button>
+    @if (editingListing()) {
+      <button type="button" (click)="onCancelEdit()">Cancel editing</button>
+    }
   </form>
 
   <div class="my-listings">
@@ -95,6 +98,7 @@
             <p>{{ listing.price }} SEK</p>
             <p>{{ listing.condition }}</p>
 
+            <button type="button" (click)="onEditListing(listing)">Edit listing</button>
             <button type="button" (click)="onDeleteListing(listing.id)">Delete listing</button>
           </article>
         }

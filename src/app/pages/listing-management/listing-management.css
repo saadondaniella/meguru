@@ -10,3 +10,57 @@ input[type='number'] {
   appearance: textfield;
   -moz-appearance: textfield;
 }
+
+/* MY LISTINGS */
+
+.my-listings {
+  margin-top: 80px;
+}
+
+.my-listings h2 {
+  margin-bottom: 12px;
+}
+
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 32px;
+  margin-top: 30px;
+}
+
+.listing-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.listing-card img {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.listing-card h3 {
+  margin: 10px 0 0;
+  font-size: 20px;
+}
+
+.listing-card p {
+  margin: 0;
+}
+
+.listing-card button {
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.listing-card button:first-of-type {
+  margin-top: auto;
+}
