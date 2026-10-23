@@ -1,0 +1,19 @@
+@if (listing(); as listing) {
+  <section class="listing-detail">
+    @if (imageUrl) {
+      <img [src]="imageUrl" [alt]="listing.title" />
+    }
+
+    <h1>{{ listing.title }}</h1>
+
+    <p>{{ listing.price }} kr</p>
+
+    <p>{{ listing.description }}</p>
+
+    <p>Category: {{ listing.category }}</p>
+
+    <p>Condition: {{ listing.condition }}</p>
+  </section>
+} @else {
+  <p>Loading listing...</p>
+}

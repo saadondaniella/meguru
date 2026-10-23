@@ -25,6 +25,10 @@ export class ListingService {
       .order('created_at', { ascending: false });
   }
 
+  async getListingById(listingId: string) {
+    return await this.supabase.from('listings').select('*').eq('id', listingId).single();
+  }
+
   async updateListing(
     listingId: string,
     updates: Partial<Omit<Listing, 'id' | 'seller_id' | 'created_at'>>,
