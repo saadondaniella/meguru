@@ -37,4 +37,10 @@ export const routes: Routes = [
       import('./pages/listing-management/listing-management').then((m) => m.ListingManagement),
     canActivate: [authGuard],
   },
+
+  {
+    path: 'listings/:id',
+    loadComponent: () =>
+      import('./pages/listing-detail/listing-detail').then((m) => m.ListingDetail),
+  },
 ];

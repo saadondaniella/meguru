@@ -1,0 +1,26 @@
+.listing-detail {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 24px;
+}
+
+.listing-detail img {
+  display: block;
+  width: 100%;
+  max-width: 450px;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.listing-detail h1 {
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+.listing-detail p {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
