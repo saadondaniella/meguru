@@ -13,6 +13,18 @@
     <p>Category: {{ listing.category }}</p>
 
     <p>Condition: {{ listing.condition }}</p>
+
+    @if (seller(); as seller) {
+      <div class="seller-info">
+        <p>
+          Sold by:
+          <a [routerLink]="['/sellers', seller.id]">
+            {{ seller.display_name }}
+          </a>
+        </p>
+      </div>
+    }
+    
   </section>
 } @else {
   <p>Loading listing...</p>

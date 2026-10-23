@@ -1,0 +1,129 @@
+.public-seller-profile {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 80px 5%;
+  color: #4d5d46;
+}
+
+/* Seller information */
+
+.public-seller-profile > h1 {
+  font-size: clamp(3.5rem, 8vw, 8rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  margin: 0 0 30px;
+  overflow-wrap: anywhere;
+}
+
+.public-seller-profile > p {
+  max-width: 550px;
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 15px;
+}
+
+.public-seller-profile > p:first-of-type {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #9e5a44;
+}
+
+/* Listings */
+
+.seller-listings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 50px 24px;
+  margin-top: 100px;
+}
+
+.seller-listings > h2 {
+  grid-column: 1 / -1;
+  font-size: clamp(2rem, 4vw, 4rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  border-bottom: 1px solid #4d5d46;
+  padding-bottom: 20px;
+  margin: 0 0 15px;
+}
+
+/* Product cards */
+
+.listing-card {
+  min-width: 0;
+}
+
+.listing-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: #e8e5df;
+  margin-bottom: 18px;
+  transition: opacity 0.3s ease;
+}
+
+.listing-card:hover img {
+  opacity: 0.85;
+}
+
+.listing-card h3 {
+  font-size: 1.15rem;
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+
+.listing-card p {
+  font-size: 0.85rem;
+  margin: 0 0 5px;
+}
+
+.listing-card p:last-child {
+  color: #9e5a44;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+/* Tablet */
+
+@media (max-width: 900px) {
+  .seller-listings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .public-seller-profile {
+    padding: 50px 20px;
+  }
+
+  .seller-listings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 35px 12px;
+    margin-top: 70px;
+  }
+
+  .seller-listings > h2 {
+    padding-bottom: 15px;
+  }
+
+  .listing-card h3 {
+    font-size: 0.95rem;
+  }
+
+  .listing-card p {
+    font-size: 0.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listing-card img {
+    transition: none;
+  }
+}
