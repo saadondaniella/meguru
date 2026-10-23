@@ -1,11 +1,11 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ListingService } from '../../services/listing';
 import { Listing } from '../../models/listing';
 import { Profile } from '../../services/profile';
 
 @Component({
-  imports: [],
+  imports: [RouterLink],
   selector: 'app-listing-detail',
   styleUrl: './listing-detail.css',
   templateUrl: './listing-detail.html',
