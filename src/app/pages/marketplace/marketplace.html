@@ -1,0 +1,54 @@
+<section class="marketplace">
+  <h1>THE MARKETPLACE</h1>
+  <p>Pre-loved fashion. Ready for its next chapter.</p>
+
+  <section class="marketplace-grid">
+    @for (listing of listings(); track listing.id) {
+      <article class="listing-card">
+        <a [routerLink]="['/listings', listing.id]">
+          @if (listing.image_path) {
+            <img [src]="getImageUrl(listing.image_path)" [alt]="listing.title" />
+          }
+
+          <h2>{{ listing.title }}</h2>
+        </a>
+
+        <p>{{ listing.price }} kr</p>
+        <p>{{ listing.condition }}</p>
+      </article>
+    } @empty {
+      <p>No listings available yet.</p>
+    }
+  </section>
+
+  @if (totalPages() > 1) {
+    <nav class="pagination" aria-label="Marketplace pagination">
+      <button
+        type="button"
+        (click)="changePage(currentPage() - 1)"
+        [disabled]="currentPage() === 1"
+      >
+        ← Previous
+      </button>
+
+      @for (page of pageNumbers(); track page) {
+        <button
+          type="button"
+          (click)="changePage(page)"
+          [class.active]="currentPage() === page"
+          [attr.aria-current]="currentPage() === page ? 'page' : null"
+        >
+          {{ page }}
+        </button>
+      }
+
+      <button
+        type="button"
+        (click)="changePage(currentPage() + 1)"
+        [disabled]="currentPage() === totalPages()"
+      >
+        Next →
+      </button>
+    </nav>
+  }
+</section>

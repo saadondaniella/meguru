@@ -24,6 +24,16 @@ export class ListingService {
       .eq('seller_id', sellerId)
       .order('created_at', { ascending: false });
   }
+  async getAllListings(page = 1, pageSize = 9) {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    return await this.supabase
+      .from('listings')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+  }
 
   async getListingById(listingId: string) {
     return await this.supabase.from('listings').select('*').eq('id', listingId).single();
