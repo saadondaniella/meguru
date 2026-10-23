@@ -1,7 +1,7 @@
 @if (listing(); as listing) {
   <section class="listing-detail">
-    @if (imageUrl) {
-      <img [src]="imageUrl" [alt]="listing.title" />
+    @if (imageUrl()) {
+      <img [src]="imageUrl()" [alt]="listing.title" />
     }
 
     <h1>{{ listing.title }}</h1>

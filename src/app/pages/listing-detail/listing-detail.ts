@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ListingService } from '../../services/listing';
 import { Listing } from '../../models/listing';
+import { Profile } from '../../services/profile';
 
 @Component({
   imports: [],
@@ -12,10 +13,12 @@ import { Listing } from '../../models/listing';
 export class ListingDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private listingService = inject(ListingService);
+  private profileService = inject(Profile);
 
   listingId = this.route.snapshot.paramMap.get('id');
   listing = signal<Listing | null>(null);
-  imageUrl: string | null = null;
+  imageUrl = signal<string | null>(null);
+  seller = signal<{ id: string; display_name: string } | null>(null);
 
   ngOnInit() {
     console.log('ListingDetail initialized');
@@ -40,8 +43,18 @@ export class ListingDetail implements OnInit {
     }
 
     this.listing.set(data);
+    const { data: seller, error: profileError } = await this.profileService.getProfile(
+      data.seller_id,
+    );
+
+    if (profileError) {
+      console.error('Error loading seller profile:', profileError);
+    } else {
+      console.log('Seller profile:', seller);
+      this.seller.set(seller);
+    }
     if (data.image_path) {
-      this.imageUrl = this.listingService.getListingImageUrl(data.image_path);
+      this.imageUrl.set(this.listingService.getListingImageUrl(data.image_path));
     }
   }
 }
