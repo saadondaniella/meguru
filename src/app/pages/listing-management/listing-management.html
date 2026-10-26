@@ -1,105 +1,218 @@
 <section class="listing-management">
-  <h1>Create a listing</h1>
-  <p>Give your pre-loved pieces a new home.</p>
-
-  <form [formGroup]="listingForm" (ngSubmit)="onSubmit()">
+  <header class="listing-management-header">
     <div>
-      <label for="title">Title</label>
-      <input
-        id="title"
-        type="text"
-        formControlName="title"
-        maxlength="100"
-        placeholder="e.g. Vintage leather jacket"
-      />
+      <h1>My listings</h1>
+      <p>Manage your pre-loved pieces.</p>
     </div>
 
-    <div>
-      <label for="description">Description</label>
-      <textarea
-        id="description"
-        formControlName="description"
-        maxlength="2000"
-        rows="5"
-        placeholder="Tell us about your item..."
-      ></textarea>
-      <small> {{ listingForm.controls.description.value.length }} / 2000 </small>
-    </div>
+    <button type="button" class="new-listing-btn" (click)="onCreateListing()">+ New listing</button>
+  </header>
 
-    <div>
-      <label for="price">Price (SEK)</label>
-      <input
-        id="price"
-        type="number"
-        formControlName="price"
-        min="0"
-        step="0.01"
-        [readOnly]="listingForm.controls.category.value === 'free'"
-      />
-    </div>
+  <!-- CREATE / EDIT LISTING MODAL -->
+  @if (isModalOpen()) {
+    <div class="modal-overlay">
+      <div
+        class="modal-content"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="listing-modal-title"
+      >
+        <button
+          type="button"
+          class="modal-close"
+          (click)="onCloseModal()"
+          [disabled]="isUploading()"
+          aria-label="Close modal"
+        >
+          ✕
+        </button>
 
-    <div>
-      <label for="category">Category</label>
-      <select id="category" formControlName="category" (change)="onCategoryChange()">
-        <option value="exclusive">Exclusive</option>
-        <option value="budget">Budget</option>
-        <option value="free">Free / Bortskänkes</option>
-      </select>
-    </div>
+        <h2 id="listing-modal-title">
+          {{
+            editingListing()
+              ? editingListing()?.status === 'draft'
+                ? 'Continue your draft'
+                : 'Edit listing'
+              : 'Create a listing'
+          }}
+        </h2>
 
-    <div>
-      <label for="condition">Condition</label>
-      <select id="condition" formControlName="condition">
-        <option value="new_with_tags">New with tags</option>
-        <option value="like_new">Like new</option>
-        <option value="very_good">Very good</option>
-        <option value="good">Good</option>
-        <option value="well_worn">Well worn</option>
-      </select>
-    </div>
+        <p>Give your pre-loved pieces a new home.</p>
 
-    <div>
-      <label for="image">Listing image</label>
-      <input
-        #imageInput
-        id="image"
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        (change)="onImageSelected($event)"
-      />
-      <small>Choose an image of your item (max 5 MB).</small>
-    </div>
-    <button type="submit" [disabled]="listingForm.invalid || isUploading()">
-      {{ isUploading() ? 'Saving...' : editingListing() ? 'Save changes' : 'Create listing' }}
-    </button>
-    @if (editingListing()) {
-      <button type="button" (click)="onCancelEdit()">Cancel editing</button>
-    }
-  </form>
+        <form [formGroup]="listingForm" (ngSubmit)="onSubmit()">
+          <div>
+            <label for="title">Title</label>
+            <input
+              id="title"
+              type="text"
+              formControlName="title"
+              maxlength="100"
+              placeholder="e.g. Vintage leather jacket"
+            />
+          </div>
 
+          <div>
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              formControlName="description"
+              maxlength="2000"
+              rows="5"
+              placeholder="Tell us about your item..."
+            ></textarea>
+            <small> {{ listingForm.controls.description.value.length }} / 2000 </small>
+          </div>
+
+          <div>
+            <label for="price">Price (SEK)</label>
+            <input
+              id="price"
+              type="number"
+              formControlName="price"
+              min="0"
+              step="0.01"
+              [readOnly]="listingForm.controls.category.value === 'free'"
+            />
+          </div>
+
+          <div>
+            <label for="category">Category</label>
+            <select id="category" formControlName="category" (change)="onCategoryChange()">
+              <option value="exclusive">Exclusive</option>
+              <option value="budget">Budget</option>
+              <option value="free">Free / Bortskänkes</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="condition">Condition</label>
+            <select id="condition" formControlName="condition">
+              <option value="new_with_tags">New with tags</option>
+              <option value="like_new">Like new</option>
+              <option value="very_good">Very good</option>
+              <option value="good">Good</option>
+              <option value="well_worn">Well worn</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="image">Listing image</label>
+            <input
+              #imageInput
+              id="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              (change)="onImageSelected($event)"
+            />
+            <small>Choose an image of your item (max 5 MB).</small>
+
+            @if (editingListing()?.image_path) {
+              <p>Current image:</p>
+              <img
+                class="current-listing-image"
+                [src]="listingService.getListingImageUrl(editingListing()!.image_path!)"
+                alt="Current listing image"
+              />
+            }
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" [disabled]="listingForm.invalid || isUploading()">
+              {{
+                isUploading()
+                  ? 'Saving...'
+                  : editingListing()?.status === 'draft'
+                    ? 'Publish listing'
+                    : editingListing()
+                      ? 'Save changes'
+                      : 'Publish listing'
+              }}
+            </button>
+
+            @if (!editingListing() || editingListing()?.status === 'draft') {
+              <button type="button" [disabled]="isUploading()" (click)="onSaveDraft()">
+                Save as draft
+              </button>
+            }
+
+            <button type="button" [disabled]="isUploading()" (click)="onCloseModal()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- PUBLISHED LISTINGS -->
   <div class="my-listings">
-    <h2>My listings</h2>
-    <p>Number of listings: {{ listings().length }}</p>
+    <h2>Published listings</h2>
+    <p>Number of listings: {{ publishedListings().length }}</p>
 
-    @if (listings().length === 0) {
-      <p>You haven't created any listings yet.</p>
+    @if (publishedListings().length === 0) {
+      <p>You haven't published any listings yet.</p>
     } @else {
       <div class="listings-grid">
-        @for (listing of listings(); track listing.id) {
+        @for (listing of publishedListings(); track listing.id) {
           <article class="listing-card">
             @if (listing.image_path) {
               <img
                 [src]="listingService.getListingImageUrl(listing.image_path)"
-                [alt]="listing.title"
+                [alt]="listing.title || 'Listing image'"
               />
             }
 
             <h3>{{ listing.title }}</h3>
-            <p>{{ listing.price }} SEK</p>
-            <p>{{ listing.condition }}</p>
+
+            @if (listing.price !== null) {
+              <p>{{ listing.price }} SEK</p>
+            }
+
+            @if (listing.condition) {
+              <p>{{ listing.condition }}</p>
+            }
 
             <button type="button" (click)="onEditListing(listing)">Edit listing</button>
+
             <button type="button" (click)="onDeleteListing(listing.id)">Delete listing</button>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- DRAFT LISTINGS -->
+  <div class="my-listings drafts-section">
+    <h2>Drafts</h2>
+    <p>Number of drafts: {{ draftListings().length }}</p>
+
+    @if (draftListings().length === 0) {
+      <p>You don't have any drafts yet.</p>
+    } @else {
+      <div class="listings-grid">
+        @for (listing of draftListings(); track listing.id) {
+          <article class="listing-card">
+            @if (listing.image_path) {
+              <img
+                [src]="listingService.getListingImageUrl(listing.image_path)"
+                [alt]="listing.title || 'Draft listing image'"
+              />
+            }
+
+            <h3>{{ listing.title || 'Untitled draft' }}</h3>
+            <span class="listing-status">Draft</span>
+
+            @if (listing.price !== null) {
+              <p>{{ listing.price }} SEK</p>
+            }
+
+            @if (listing.condition) {
+              <p>{{ listing.condition }}</p>
+            }
+
+            <button type="button" (click)="onEditListing(listing)">Continue editing</button>
+
+            <button type="button" (click)="onDeleteListing(listing.id)">Delete draft</button>
           </article>
         }
       </div>

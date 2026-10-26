@@ -64,3 +64,128 @@ input[type='number'] {
 .listing-card button:first-of-type {
   margin-top: auto;
 }
+
+/* MODAL OVERLAY */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 20, 20, 0.65);
+}
+
+/* MODAL CONTENT */
+.modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  background: #f5f2eb;
+  padding: 48px;
+  border-radius: 4px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+  margin: 0 0 12px;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 500;
+}
+
+.modal-content > p {
+  margin-bottom: 32px;
+}
+
+/* CLOSE BUTTON */
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* FORM LAYOUT */
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.modal-content form > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-content input:not([type='file']),
+.modal-content textarea,
+.modal-content select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #b8b5ae;
+  background: transparent;
+  border-radius: 2px;
+  font: inherit;
+}
+
+.modal-content textarea {
+  resize: vertical;
+}
+
+.modal-content small {
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+/* ACTION BUTTONS */
+.modal-content .modal-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.modal-actions button {
+  padding: 12px 18px;
+  cursor: pointer;
+}
+
+.modal-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* CURRENT IMAGE */
+.current-listing-image {
+  width: 120px;
+  height: 150px;
+  object-fit: cover;
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-content {
+    padding: 48px 22px 28px;
+    max-height: 95dvh;
+  }
+
+  .modal-content .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+}

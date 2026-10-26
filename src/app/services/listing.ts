@@ -5,7 +5,9 @@ import { Listing } from '../models/listing';
 type CreateListing = Pick<
   Listing,
   'seller_id' | 'title' | 'description' | 'price' | 'category' | 'condition' | 'image_path'
->;
+> & {
+  status?: Listing['status'];
+};
 
 @Injectable({
   providedIn: 'root',
@@ -31,6 +33,7 @@ export class ListingService {
     return await this.supabase
       .from('listings')
       .select('*', { count: 'exact' })
+      .eq('status', 'published')
       .order('created_at', { ascending: false })
       .range(from, to);
   }
