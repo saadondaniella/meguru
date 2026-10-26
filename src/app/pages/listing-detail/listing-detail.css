@@ -24,3 +24,63 @@
   line-height: 1.6;
   margin-bottom: 12px;
 }
+
+.listing-image {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.sold-badge {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 65px;
+  height: 105px;
+  padding-top: 10px;
+
+  background: #9e5a44;
+  color: #f5f2eb;
+
+  font-family: 'Noto Serif', serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+
+  transform: rotate(12deg);
+  box-shadow: 3px 5px 12px rgba(0, 0, 0, 0.18);
+}
+
+.sold-badge::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 8px;
+  height: 8px;
+  border: 2px solid #f5f2eb;
+  border-radius: 50%;
+  background: #1a1a1a;
+}
+
+.sold-badge::after {
+  content: '';
+  position: absolute;
+  bottom: calc(100% - 14px);
+  left: 50%;
+
+  width: 1px;
+  height: 28px;
+  background: #1a1a1a;
+
+  transform: rotate(-15deg);
+  transform-origin: bottom;
+}

@@ -5,8 +5,11 @@ import {
   signal,
   computed,
   viewChild,
+  HostListener,
   ElementRef,
   effect,
+  afterNextRender,
+  Injector,
 } from '@angular/core';
 import { ListingService } from '../../services/listing';
 import { SUPABASE_CLIENT } from '../../services/supabase';
@@ -43,6 +46,9 @@ export class ListingManagement implements OnInit {
   isMarkingSold = signal(false);
   soldErrorMessage = signal('');
   currentSellerId = signal<string | null>(null);
+  readonly statusChangeTarget = signal<Listing | null>(null);
+  readonly statusChangeTo = signal<'sold' | 'published' | null>(null);
+  readonly statusDialog = viewChild<ElementRef<HTMLDivElement>>('statusDialog');
 
   // DELETE CONFIRMATION
   deleteTarget = signal<Listing | null>(null);
@@ -51,7 +57,8 @@ export class ListingManagement implements OnInit {
   deleteDialog = viewChild<ElementRef<HTMLDivElement>>('deleteDialog');
 
   successCloseButton = viewChild<ElementRef<HTMLButtonElement>>('successCloseButton');
-  private previousFocusedElement: HTMLElement | null = null;
+  private readonly injector = inject(Injector);
+  private statusTriggerElement: HTMLElement | null = null;
 
   constructor() {
     effect(() => {
@@ -86,6 +93,13 @@ export class ListingManagement implements OnInit {
     (trigger ?? this.newListingButton()?.nativeElement)?.focus();
   }
 
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    if (this.statusChangeTarget() && !this.isMarkingSold()) {
+      this.closeStatusConfirmation();
+    }
+  }
+
   // OPEN MODAL FOR A NEW LISTING
   onCreateListing(event?: Event) {
     if (this.isUploading()) return;
@@ -103,6 +117,40 @@ export class ListingManagement implements OnInit {
     this.isModalOpen.set(false);
     this.editingListing.set(null);
     this.restoreFormTriggerFocus();
+  }
+
+  openStatusConfirmation(listing: Listing, status: 'sold' | 'published', trigger: HTMLElement) {
+    this.statusTriggerElement = trigger;
+    this.soldErrorMessage.set('');
+    this.statusChangeTarget.set(listing);
+    this.statusChangeTo.set(status);
+
+    afterNextRender(
+      () => {
+        this.statusDialog()?.nativeElement.focus();
+      },
+      { injector: this.injector },
+    );
+  }
+
+  closeStatusConfirmation() {
+    if (this.isMarkingSold()) return;
+
+    this.statusChangeTarget.set(null);
+    this.statusChangeTo.set(null);
+
+    const trigger = this.statusTriggerElement;
+    this.statusTriggerElement = null;
+
+    afterNextRender(
+      () => {
+        // After a successful status change, the original button moves
+        // to another section and may no longer exist in the DOM.
+        const focusTarget = trigger?.isConnected ? trigger : this.newListingButton()?.nativeElement;
+        focusTarget?.focus();
+      },
+      { injector: this.injector },
+    );
   }
 
   // START EDITING
@@ -264,10 +312,6 @@ export class ListingManagement implements OnInit {
       return;
     }
 
-    const confirmed = window.confirm(`Mark "${listing.title}" as sold?`);
-
-    if (!confirmed) return;
-
     this.isMarkingSold.set(true);
     this.soldErrorMessage.set('');
 
@@ -289,6 +333,84 @@ export class ListingManagement implements OnInit {
       this.soldErrorMessage.set('Something went wrong. Please try again.');
     } finally {
       this.isMarkingSold.set(false);
+    }
+  }
+
+  onStatusDialogKeydown(event: KeyboardEvent) {
+    if (event.key !== 'Tab') return;
+    const dialog = this.statusDialog()?.nativeElement;
+    if (!dialog) return;
+
+    const buttons = Array.from(dialog.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+
+    if (!buttons.length) {
+      event.preventDefault();
+      return;
+    }
+
+    const first = buttons[0];
+    const last = buttons[buttons.length - 1];
+
+    if (event.shiftKey) {
+      if (document.activeElement === first || document.activeElement === dialog) {
+        event.preventDefault();
+        last.focus();
+      }
+    } else if (document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  // MARK SOLD LISTING AS AVAILABLE
+  async onMarkAsAvailable(listing: Listing) {
+    if (
+      listing.status !== 'sold' ||
+      this.isUploading() ||
+      this.isDeleting() ||
+      this.isMarkingSold()
+    ) {
+      return;
+    }
+
+    this.isMarkingSold.set(true);
+    this.soldErrorMessage.set('');
+
+    try {
+      const { error } = await this.listingService.updateListing(listing.id, {
+        status: 'published',
+      });
+
+      if (error) {
+        console.error('Could not make listing available:', error);
+        this.soldErrorMessage.set('Could not make this listing available. Please try again.');
+        return;
+      }
+
+      await this.loadListings();
+      this.pageSuccessMessage.set('Your listing is available again!');
+    } catch (error) {
+      console.error('Unexpected error updating listing:', error);
+      this.soldErrorMessage.set('Something went wrong. Please try again.');
+    } finally {
+      this.isMarkingSold.set(false);
+    }
+  }
+
+  async confirmStatusChange() {
+    const listing = this.statusChangeTarget();
+    const status = this.statusChangeTo();
+
+    if (!listing || !status || this.isMarkingSold()) return;
+
+    if (status === 'sold') {
+      await this.onMarkAsSold(listing);
+    } else {
+      await this.onMarkAsAvailable(listing);
+    }
+
+    if (!this.soldErrorMessage()) {
+      this.closeStatusConfirmation();
     }
   }
 

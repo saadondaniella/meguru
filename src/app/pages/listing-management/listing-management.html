@@ -41,7 +41,7 @@
     </div>
   </div>
 
-  @if (soldErrorMessage()) {
+  @if (soldErrorMessage() && !statusChangeTarget()) {
     <p class="listing-page-error" role="alert">
       {{ soldErrorMessage() }}
     </p>
@@ -144,7 +144,13 @@
             }
 
             <button type="button" (click)="onEditListing(listing, $event)">Edit listing</button>
-            <button type="button" (click)="onMarkAsSold(listing)" [disabled]="isMarkingSold()">
+
+            <button
+              #statusTrigger
+              type="button"
+              (click)="openStatusConfirmation(listing, 'sold', statusTrigger)"
+              [disabled]="isMarkingSold()"
+            >
               {{ isMarkingSold() ? 'UPDATING...' : 'Mark as sold' }}
             </button>
 
@@ -178,11 +184,9 @@
               />
             }
 
-            <h3>
-              {{ listing.title || 'Untitled draft' }}
-            </h3>
+            <h3>{{ listing.title || 'Untitled draft' }}</h3>
 
-            <span class="listing-status"> Draft </span>
+            <span class="listing-status">Draft</span>
 
             @if (listing.price !== null) {
               <p>{{ listing.price }} SEK</p>
@@ -229,6 +233,15 @@
               <p>{{ listing.price }} SEK</p>
             }
 
+            <button
+              #statusTrigger
+              type="button"
+              (click)="openStatusConfirmation(listing, 'published', statusTrigger)"
+              [disabled]="isMarkingSold()"
+            >
+              {{ isMarkingSold() ? 'UPDATING...' : 'Mark as available' }}
+            </button>
+
             <button type="button" (click)="onDeleteListing(listing.id, $event)">
               Delete listing
             </button>
@@ -237,6 +250,67 @@
       </div>
     }
   </div>
+
+  <!-- STATUS CHANGE CONFIRMATION MODAL -->
+  @if (statusChangeTarget(); as listing) {
+    <div class="delete-overlay" (click)="!isMarkingSold() && closeStatusConfirmation()">
+      <div
+        #statusDialog
+        class="delete-dialog"
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+        aria-labelledby="status-dialog-title"
+        aria-describedby="status-dialog-description"
+        (click)="$event.stopPropagation()"
+        (keydown)="onStatusDialogKeydown($event)"
+      >
+        <span class="delete-dialog-eyebrow"> MEGURU® / CONFIRM ACTION </span>
+
+        <h2 id="status-dialog-title">
+          @if (statusChangeTo() === 'sold') {
+            Mark as sold?
+          } @else {
+            Make available again?
+          }
+        </h2>
+
+        <p id="status-dialog-description">
+          @if (statusChangeTo() === 'sold') {
+            "{{ listing.title }}" will be marked as sold and removed from the marketplace.
+          } @else {
+            "{{ listing.title }}" will be available in the marketplace again.
+          }
+        </p>
+
+        @if (soldErrorMessage()) {
+          <p class="delete-dialog-error" role="alert">
+            {{ soldErrorMessage() }}
+          </p>
+        }
+
+        <div class="delete-dialog-actions">
+          <button
+            type="button"
+            class="delete-cancel-btn"
+            (click)="closeStatusConfirmation()"
+            [disabled]="isMarkingSold()"
+          >
+            CANCEL
+          </button>
+
+          <button
+            type="button"
+            class="delete-confirm-btn"
+            (click)="confirmStatusChange()"
+            [disabled]="isMarkingSold()"
+          >
+            {{ isMarkingSold() ? 'UPDATING...' : 'CONFIRM' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- SUCCESS POPUP -->
   @if (successPopup()) {
