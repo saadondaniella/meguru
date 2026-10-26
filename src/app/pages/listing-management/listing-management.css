@@ -236,3 +236,159 @@
   outline: 2px solid #9e5a44;
   outline-offset: 3px;
 }
+
+/* DASHBOARD OVERVIEW */
+
+.dashboard-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 32px 0 48px;
+}
+
+.dashboard-overview > * {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px 20px;
+  border: 1px solid #4d5d46;
+  background: #f5f2eb;
+  color: #4d5d46;
+}
+
+.dashboard-overview h2 {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dashboard-overview p {
+  margin: 0;
+  font-family: 'Noto Serif', serif;
+  font-size: 32px;
+  line-height: 1;
+}
+
+@media (max-width: 600px) {
+  .dashboard-overview {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .dashboard-overview > * {
+    flex-direction: row;
+    align-items: center;
+    padding: 14px 18px;
+  }
+}
+
+:host {
+  display: block;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 32px 80px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  :host {
+    padding: 24px 20px 60px;
+  }
+}
+
+/* DASHBOARD HEADER */
+
+.listing-management-header {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.listing-management-header > div:first-child {
+  flex: 1 1 100%;
+}
+
+.listing-management-header h1 {
+  margin: 0 0 10px;
+  color: #4d5d46;
+  font-family: 'Noto Serif', serif;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.listing-management-header p {
+  margin: 0;
+  color: #66645f;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+}
+
+/* ACTIONS */
+
+.new-listing-btn {
+  min-height: 42px;
+  padding: 12px 20px;
+  border: 1px solid #4d5d46;
+  background: #4d5d46;
+  color: #f5f2eb;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.new-listing-btn:hover {
+  background: #394635;
+}
+
+.dashboard-profile-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 4px;
+  color: #4d5d46;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.dashboard-profile-link:hover {
+  color: #9e5a44;
+}
+
+.new-listing-btn:focus-visible,
+.dashboard-profile-link:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 3px;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .listing-management-header {
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .listing-management-header h1 {
+    font-size: 38px;
+  }
+
+  .new-listing-btn {
+    width: 100%;
+  }
+
+  .dashboard-profile-link {
+    min-height: 32px;
+    margin-right: 12px;
+  }
+}
