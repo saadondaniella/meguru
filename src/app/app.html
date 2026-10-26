@@ -1,3 +1,5 @@
 <app-navbar></app-navbar>
 
-<router-outlet></router-outlet>
+<main [attr.inert]="isMenuOpen() ? '' : null">
+  <router-outlet></router-outlet>
+</main>
