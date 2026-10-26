@@ -1,4 +1,13 @@
-import { Component, inject, OnInit, signal, computed, viewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  signal,
+  computed,
+  viewChild,
+  ElementRef,
+  effect,
+} from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ListingService } from '../../services/listing';
 import { SUPABASE_CLIENT } from '../../services/supabase';
@@ -42,6 +51,32 @@ export class ListingManagement implements OnInit {
   isModalOpen = signal(false);
 
   imagePreviewUrl = signal<string | null>(null);
+  imageErrorMessage = signal('');
+  formErrorMessage = signal('');
+  pageSuccessMessage = signal('');
+
+  successPopup = signal<'published' | 'draft' | 'updated' | null>(null);
+
+  // DELETE CONFIRMATION
+  deleteTarget = signal<Listing | null>(null);
+  deleteErrorMessage = signal('');
+  isDeleting = signal(false);
+  deleteDialog = viewChild<ElementRef<HTMLDivElement>>('deleteDialog');
+
+  successCloseButton = viewChild<ElementRef<HTMLButtonElement>>('successCloseButton');
+  private previousFocusedElement: HTMLElement | null = null;
+
+  constructor() {
+    effect(() => {
+      const button = this.successCloseButton();
+
+      if (button) {
+        button.nativeElement.focus();
+      }
+    });
+  }
+
+  private deleteTrigger: HTMLButtonElement | null = null;
 
   imageInput = viewChild<ElementRef<HTMLInputElement>>('imageInput');
 
@@ -50,7 +85,7 @@ export class ListingManagement implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
 
-    this.selectedImage = null;
+    this.imageErrorMessage.set('');
 
     if (!file) return;
 
@@ -63,7 +98,7 @@ export class ListingManagement implements OnInit {
       !extension ||
       !allowedExtensions.includes(extension)
     ) {
-      alert('Please select a JPG, PNG or WebP image.');
+      this.imageErrorMessage.set('Please select a JPG, PNG or WebP image.');
       input.value = '';
       return;
     }
@@ -71,7 +106,7 @@ export class ListingManagement implements OnInit {
     const maxSize = 5 * 1024 * 1024;
 
     if (file.size > maxSize) {
-      alert('Image must be smaller than 5 MB.');
+      this.imageErrorMessage.set('Image must be smaller than 5 MB.');
       input.value = '';
       return;
     }
@@ -96,6 +131,8 @@ export class ListingManagement implements OnInit {
   // REMOVE SELECTED IMAGE
   onRemoveImage() {
     if (this.isUploading()) return;
+
+    this.imageErrorMessage.set('');
 
     const previewUrl = this.imagePreviewUrl();
 
@@ -127,6 +164,8 @@ export class ListingManagement implements OnInit {
 
   // RESET FORM
   resetForm() {
+    this.imageErrorMessage.set('');
+    this.formErrorMessage.set('');
     this.listingForm.reset({
       title: '',
       description: '',
@@ -154,12 +193,13 @@ export class ListingManagement implements OnInit {
   // SAVE LISTING AS DRAFT
   async onSaveDraft() {
     if (this.isUploading()) return;
+    this.formErrorMessage.set('');
 
     const editing = this.editingListing();
 
     // Never turn a published or sold listing into a draft.
     if (editing && editing.status !== 'draft') {
-      alert('Only drafts can be saved as drafts.');
+      this.formErrorMessage.set('Only drafts can be saved as drafts.');
       return;
     }
 
@@ -171,7 +211,7 @@ export class ListingManagement implements OnInit {
       values.description.length > 2000 ||
       (values.price !== null && (!Number.isFinite(values.price) || values.price < 0))
     ) {
-      alert('Please check the title, description and price.');
+      this.formErrorMessage.set('Please check the title, description and price.');
       return;
     }
 
@@ -191,7 +231,7 @@ export class ListingManagement implements OnInit {
       const { data: userData, error: userError } = await this.supabase.auth.getUser();
 
       if (userError || !userData.user) {
-        alert('You must be logged in to save a draft.');
+        this.formErrorMessage.set('You must be logged in to save a draft.');
         return;
       }
 
@@ -206,7 +246,7 @@ export class ListingManagement implements OnInit {
 
         if (imageError) {
           console.error('Could not upload draft image:', imageError);
-          alert('Could not upload the image.');
+          this.formErrorMessage.set('Could not upload the image.');
           return;
         }
 
@@ -225,7 +265,7 @@ export class ListingManagement implements OnInit {
           if (newImagePath) {
             await this.listingService.deleteListingImage(newImagePath);
           }
-          alert('Could not update draft.');
+          this.formErrorMessage.set('Could not update draft.');
           return;
         }
 
@@ -238,7 +278,8 @@ export class ListingManagement implements OnInit {
         }
 
         console.log('Draft updated successfully');
-        alert('Draft updated successfully!');
+        this.pageSuccessMessage.set('Your draft has been updated!');
+        this.showSuccessPopup('draft');
       } else {
         const { data: draft, error } = await this.listingService.createListing({
           seller_id: userId,
@@ -251,12 +292,13 @@ export class ListingManagement implements OnInit {
           if (newImagePath) {
             await this.listingService.deleteListingImage(newImagePath);
           }
-          alert('Could not save draft.');
+          this.formErrorMessage.set('Could not save draft.');
           return;
         }
 
         console.log('Draft saved successfully:', draft);
-        alert('Draft saved successfully!');
+        this.pageSuccessMessage.set('Your draft has been saved!');
+        this.showSuccessPopup('draft');
       }
 
       this.editingListing.set(null);
@@ -265,7 +307,7 @@ export class ListingManagement implements OnInit {
       await this.loadListings();
     } catch (error) {
       console.error('Unexpected error saving draft:', error);
-      alert('Something went wrong. Please try again.');
+      this.formErrorMessage.set('Something went wrong. Please try again.');
     } finally {
       this.isUploading.set(false);
     }
@@ -274,6 +316,7 @@ export class ListingManagement implements OnInit {
   // CREATE OR UPDATE LISTING
   async onSubmit() {
     if (this.isUploading()) return;
+    this.formErrorMessage.set('');
 
     if (this.listingForm.invalid) {
       this.listingForm.markAllAsTouched();
@@ -283,7 +326,7 @@ export class ListingManagement implements OnInit {
     const values = this.listingForm.getRawValue();
 
     if (!values.title.trim()) {
-      alert('Please enter a title.');
+      this.formErrorMessage.set('Please enter a title.');
       return;
     }
 
@@ -293,7 +336,7 @@ export class ListingManagement implements OnInit {
       const { data: userData, error: userError } = await this.supabase.auth.getUser();
 
       if (userError || !userData.user) {
-        alert('You must be logged in to manage listings.');
+        this.formErrorMessage.set('You must be logged in to manage listings.');
         return;
       }
 
@@ -322,7 +365,7 @@ export class ListingManagement implements OnInit {
 
           if (imageError) {
             console.error('Image upload failed:', imageError);
-            alert('Could not upload the new image.');
+            this.formErrorMessage.set('Could not upload the new image.');
             return;
           }
 
@@ -351,7 +394,7 @@ export class ListingManagement implements OnInit {
             }
           }
 
-          alert('Could not update listing.');
+          this.formErrorMessage.set('Could not update listing.');
           return;
         }
 
@@ -367,6 +410,14 @@ export class ListingManagement implements OnInit {
         }
 
         console.log('Listing updated successfully');
+
+        this.pageSuccessMessage.set(
+          editing.status === 'draft'
+            ? 'Your listing has been published!'
+            : 'Your changes have been saved!',
+        );
+
+        this.showSuccessPopup(editing.status === 'draft' ? 'published' : 'updated');
 
         this.editingListing.set(null);
         this.resetForm();
@@ -388,7 +439,7 @@ export class ListingManagement implements OnInit {
 
         if (imageError) {
           console.error('Image upload failed:', imageError);
-          alert('Could not upload image.');
+          this.formErrorMessage.set('Could not upload image.');
           return;
         }
 
@@ -413,11 +464,13 @@ export class ListingManagement implements OnInit {
           }
         }
 
-        alert('Could not create listing.');
+        this.formErrorMessage.set('Could not create listing.');
         return;
       }
 
       console.log('Listing created successfully:', listing);
+      this.pageSuccessMessage.set('Your listing has been published!');
+      this.showSuccessPopup('published');
 
       this.resetForm();
       this.isModalOpen.set(false);
@@ -425,15 +478,35 @@ export class ListingManagement implements OnInit {
       await this.loadListings();
     } catch (error) {
       console.error('Unexpected error saving listing:', error);
-      alert('Something went wrong. Please try again.');
+      this.formErrorMessage.set('Something went wrong. Please try again.');
     } finally {
       this.isUploading.set(false);
     }
   }
 
+  showSuccessPopup(type: 'published' | 'draft' | 'updated') {
+    this.previousFocusedElement =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    this.successPopup.set(type);
+  }
+
+  closeSuccessPopup() {
+    this.successPopup.set(null);
+    this.pageSuccessMessage.set('');
+
+    if (this.previousFocusedElement?.isConnected) {
+      this.previousFocusedElement.focus();
+    }
+
+    this.previousFocusedElement = null;
+  }
+
   // OPEN MODAL FOR A NEW LISTING
   onCreateListing() {
     if (this.isUploading()) return;
+    this.formErrorMessage.set('');
+    this.pageSuccessMessage.set('');
 
     this.editingListing.set(null);
     this.resetForm();
@@ -443,6 +516,7 @@ export class ListingManagement implements OnInit {
   // CLOSE MODAL
   onCloseModal() {
     if (this.isUploading()) return;
+    this.formErrorMessage.set('');
 
     this.isModalOpen.set(false);
     this.editingListing.set(null);
@@ -452,6 +526,10 @@ export class ListingManagement implements OnInit {
   // START EDITING
   onEditListing(listing: Listing) {
     if (this.isUploading()) return;
+    this.formErrorMessage.set('');
+    this.pageSuccessMessage.set('');
+
+    this.imageErrorMessage.set('');
 
     this.editingListing.set(listing);
 
@@ -484,50 +562,115 @@ export class ListingManagement implements OnInit {
   // CANCEL EDITING
   onCancelEdit() {
     if (this.isUploading()) return;
+    this.formErrorMessage.set('');
 
     this.editingListing.set(null);
     this.resetForm();
     this.isModalOpen.set(false);
   }
 
-  // DELETE LISTING
-  async onDeleteListing(listingId: string) {
-    if (this.isUploading()) return;
-
-    const confirmed = confirm('Are you sure you want to delete this listing?');
-
-    if (!confirmed) return;
+  // OPEN DELETE CONFIRMATION — no database changes yet
+  onDeleteListing(listingId: string, event?: Event) {
+    if (this.isUploading() || this.isDeleting()) return;
 
     const listing = this.listings().find((item) => item.id === listingId);
-
     if (!listing) return;
 
-    const { error } = await this.listingService.deleteListing(listingId);
+    this.deleteTrigger =
+      event?.currentTarget instanceof HTMLButtonElement ? event.currentTarget : null;
+    this.deleteErrorMessage.set('');
+    this.deleteTarget.set(listing);
 
-    if (error) {
-      console.error('Error deleting listing:', error);
-      alert('Could not delete listing.');
+    // Wait for Angular to render the dialog before moving keyboard focus.
+    setTimeout(() => {
+      this.deleteDialog()
+        ?.nativeElement.querySelector<HTMLButtonElement>('[data-delete-cancel]')
+        ?.focus();
+    }, 0);
+  }
+
+  // CLOSE DELETE CONFIRMATION
+  onCancelDelete() {
+    if (this.isDeleting()) return;
+    this.deleteTarget.set(null);
+    this.deleteErrorMessage.set('');
+
+    const trigger = this.deleteTrigger;
+    this.deleteTrigger = null;
+    queueMicrotask(() => trigger?.isConnected && trigger.focus());
+  }
+
+  // ESC closes; TAB stays inside the confirmation dialog
+  onDeleteDialogKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.onCancelDelete();
       return;
     }
 
-    // Remove image after database deletion
-    if (listing.image_path) {
-      const { error: imageError } = await this.listingService.deleteListingImage(
-        listing.image_path,
-      );
+    if (event.key !== 'Tab') return;
 
-      if (imageError) {
-        console.error('Error deleting listing image:', imageError);
+    const dialog = this.deleteDialog()?.nativeElement;
+    if (!dialog) return;
+
+    const buttons = Array.from(dialog.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+    if (!buttons.length) return;
+
+    const first = buttons[0];
+    const last = buttons[buttons.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  // DELETE ONLY AFTER EXPLICIT CONFIRMATION
+  async onConfirmDelete() {
+    const listing = this.deleteTarget();
+    if (!listing || this.isDeleting() || this.isUploading()) return;
+
+    this.isDeleting.set(true);
+    this.deleteErrorMessage.set('');
+
+    try {
+      const { error } = await this.listingService.deleteListing(listing.id);
+
+      if (error) {
+        console.error('Error deleting listing:', error);
+        this.deleteErrorMessage.set('Could not delete listing. Please try again.');
+        return;
       }
-    }
 
-    // Exit edit mode if the deleted listing was being edited
-    if (this.editingListing()?.id === listingId) {
-      this.editingListing.set(null);
-      this.resetForm();
-    }
+      // Database deletion succeeded; clean up the image afterward.
+      if (listing.image_path) {
+        const { error: imageError } = await this.listingService.deleteListingImage(
+          listing.image_path,
+        );
+        if (imageError) {
+          console.error('Error deleting listing image:', imageError);
+        }
+      }
 
-    await this.loadListings();
+      if (this.editingListing()?.id === listing.id) {
+        this.editingListing.set(null);
+        this.resetForm();
+        this.isModalOpen.set(false);
+      }
+
+      this.deleteTarget.set(null);
+      this.deleteTrigger = null;
+      this.pageSuccessMessage.set('Your listing has been deleted.');
+      await this.loadListings();
+    } catch (error) {
+      console.error('Unexpected error deleting listing:', error);
+      this.deleteErrorMessage.set('Something went wrong. Please try again.');
+    } finally {
+      this.isDeleting.set(false);
+    }
   }
 
   // INITIAL LOAD

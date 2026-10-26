@@ -1,10 +1,123 @@
-.info-tooltip {
-  position: relative;
-  display: inline-flex;
-  margin-left: 6px;
+/* MEGURU — SELLER PROFILE */
+
+.seller-profile {
+  width: min(100% - 40px, 620px);
+  margin: 80px auto;
+  color: #1c1917;
 }
 
-.info-icon {
+.seller-profile h1 {
+  margin: 0 0 12px;
+  font-family: 'Noto Serif', serif;
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.seller-profile .profile-intro {
+  margin: 0 0 48px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.seller-profile form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.seller-profile .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-profile label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.seller-profile input,
+.seller-profile textarea {
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 14px;
+  border: 1px solid #aaa69e;
+  border-radius: 0;
+  background: transparent;
+  color: #1c1917;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.seller-profile textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.seller-profile input:focus,
+.seller-profile textarea:focus {
+  outline: 1px solid #4d5d46;
+  outline-offset: 0;
+  border-color: #4d5d46;
+}
+
+.seller-profile input[aria-invalid='true'],
+.seller-profile textarea[aria-invalid='true'] {
+  border-color: #9e5a44;
+}
+
+.seller-profile .character-counter {
+  align-self: flex-end;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #77736e;
+}
+
+.seller-profile .error-message {
+  margin: 0;
+  color: #9e5a44;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.seller-profile .success-message {
+  margin: 0;
+  color: #4d5d46;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.seller-profile .form-feedback {
+  margin-top: 8px;
+}
+
+.seller-profile .status-message {
+  font-size: 13px;
+  color: #4d5d46;
+}
+
+/* INSTAGRAM TOOLTIP */
+
+.seller-profile .label-with-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.seller-profile .info-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.seller-profile .info-icon {
   border: none;
   background: transparent;
   padding: 0;
@@ -13,7 +126,7 @@
   color: #4d5d46;
 }
 
-.tooltip-text {
+.seller-profile .tooltip-text {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
@@ -22,6 +135,7 @@
   padding: 12px;
   background: #4d5d46;
   color: #f5f2eb;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 12px;
   line-height: 1.5;
   border-radius: 4px;
@@ -32,8 +146,53 @@
   pointer-events: none;
 }
 
-.info-tooltip:hover .tooltip-text,
-.info-tooltip:focus-within .tooltip-text {
+.seller-profile .info-tooltip:hover .tooltip-text,
+.seller-profile .info-tooltip:focus-within .tooltip-text {
   opacity: 1;
   visibility: visible;
+}
+
+/* BUTTONS */
+
+.seller-profile .submit-wrapper {
+  margin-top: 12px;
+}
+
+.seller-profile .submit-wrapper button,
+.seller-profile .retry-btn {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 20px;
+  border: 1px solid #4d5d46;
+  border-radius: 0;
+  background: #4d5d46;
+  color: #f5f2eb;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.seller-profile .submit-wrapper button:hover:not(:disabled),
+.seller-profile .retry-btn:hover {
+  background: #384632;
+}
+
+.seller-profile .submit-wrapper button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .seller-profile {
+    margin: 48px auto;
+  }
+
+  .seller-profile .profile-intro {
+    margin-bottom: 32px;
+  }
 }

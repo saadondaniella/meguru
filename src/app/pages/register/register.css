@@ -1,24 +1,143 @@
-.submit-wrapper {
+/* MEGURU — REGISTER */
+
+.register {
+  width: min(100% - 40px, 520px);
+  margin: 80px auto;
+  color: #1c1917;
+}
+
+.register h1 {
+  margin: 0 0 12px;
+  font-family: 'Noto Serif', serif;
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.register > p {
+  margin: 0 0 48px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.register form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.register form > div:not(.submit-wrapper) {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.register label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.register input {
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 14px;
+  border: 1px solid #aaa69e;
+  border-radius: 0;
+  background: transparent;
+  color: #1c1917;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+}
+
+.register input:focus {
+  outline: 1px solid #4d5d46;
+  outline-offset: 0;
+  border-color: #4d5d46;
+}
+
+.register input[aria-invalid='true'] {
+  border-color: #9e5a44;
+}
+
+.register .password-wrapper {
   position: relative;
-  width: fit-content;
 }
 
-.submit-tooltip {
+.register .password-wrapper input {
+  padding-right: 56px;
+}
+
+.register .password-toggle {
   position: absolute;
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  padding: 8px 12px;
-  background: #222;
-  color: white;
-  font-size: 12px;
-  border-radius: 4px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #1c1917;
+  cursor: pointer;
 }
 
-.submit-wrapper:hover .submit-tooltip {
-  opacity: 1;
+.register .error-message {
+  margin: 0;
+  color: #9e5a44;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.register .success-message {
+  margin-top: 24px;
+  color: #4d5d46;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.register .submit-wrapper {
+  margin-top: 12px;
+}
+
+.register .submit-wrapper button {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 20px;
+  border: 1px solid #4d5d46;
+  border-radius: 0;
+  background: #4d5d46;
+  color: #f5f2eb;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.register .submit-wrapper button:hover:not(:disabled) {
+  background: #384632;
+}
+
+.register .submit-wrapper button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .register {
+    margin: 48px auto;
+  }
+
+  .register > p {
+    margin-bottom: 32px;
+  }
 }
