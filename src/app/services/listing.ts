@@ -26,6 +26,16 @@ export class ListingService {
       .eq('seller_id', sellerId)
       .order('created_at', { ascending: false });
   }
+
+  async getPublishedListingsBySeller(sellerId: string) {
+    return await this.supabase
+      .from('listings')
+      .select('*')
+      .eq('seller_id', sellerId)
+      .eq('status', 'published')
+      .order('created_at', { ascending: false });
+  }
+
   async getAllListings(page = 1, pageSize = 9) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
@@ -46,10 +56,20 @@ export class ListingService {
     listingId: string,
     updates: Partial<Omit<Listing, 'id' | 'seller_id' | 'created_at'>>,
   ) {
+    const { data: userData, error: userError } = await this.supabase.auth.getUser();
+
+    if (userError || !userData.user) {
+      return {
+        data: null,
+        error: userError ?? new Error('You must be logged in.'),
+      };
+    }
+
     return await this.supabase
       .from('listings')
       .update(updates)
       .eq('id', listingId)
+      .eq('seller_id', userData.user.id)
       .select()
       .single();
   }
