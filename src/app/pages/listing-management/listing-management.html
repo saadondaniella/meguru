@@ -8,6 +8,12 @@
     <button type="button" class="new-listing-btn" (click)="onCreateListing()">+ New listing</button>
   </header>
 
+  @if (pageSuccessMessage() && !successPopup()) {
+    <p class="listing-page-success" role="status">
+      {{ pageSuccessMessage() }}
+    </p>
+  }
+
   <!-- CREATE / EDIT LISTING MODAL -->
   @if (isModalOpen()) {
     <div class="modal-overlay">
@@ -27,7 +33,12 @@
           ✕
         </button>
 
-        <form class="listing-modal-form" [formGroup]="listingForm" (ngSubmit)="onSubmit()">
+        <form
+          class="listing-modal-form"
+          [formGroup]="listingForm"
+          (ngSubmit)="onSubmit()"
+          novalidate
+        >
           <!-- LEFT: IMAGE AREA -->
           <div class="listing-image-panel">
             <div class="image-panel-heading">
@@ -84,9 +95,19 @@
                 accept="image/jpeg,image/png,image/webp"
                 (change)="onImageSelected($event)"
                 [disabled]="isUploading()"
+                [attr.aria-invalid]="imageErrorMessage() ? 'true' : null"
+                [attr.aria-describedby]="
+                  imageErrorMessage() ? 'image-help image-error' : 'image-help'
+                "
               />
 
-              <small>JPG, PNG OR WEBP / MAX 5 MB</small>
+              <small id="image-help"> JPG, PNG OR WEBP / MAX 5 MB </small>
+
+              @if (imageErrorMessage()) {
+                <p id="image-error" class="image-error-message" role="alert">
+                  {{ imageErrorMessage() }}
+                </p>
+              }
             </div>
           </div>
 
@@ -110,32 +131,78 @@
 
               <p class="listing-form-intro">Every piece has a story. Tell us yours.</p>
 
+              <!-- TITLE -->
               <div class="listing-field">
-                <label for="title">ITEM TITLE</label>
+                <label for="title">ITEM TITLE *</label>
+
                 <input
                   id="title"
                   type="text"
                   formControlName="title"
                   maxlength="100"
                   placeholder="e.g. Vintage leather jacket"
+                  [attr.aria-invalid]="
+                    listingForm.controls.title.touched && listingForm.controls.title.invalid
+                  "
+                  [attr.aria-describedby]="
+                    listingForm.controls.title.touched && listingForm.controls.title.invalid
+                      ? 'title-error'
+                      : null
+                  "
                 />
+
+                @if (listingForm.controls.title.touched && listingForm.controls.title.invalid) {
+                  <p id="title-error" class="listing-field-error">
+                    @if (listingForm.controls.title.hasError('required')) {
+                      Please enter an item title to publish.
+                    } @else if (listingForm.controls.title.hasError('maxlength')) {
+                      Title must be 100 characters or fewer.
+                    }
+                  </p>
+                }
               </div>
 
+              <!-- DESCRIPTION -->
               <div class="listing-field">
                 <label for="description">DESCRIPTION</label>
+
                 <textarea
                   id="description"
                   formControlName="description"
                   maxlength="2000"
                   rows="3"
                   placeholder="Tell us about your item..."
+                  [attr.aria-invalid]="
+                    listingForm.controls.description.touched &&
+                    listingForm.controls.description.invalid
+                  "
+                  [attr.aria-describedby]="
+                    listingForm.controls.description.touched &&
+                    listingForm.controls.description.invalid
+                      ? 'description-counter description-error'
+                      : 'description-counter'
+                  "
                 ></textarea>
-                <small> {{ listingForm.controls.description.value.length }} / 2000 </small>
+
+                <small id="description-counter">
+                  {{ listingForm.controls.description.value.length }} / 2000
+                </small>
+
+                @if (
+                  listingForm.controls.description.touched &&
+                  listingForm.controls.description.hasError('maxlength')
+                ) {
+                  <p id="description-error" class="listing-field-error">
+                    Description must be 2000 characters or fewer.
+                  </p>
+                }
               </div>
 
+              <!-- PRICE / CATEGORY -->
               <div class="listing-field-row">
                 <div class="listing-field">
-                  <label for="price">PRICE (SEK)</label>
+                  <label for="price">PRICE (SEK) *</label>
+
                   <input
                     id="price"
                     type="number"
@@ -143,32 +210,97 @@
                     min="0"
                     step="0.01"
                     [readOnly]="listingForm.controls.category.value === 'free'"
+                    [attr.aria-invalid]="
+                      listingForm.controls.price.touched && listingForm.controls.price.invalid
+                    "
+                    [attr.aria-describedby]="
+                      listingForm.controls.price.touched && listingForm.controls.price.invalid
+                        ? 'price-error'
+                        : null
+                    "
                   />
+
+                  @if (listingForm.controls.price.touched && listingForm.controls.price.invalid) {
+                    <p id="price-error" class="listing-field-error">
+                      @if (listingForm.controls.price.hasError('required')) {
+                        Please enter a price to publish.
+                      } @else if (listingForm.controls.price.hasError('min')) {
+                        Price cannot be negative.
+                      }
+                    </p>
+                  }
                 </div>
 
                 <div class="listing-field">
-                  <label for="category">CATEGORY</label>
-                  <select id="category" formControlName="category" (change)="onCategoryChange()">
+                  <label for="category">CATEGORY *</label>
+
+                  <select
+                    id="category"
+                    formControlName="category"
+                    (change)="onCategoryChange()"
+                    [attr.aria-invalid]="
+                      listingForm.controls.category.touched && listingForm.controls.category.invalid
+                    "
+                    [attr.aria-describedby]="
+                      listingForm.controls.category.touched && listingForm.controls.category.invalid
+                        ? 'category-error'
+                        : null
+                    "
+                  >
                     <option value="exclusive">Exclusive</option>
                     <option value="budget">Budget</option>
                     <option value="free">Free / Bortskänkes</option>
                   </select>
+
+                  @if (
+                    listingForm.controls.category.touched && listingForm.controls.category.invalid
+                  ) {
+                    <p id="category-error" class="listing-field-error">Please select a category.</p>
+                  }
                 </div>
               </div>
 
+              <!-- CONDITION -->
               <div class="listing-field">
-                <label for="condition">CONDITION</label>
-                <select id="condition" formControlName="condition">
+                <label for="condition">CONDITION *</label>
+
+                <select
+                  id="condition"
+                  formControlName="condition"
+                  [attr.aria-invalid]="
+                    listingForm.controls.condition.touched && listingForm.controls.condition.invalid
+                  "
+                  [attr.aria-describedby]="
+                    listingForm.controls.condition.touched && listingForm.controls.condition.invalid
+                      ? 'condition-error'
+                      : null
+                  "
+                >
                   <option value="new_with_tags">New with tags</option>
                   <option value="like_new">Like new</option>
                   <option value="very_good">Very good</option>
                   <option value="good">Good</option>
                   <option value="well_worn">Well worn</option>
                 </select>
+
+                @if (
+                  listingForm.controls.condition.touched && listingForm.controls.condition.invalid
+                ) {
+                  <p id="condition-error" class="listing-field-error">
+                    Please select the item's condition.
+                  </p>
+                }
               </div>
             </div>
 
+            <!-- ACTIONS -->
             <div class="modal-actions">
+              @if (formErrorMessage()) {
+                <p class="listing-form-feedback" role="alert">
+                  {{ formErrorMessage() }}
+                </p>
+              }
+
               <button
                 class="publish-btn"
                 type="submit"
@@ -211,10 +343,62 @@
     </div>
   }
 
+  <!-- DELETE CONFIRMATION MODAL -->
+  @if (deleteTarget()) {
+    <div class="delete-overlay" (click)="onCancelDelete()">
+      <div
+        #deleteDialog
+        class="delete-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+        (click)="$event.stopPropagation()"
+        (keydown)="onDeleteDialogKeydown($event)"
+      >
+        <span class="delete-dialog-eyebrow"> MEGURU® / CONFIRM ACTION </span>
+
+        <h2 id="delete-dialog-title">Delete this listing?</h2>
+
+        <p id="delete-dialog-description">This action can't be undone.</p>
+
+        @if (deleteErrorMessage()) {
+          <p class="delete-dialog-error" role="alert">
+            {{ deleteErrorMessage() }}
+          </p>
+        }
+
+        <div class="delete-dialog-actions">
+          <button
+            data-delete-cancel
+            type="button"
+            class="delete-cancel-btn"
+            (click)="onCancelDelete()"
+            [disabled]="isDeleting()"
+          >
+            CANCEL
+          </button>
+
+          <button
+            type="button"
+            class="delete-confirm-btn"
+            (click)="onConfirmDelete()"
+            [disabled]="isDeleting()"
+          >
+            {{ isDeleting() ? 'DELETING...' : 'DELETE' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- PUBLISHED LISTINGS -->
   <div class="my-listings">
     <h2>Published listings</h2>
-    <p>Number of listings: {{ publishedListings().length }}</p>
+    <p>
+      Number of listings:
+      {{ publishedListings().length }}
+    </p>
 
     @if (publishedListings().length === 0) {
       <p>You haven't published any listings yet.</p>
@@ -241,7 +425,9 @@
 
             <button type="button" (click)="onEditListing(listing)">Edit listing</button>
 
-            <button type="button" (click)="onDeleteListing(listing.id)">Delete listing</button>
+            <button type="button" (click)="onDeleteListing(listing.id, $event)">
+              Delete listing
+            </button>
           </article>
         }
       </div>
@@ -251,7 +437,10 @@
   <!-- DRAFT LISTINGS -->
   <div class="my-listings drafts-section">
     <h2>Drafts</h2>
-    <p>Number of drafts: {{ draftListings().length }}</p>
+    <p>
+      Number of drafts:
+      {{ draftListings().length }}
+    </p>
 
     @if (draftListings().length === 0) {
       <p>You don't have any drafts yet.</p>
@@ -266,8 +455,11 @@
               />
             }
 
-            <h3>{{ listing.title || 'Untitled draft' }}</h3>
-            <span class="listing-status">Draft</span>
+            <h3>
+              {{ listing.title || 'Untitled draft' }}
+            </h3>
+
+            <span class="listing-status"> Draft </span>
 
             @if (listing.price !== null) {
               <p>{{ listing.price }} SEK</p>
@@ -279,10 +471,67 @@
 
             <button type="button" (click)="onEditListing(listing)">Continue editing</button>
 
-            <button type="button" (click)="onDeleteListing(listing.id)">Delete draft</button>
+            <button type="button" (click)="onDeleteListing(listing.id, $event)">
+              Delete draft
+            </button>
           </article>
         }
       </div>
     }
   </div>
+
+  <!-- SUCCESS POPUP -->
+  @if (successPopup()) {
+    <div class="success-overlay" (keydown.escape)="closeSuccessPopup()">
+      <div
+        class="success-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="success-dialog-title"
+        aria-describedby="success-dialog-description"
+      >
+        <span class="success-eyebrow"> MEGURU® / SUCCESS </span>
+
+        <span class="success-check" aria-hidden="true">✓</span>
+
+        <h2 id="success-dialog-title">
+          @switch (successPopup()) {
+            @case ('published') {
+              It's live!
+            }
+            @case ('draft') {
+              Saved for later.
+            }
+            @case ('updated') {
+              Changes saved.
+            }
+          }
+        </h2>
+
+        <p id="success-dialog-description">
+          @switch (successPopup()) {
+            @case ('published') {
+              Your listing has been published.
+            }
+            @case ('draft') {
+              Your draft is saved and ready when you are.
+            }
+            @case ('updated') {
+              Your listing has been updated.
+            }
+          }
+        </p>
+
+        <button
+          #successCloseButton
+          type="button"
+          class="success-close-btn"
+          (click)="closeSuccessPopup()"
+          (keydown.tab)="$event.preventDefault()"
+        >
+          GOT IT
+        </button>
+      </div>
+    </div>
+  }
 </section>

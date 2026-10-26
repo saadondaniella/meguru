@@ -1,0 +1,191 @@
+/* MEGURU — LOGIN */
+
+.login {
+  width: min(100% - 40px, 520px);
+  margin: 80px auto;
+  color: #1c1917;
+}
+
+.login h1 {
+  margin: 0 0 12px;
+  font-family: 'Noto Serif', serif;
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.login > p {
+  margin: 0 0 48px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.login form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.login .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.login input {
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 14px;
+  border: 1px solid #aaa69e;
+  border-radius: 0;
+  background: transparent;
+  color: #1c1917;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+}
+
+.login input:focus {
+  outline: 1px solid #4d5d46;
+  outline-offset: 0;
+  border-color: #4d5d46;
+}
+
+.login input[aria-invalid='true'] {
+  border-color: #9e5a44;
+}
+
+/* PASSWORD */
+
+.login .password-wrapper {
+  position: relative;
+}
+
+.login .password-wrapper input {
+  padding-right: 56px;
+}
+
+.login .password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #1c1917;
+  cursor: pointer;
+}
+
+/* LINKS */
+
+.login .forgot-password-link {
+  align-self: flex-end;
+  margin-top: -10px;
+  color: #1c1917;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.login .forgot-password-link:hover,
+.login .register-link a:hover {
+  color: #9e5a44;
+}
+
+/* SUBMIT */
+
+.login .submit-wrapper {
+  margin-top: 4px;
+}
+
+.login .submit-wrapper button {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 20px;
+  border: 1px solid #4d5d46;
+  border-radius: 0;
+  background: #4d5d46;
+  color: #f5f2eb;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.login .submit-wrapper button:hover:not(:disabled) {
+  background: #384632;
+}
+
+.login .submit-wrapper button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* FEEDBACK */
+
+.login .error-message {
+  margin: 0;
+  color: #9e5a44;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.login .success-message {
+  margin: 0;
+  color: #4d5d46;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.login .form-feedback {
+  margin-top: 24px;
+}
+
+/* REGISTER LINK */
+
+.login .register-link {
+  margin: 40px 0 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+}
+
+.login .register-link a {
+  margin-left: 6px;
+  color: #1c1917;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .login {
+    margin: 48px auto;
+  }
+
+  .login > p {
+    margin-bottom: 32px;
+  }
+
+  .login .register-link {
+    margin-top: 32px;
+  }
+}

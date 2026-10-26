@@ -26,7 +26,7 @@ export class SellerProfile implements OnInit {
     bio: ['', Validators.maxLength(500)],
     city: ['', Validators.maxLength(50)],
     contact_email: ['', [Validators.email, Validators.maxLength(254)]],
-    instagram: ['', [Validators.pattern(/^@?[a-zA-Z0-9._]{1,30}$/)]],
+    instagram: ['', [Validators.maxLength(31), Validators.pattern(/^@?[a-zA-Z0-9._]{1,30}$/)]],
   });
 
   async getCurrentUserId(): Promise<string | null> {
@@ -46,11 +46,15 @@ export class SellerProfile implements OnInit {
   async loadProfile() {
     this.isLoading.set(true);
     this.loadError.set(false);
+    this.errorMessage.set('');
+    this.successMessage.set('');
 
     try {
       const userId = await this.getCurrentUserId();
 
       if (!userId) {
+        this.loadError.set(true);
+        this.errorMessage.set('You must be logged in to view your profile.');
         return;
       }
 
@@ -74,6 +78,9 @@ export class SellerProfile implements OnInit {
           instagram: data.instagram ?? '',
         });
       }
+
+      this.profileForm.markAsPristine();
+      this.profileForm.markAsUntouched();
     } catch {
       this.loadError.set(true);
       this.errorMessage.set('Could not load your profile. Please try again.');
@@ -89,7 +96,16 @@ export class SellerProfile implements OnInit {
     this.errorMessage.set('');
 
     if (this.profileForm.invalid || !this.profileForm.controls.display_name.value?.trim()) {
-      this.errorMessage.set('Please enter a valid display name.');
+      this.profileForm.markAllAsTouched();
+
+      if (!this.profileForm.controls.display_name.value?.trim()) {
+        this.profileForm.controls.display_name.setErrors({
+          ...this.profileForm.controls.display_name.errors,
+          required: true,
+        });
+      }
+
+      this.errorMessage.set('Please correct the highlighted fields.');
       return;
     }
 
@@ -119,11 +135,12 @@ export class SellerProfile implements OnInit {
 
       if (error) {
         console.error('Error saving profile:', error.message);
-        this.errorMessage.set('Something went wrong. Please try again.');
+        this.errorMessage.set('Could not save your profile. Please try again.');
         return;
       }
 
       this.hasProfile.set(true);
+      this.profileForm.markAsPristine();
       this.successMessage.set('Your profile has been saved!');
     } catch {
       this.errorMessage.set('Something went wrong. Please try again.');

@@ -2,22 +2,41 @@
   <h1>Welcome back</h1>
   <p>Log in to your MEGURU account.</p>
 
-  <form #loginForm="ngForm" (ngSubmit)="onSubmit()">
-    <div>
-      <label for="email">Email</label>
+  <form #loginForm="ngForm" (ngSubmit)="onSubmit()" novalidate>
+    <!-- EMAIL -->
+    <div class="form-field">
+      <label for="email">Email *</label>
+
       <input
         type="email"
         id="email"
         name="email"
         [(ngModel)]="email"
+        #emailControl="ngModel"
         placeholder="Your email"
         autocomplete="email"
         required
+        email
+        [attr.aria-invalid]="emailControl.touched && emailControl.invalid"
+        [attr.aria-describedby]="
+          emailControl.touched && emailControl.invalid ? 'login-email-error' : null
+        "
       />
+
+      @if (emailControl.touched && emailControl.invalid) {
+        <p id="login-email-error" class="error-message">
+          @if (emailControl.errors?.['required']) {
+            Please enter your email address.
+          } @else if (emailControl.errors?.['email']) {
+            Please enter a valid email address.
+          }
+        </p>
+      }
     </div>
 
-    <div>
-      <label for="password">Password</label>
+    <!-- PASSWORD -->
+    <div class="form-field">
+      <label for="password">Password *</label>
 
       <div class="password-wrapper">
         <input
@@ -25,9 +44,14 @@
           id="password"
           name="password"
           [(ngModel)]="password"
+          #passwordControl="ngModel"
           placeholder="Your password"
           autocomplete="current-password"
           required
+          [attr.aria-invalid]="passwordControl.touched && passwordControl.invalid"
+          [attr.aria-describedby]="
+            passwordControl.touched && passwordControl.invalid ? 'login-password-error' : null
+          "
         />
 
         <button
@@ -74,26 +98,38 @@
           }
         </button>
       </div>
+
+      @if (passwordControl.touched && passwordControl.invalid) {
+        <p id="login-password-error" class="error-message">Please enter your password.</p>
+      }
     </div>
 
-    <a routerLink="/forgot-password"> Forgot password? </a>
+    <!-- FORGOT PASSWORD -->
+    <a class="forgot-password-link" routerLink="/forgot-password"> Forgot password? </a>
 
-    <button type="submit" [disabled]="loginForm.invalid || isLoading()">
-      {{ isLoading() ? 'Logging in...' : 'Log in' }}
-    </button>
+    <!-- SUBMIT -->
+    <div class="submit-wrapper">
+      <button type="submit" [disabled]="loginForm.invalid || isLoading()">
+        {{ isLoading() ? 'Logging in...' : 'Log in' }}
+      </button>
+    </div>
   </form>
 
+  <!-- FEEDBACK -->
   @if (errorMessage()) {
-    <p class="error-message" role="alert">
+    <p class="error-message form-feedback" role="alert">
       {{ errorMessage() }}
     </p>
   }
 
   @if (successMessage()) {
-    <p class="success-message">{{ successMessage() }}</p>
+    <p class="success-message form-feedback" role="status">
+      {{ successMessage() }}
+    </p>
   }
 
-  <p>
+  <!-- REGISTER LINK -->
+  <p class="register-link">
     New to MEGURU?
     <a routerLink="/register">Create an account</a>
   </p>

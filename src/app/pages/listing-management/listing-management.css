@@ -128,14 +128,13 @@ input[type='number'] {
   outline-offset: 3px;
 }
 
+/* Equal columns; image stays fixed while form scrolls */
 .modal-content form.listing-modal-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 0;
   width: 100%;
   height: 100%;
-  min-height: 0;
-  max-height: 100%;
   margin: 0;
   padding: 0;
 }
@@ -232,28 +231,6 @@ input[type='number'] {
   cursor: pointer;
 }
 
-.remove-image-btn {
-  padding: 10px 0;
-  border: none;
-  background: transparent;
-  color: #f5f2eb;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.05em;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: pointer;
-}
-
-.remove-image-btn:hover {
-  opacity: 0.65;
-}
-
-.remove-image-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .image-upload-label:hover {
   background: #f5f2eb;
   color: #4d5d46;
@@ -287,12 +264,13 @@ input[type='number'] {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  max-height: 100%;
-  padding: 32px 48px;
+  height: 100%;
+  padding: 32px clamp(28px, 4vw, 72px) 36px;
+  overflow-x: hidden;
   overflow-y: auto;
-  overscroll-behavior: contain;
   background: #f5f2eb;
   color: #1c1917;
+  scrollbar-gutter: stable;
 }
 
 .details-panel-heading {
@@ -302,10 +280,10 @@ input[type='number'] {
 .listing-form-content {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 22px;
   width: 100%;
   max-width: 620px;
-  padding: 12px 0 8px;
+  padding: clamp(32px, 5vh, 60px) 0 28px;
 }
 
 .listing-form-content h2 {
@@ -380,11 +358,11 @@ input[type='number'] {
 .modal-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
   max-width: 620px;
   margin-top: auto;
-  padding-top: 8px;
+  padding-top: 20px;
 }
 
 .modal-actions button {
@@ -491,4 +469,225 @@ input[type='number'] {
   .details-panel-heading {
     padding-right: 46px;
   }
+}
+
+/* LISTING STUDIO — VALIDATION */
+.listing-field input[aria-invalid='true'],
+.listing-field textarea[aria-invalid='true'],
+.listing-field select[aria-invalid='true'] {
+  border-color: #9e5a44;
+}
+
+.listing-field .listing-field-error {
+  margin: 0;
+  color: #9e5a44;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.image-upload-controls .image-error-message {
+  flex-basis: 100%;
+  margin: 0;
+  color: #f5d5c9;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* LISTING SAVE / PUBLISH FEEDBACK */
+.listing-page-success {
+  margin: 24px 0 0;
+  padding: 15px 18px;
+  border-left: 3px solid #4d5d46;
+  background: rgba(77, 93, 70, 0.08);
+  color: #4d5d46;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.modal-actions .listing-form-feedback {
+  margin: 0 0 8px;
+  padding: 12px 14px;
+  border-left: 3px solid #9e5a44;
+  background: rgba(158, 90, 68, 0.08);
+  color: #9e5a44;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* DELETE CONFIRMATION */
+.delete-overlay,
+.delete-overlay * {
+  box-sizing: border-box;
+}
+
+.delete-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(28, 25, 23, 0.48);
+}
+
+.delete-dialog {
+  width: min(100%, 320px);
+  padding: 28px;
+  background: #f5f2eb;
+  color: #1c1917;
+  box-shadow: 0 16px 60px rgba(28, 25, 23, 0.15);
+}
+
+.delete-dialog-eyebrow {
+  display: block;
+  margin-bottom: 18px;
+  color: #9e5a44;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.delete-dialog h2 {
+  margin: 0 0 10px;
+  font-family: 'Noto Serif', serif;
+  font-size: 27px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.delete-dialog p {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.delete-dialog .delete-dialog-error {
+  margin-top: 14px;
+  color: #9e5a44;
+}
+
+.delete-dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.delete-dialog-actions button {
+  min-height: 42px;
+  padding: 10px 8px;
+  border-radius: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.delete-cancel-btn {
+  border: 1px solid #1c1917;
+  background: transparent;
+  color: #1c1917;
+}
+
+.delete-confirm-btn {
+  border: 1px solid #9e5a44;
+  background: #9e5a44;
+  color: #fff;
+}
+
+.delete-dialog-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.delete-dialog-actions button:focus-visible {
+  outline: 2px solid #4d5d46;
+  outline-offset: 3px;
+}
+
+/* SUCCESS POPUP */
+
+.success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(28, 25, 23, 0.48);
+}
+
+.success-dialog {
+  width: min(100%, 300px);
+  padding: 30px 26px 26px;
+  background: #f5f2eb;
+  color: #1c1917;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(28, 25, 23, 0.18);
+}
+
+.success-eyebrow {
+  display: block;
+  margin-bottom: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.success-check {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 20px;
+  border: 1px solid #4d5d46;
+  border-radius: 50%;
+  color: #4d5d46;
+  font-size: 22px;
+  font-weight: 300;
+}
+
+.success-dialog h2 {
+  margin: 0 0 10px;
+  font-family: 'Noto Serif', serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.success-dialog p {
+  margin: 0 0 28px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #66645f;
+}
+
+.success-close-btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 13px 20px;
+  border: none;
+  background: #4d5d46;
+  color: #f5f2eb;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.success-close-btn:hover {
+  background: #394635;
+}
+
+.success-close-btn:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 3px;
 }

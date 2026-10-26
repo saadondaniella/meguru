@@ -4,22 +4,37 @@
 
   <form #registerForm="ngForm" (ngSubmit)="onSubmit()">
     <div>
-      <label for="email">Email</label>
+      <label for="email">Email *</label>
 
       <input
         type="email"
         id="email"
         name="email"
         [(ngModel)]="email"
+        #emailControl="ngModel"
         placeholder="Your email"
         autocomplete="email"
         required
         email
+        [attr.aria-invalid]="emailControl.touched && emailControl.invalid"
+        [attr.aria-describedby]="
+          emailControl.touched && emailControl.invalid ? 'email-error' : null
+        "
       />
+
+      @if (emailControl.touched && emailControl.invalid) {
+        <p id="email-error" class="error-message">
+          @if (emailControl.errors?.['required']) {
+            Please enter your email address.
+          } @else if (emailControl.errors?.['email']) {
+            Please enter a valid email address.
+          }
+        </p>
+      }
     </div>
 
     <div>
-      <label for="password">Password</label>
+      <label for="password">Password *</label>
 
       <div class="password-wrapper">
         <input
@@ -27,6 +42,11 @@
           id="password"
           name="password"
           [(ngModel)]="password"
+          #passwordControl="ngModel"
+          [attr.aria-invalid]="passwordControl.touched && passwordControl.invalid"
+          [attr.aria-describedby]="
+            passwordControl.touched && passwordControl.invalid ? 'password-error' : null
+          "
           placeholder="Your password"
           minlength="8"
           autocomplete="new-password"
@@ -77,10 +97,19 @@
           }
         </button>
       </div>
+      @if (passwordControl.touched && passwordControl.invalid) {
+        <p id="password-error" class="error-message">
+          @if (passwordControl.errors?.['required']) {
+            Please enter a password.
+          } @else if (passwordControl.errors?.['minlength']) {
+            Your password must be at least 8 characters long.
+          }
+        </p>
+      }
     </div>
 
     <div>
-      <label for="confirmPassword">Confirm password</label>
+      <label for="confirmPassword">Confirm password *</label>
 
       <div class="password-wrapper">
         <input
@@ -89,10 +118,13 @@
           name="confirmPassword"
           [(ngModel)]="confirmPassword"
           #confirmControl="ngModel"
+          [attr.aria-invalid]="
+            confirmControl.touched && (confirmControl.invalid || password !== confirmPassword)
+          "
           placeholder="Confirm your password"
           autocomplete="new-password"
           [attr.aria-describedby]="
-            confirmControl.touched && confirmPassword && password !== confirmPassword
+            confirmControl.touched && (confirmControl.invalid || password !== confirmPassword)
               ? 'password-match-error'
               : null
           "
@@ -144,8 +176,14 @@
         </button>
       </div>
 
-      @if (confirmControl.touched && confirmPassword && password !== confirmPassword) {
-        <p id="password-match-error" class="error-message" role="alert">Passwords do not match.</p>
+      @if (confirmControl.touched && (confirmControl.invalid || password !== confirmPassword)) {
+        <p id="password-match-error" class="error-message">
+          @if (confirmControl.errors?.['required']) {
+            Please confirm your password.
+          } @else if (password !== confirmPassword) {
+            Passwords do not match.
+          }
+        </p>
       }
     </div>
 
