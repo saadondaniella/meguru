@@ -93,6 +93,26 @@ export class ListingManagement implements OnInit {
     console.log('Selected image:', file.name);
   }
 
+  // REMOVE SELECTED IMAGE
+  onRemoveImage() {
+    if (this.isUploading()) return;
+
+    const previewUrl = this.imagePreviewUrl();
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      this.imagePreviewUrl.set(null);
+    }
+
+    this.selectedImage = null;
+
+    const input = this.imageInput();
+
+    if (input) {
+      input.nativeElement.value = '';
+    }
+  }
+
   // CATEGORY AND PRICE
   onCategoryChange() {
     const category = this.listingForm.controls.category.value;
@@ -114,6 +134,13 @@ export class ListingManagement implements OnInit {
       category: 'budget',
       condition: 'good',
     });
+
+    const previewUrl = this.imagePreviewUrl();
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      this.imagePreviewUrl.set(null);
+    }
 
     this.selectedImage = null;
 
@@ -429,6 +456,13 @@ export class ListingManagement implements OnInit {
     this.editingListing.set(listing);
 
     this.selectedImage = null;
+
+    const previewUrl = this.imagePreviewUrl();
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      this.imagePreviewUrl.set(null);
+    }
 
     const input = this.imageInput();
 

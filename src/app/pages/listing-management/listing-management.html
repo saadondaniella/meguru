@@ -27,117 +27,184 @@
           ✕
         </button>
 
-        <h2 id="listing-modal-title">
-          {{
-            editingListing()
-              ? editingListing()?.status === 'draft'
-                ? 'Continue your draft'
-                : 'Edit listing'
-              : 'Create a listing'
-          }}
-        </h2>
+        <form class="listing-modal-form" [formGroup]="listingForm" (ngSubmit)="onSubmit()">
+          <!-- LEFT: IMAGE AREA -->
+          <div class="listing-image-panel">
+            <div class="image-panel-heading">
+              <span>MEGURU® / LISTING STUDIO</span>
+              <span>01 / IMAGE</span>
+            </div>
 
-        <p>Give your pre-loved pieces a new home.</p>
+            <div class="image-upload-area">
+              @if (imagePreviewUrl()) {
+                <img
+                  class="listing-image-preview"
+                  [src]="imagePreviewUrl()!"
+                  alt="Preview of selected listing image"
+                />
+              } @else if (editingListing()?.image_path) {
+                <img
+                  class="listing-image-preview"
+                  [src]="listingService.getListingImageUrl(editingListing()!.image_path!)"
+                  alt="Current listing image"
+                />
+              } @else {
+                <div class="image-placeholder">
+                  <span class="image-placeholder-symbol">+</span>
+                  <p>YOUR PIECE GOES HERE.</p>
+                  <small>Give it a second life.</small>
+                </div>
+              }
+            </div>
 
-        <form [formGroup]="listingForm" (ngSubmit)="onSubmit()">
-          <div>
-            <label for="title">Title</label>
-            <input
-              id="title"
-              type="text"
-              formControlName="title"
-              maxlength="100"
-              placeholder="e.g. Vintage leather jacket"
-            />
-          </div>
+            <div class="image-upload-controls">
+              <label for="image" class="image-upload-label">
+                {{
+                  imagePreviewUrl() || editingListing()?.image_path
+                    ? 'CHANGE IMAGE +'
+                    : 'ADD IMAGE +'
+                }}
+              </label>
 
-          <div>
-            <label for="description">Description</label>
-            <textarea
-              id="description"
-              formControlName="description"
-              maxlength="2000"
-              rows="5"
-              placeholder="Tell us about your item..."
-            ></textarea>
-            <small> {{ listingForm.controls.description.value.length }} / 2000 </small>
-          </div>
+              @if (imagePreviewUrl()) {
+                <button
+                  type="button"
+                  class="remove-image-btn"
+                  (click)="onRemoveImage()"
+                  [disabled]="isUploading()"
+                >
+                  REMOVE IMAGE ×
+                </button>
+              }
 
-          <div>
-            <label for="price">Price (SEK)</label>
-            <input
-              id="price"
-              type="number"
-              formControlName="price"
-              min="0"
-              step="0.01"
-              [readOnly]="listingForm.controls.category.value === 'free'"
-            />
-          </div>
-
-          <div>
-            <label for="category">Category</label>
-            <select id="category" formControlName="category" (change)="onCategoryChange()">
-              <option value="exclusive">Exclusive</option>
-              <option value="budget">Budget</option>
-              <option value="free">Free / Bortskänkes</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="condition">Condition</label>
-            <select id="condition" formControlName="condition">
-              <option value="new_with_tags">New with tags</option>
-              <option value="like_new">Like new</option>
-              <option value="very_good">Very good</option>
-              <option value="good">Good</option>
-              <option value="well_worn">Well worn</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="image">Listing image</label>
-            <input
-              #imageInput
-              id="image"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              (change)="onImageSelected($event)"
-            />
-            <small>Choose an image of your item (max 5 MB).</small>
-
-            @if (editingListing()?.image_path) {
-              <p>Current image:</p>
-              <img
-                class="current-listing-image"
-                [src]="listingService.getListingImageUrl(editingListing()!.image_path!)"
-                alt="Current listing image"
+              <input
+                #imageInput
+                id="image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onImageSelected($event)"
+                [disabled]="isUploading()"
               />
-            }
+
+              <small>JPG, PNG OR WEBP / MAX 5 MB</small>
+            </div>
           </div>
 
-          <div class="modal-actions">
-            <button type="submit" [disabled]="listingForm.invalid || isUploading()">
-              {{
-                isUploading()
-                  ? 'Saving...'
-                  : editingListing()?.status === 'draft'
-                    ? 'Publish listing'
-                    : editingListing()
-                      ? 'Save changes'
-                      : 'Publish listing'
-              }}
-            </button>
+          <!-- RIGHT: LISTING DETAILS -->
+          <div class="listing-details-panel">
+            <div class="details-panel-heading">
+              <span>02 / THE DETAILS</span>
+              <span>PRE-LOVED CLOTHING</span>
+            </div>
 
-            @if (!editingListing() || editingListing()?.status === 'draft') {
-              <button type="button" [disabled]="isUploading()" (click)="onSaveDraft()">
-                Save as draft
+            <div class="listing-form-content">
+              <h2 id="listing-modal-title">
+                {{
+                  editingListing()
+                    ? editingListing()?.status === 'draft'
+                      ? 'Continue your draft.'
+                      : 'Edit your listing.'
+                    : 'Pass it on.'
+                }}
+              </h2>
+
+              <p class="listing-form-intro">Every piece has a story. Tell us yours.</p>
+
+              <div class="listing-field">
+                <label for="title">ITEM TITLE</label>
+                <input
+                  id="title"
+                  type="text"
+                  formControlName="title"
+                  maxlength="100"
+                  placeholder="e.g. Vintage leather jacket"
+                />
+              </div>
+
+              <div class="listing-field">
+                <label for="description">DESCRIPTION</label>
+                <textarea
+                  id="description"
+                  formControlName="description"
+                  maxlength="2000"
+                  rows="3"
+                  placeholder="Tell us about your item..."
+                ></textarea>
+                <small> {{ listingForm.controls.description.value.length }} / 2000 </small>
+              </div>
+
+              <div class="listing-field-row">
+                <div class="listing-field">
+                  <label for="price">PRICE (SEK)</label>
+                  <input
+                    id="price"
+                    type="number"
+                    formControlName="price"
+                    min="0"
+                    step="0.01"
+                    [readOnly]="listingForm.controls.category.value === 'free'"
+                  />
+                </div>
+
+                <div class="listing-field">
+                  <label for="category">CATEGORY</label>
+                  <select id="category" formControlName="category" (change)="onCategoryChange()">
+                    <option value="exclusive">Exclusive</option>
+                    <option value="budget">Budget</option>
+                    <option value="free">Free / Bortskänkes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="listing-field">
+                <label for="condition">CONDITION</label>
+                <select id="condition" formControlName="condition">
+                  <option value="new_with_tags">New with tags</option>
+                  <option value="like_new">Like new</option>
+                  <option value="very_good">Very good</option>
+                  <option value="good">Good</option>
+                  <option value="well_worn">Well worn</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button
+                class="publish-btn"
+                type="submit"
+                [disabled]="listingForm.invalid || isUploading()"
+              >
+                {{
+                  isUploading()
+                    ? 'Saving...'
+                    : editingListing()?.status === 'draft'
+                      ? 'Publish listing'
+                      : editingListing()
+                        ? 'Save changes'
+                        : 'Publish listing'
+                }}
               </button>
-            }
 
-            <button type="button" [disabled]="isUploading()" (click)="onCloseModal()">
-              Cancel
-            </button>
+              @if (!editingListing() || editingListing()?.status === 'draft') {
+                <button
+                  class="draft-btn"
+                  type="button"
+                  [disabled]="isUploading()"
+                  (click)="onSaveDraft()"
+                >
+                  Save as draft
+                </button>
+              }
+
+              <button
+                class="cancel-btn"
+                type="button"
+                [disabled]="isUploading()"
+                (click)="onCloseModal()"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </form>
       </div>
