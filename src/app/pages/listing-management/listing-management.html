@@ -13,7 +13,39 @@
     >
       + New listing
     </button>
+
+    <a routerLink="/seller-profile" class="dashboard-profile-link"> Edit profile </a>
+
+    @if (currentSellerId(); as sellerId) {
+      <a [routerLink]="['/sellers', sellerId]" class="dashboard-profile-link">
+        View public profile
+      </a>
+    }
   </header>
+
+  <!-- DASHBOARD OVERVIEW -->
+  <div class="dashboard-overview">
+    <div class="dashboard-stat">
+      <h2>Published</h2>
+      <p>{{ publishedListings().length }}</p>
+    </div>
+
+    <div class="dashboard-stat">
+      <h2>Drafts</h2>
+      <p>{{ draftListings().length }}</p>
+    </div>
+
+    <div class="dashboard-stat">
+      <h2>Sold</h2>
+      <p>{{ soldListings().length }}</p>
+    </div>
+  </div>
+
+  @if (soldErrorMessage()) {
+    <p class="listing-page-error" role="alert">
+      {{ soldErrorMessage() }}
+    </p>
+  }
 
   @if (pageSuccessMessage() && !successPopup()) {
     <p class="listing-page-success" role="status">
@@ -112,6 +144,9 @@
             }
 
             <button type="button" (click)="onEditListing(listing, $event)">Edit listing</button>
+            <button type="button" (click)="onMarkAsSold(listing)" [disabled]="isMarkingSold()">
+              {{ isMarkingSold() ? 'UPDATING...' : 'Mark as sold' }}
+            </button>
 
             <button type="button" (click)="onDeleteListing(listing.id, $event)">
               Delete listing
@@ -161,6 +196,41 @@
 
             <button type="button" (click)="onDeleteListing(listing.id, $event)">
               Delete draft
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- SOLD LISTINGS -->
+  <div class="my-listings sold-section">
+    <h2>Sold listings</h2>
+    <p>Number of sold listings: {{ soldListings().length }}</p>
+
+    @if (soldListings().length === 0) {
+      <p>You haven't sold any pieces yet.</p>
+    } @else {
+      <div class="listings-grid">
+        @for (listing of soldListings(); track listing.id) {
+          <article class="listing-card">
+            @if (listing.image_path) {
+              <img
+                [src]="listingService.getListingImageUrl(listing.image_path)"
+                [alt]="listing.title || 'Sold listing image'"
+              />
+            }
+
+            <h3>{{ listing.title }}</h3>
+
+            <span class="listing-status">Sold</span>
+
+            @if (listing.price !== null) {
+              <p>{{ listing.price }} SEK</p>
+            }
+
+            <button type="button" (click)="onDeleteListing(listing.id, $event)">
+              Delete listing
             </button>
           </article>
         }

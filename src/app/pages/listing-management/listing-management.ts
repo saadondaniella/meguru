@@ -12,10 +12,11 @@ import { ListingService } from '../../services/listing';
 import { SUPABASE_CLIENT } from '../../services/supabase';
 import { Listing } from '../../models/listing';
 import { ListingForm, ListingSavedType } from './listing-form/listing-form';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-listing-management',
-  imports: [ListingForm],
+  imports: [RouterLink, ListingForm],
   templateUrl: './listing-management.html',
   styleUrl: './listing-management.css',
 })
@@ -36,12 +37,12 @@ export class ListingManagement implements OnInit {
 
   isUploading = signal(false);
   editingListing = signal<Listing | null>(null);
-
   isModalOpen = signal(false);
-
   pageSuccessMessage = signal('');
-
   successPopup = signal<ListingSavedType | null>(null);
+  isMarkingSold = signal(false);
+  soldErrorMessage = signal('');
+  currentSellerId = signal<string | null>(null);
 
   // DELETE CONFIRMATION
   deleteTarget = signal<Listing | null>(null);
@@ -252,6 +253,45 @@ export class ListingManagement implements OnInit {
     void this.loadListings();
   }
 
+  // MARK LISTING AS SOLD
+  async onMarkAsSold(listing: Listing) {
+    if (
+      listing.status !== 'published' ||
+      this.isUploading() ||
+      this.isDeleting() ||
+      this.isMarkingSold()
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm(`Mark "${listing.title}" as sold?`);
+
+    if (!confirmed) return;
+
+    this.isMarkingSold.set(true);
+    this.soldErrorMessage.set('');
+
+    try {
+      const { error } = await this.listingService.updateListing(listing.id, {
+        status: 'sold',
+      });
+
+      if (error) {
+        console.error('Could not mark listing as sold:', error);
+        this.soldErrorMessage.set('Could not mark this listing as sold. Please try again.');
+        return;
+      }
+
+      await this.loadListings();
+      this.pageSuccessMessage.set('Your listing has been marked as sold!');
+    } catch (error) {
+      console.error('Unexpected error marking listing as sold:', error);
+      this.soldErrorMessage.set('Something went wrong. Please try again.');
+    } finally {
+      this.isMarkingSold.set(false);
+    }
+  }
+
   // LOAD SELLER LISTINGS
   async loadListings() {
     const { data: userData, error: userError } = await this.supabase.auth.getUser();
@@ -260,6 +300,8 @@ export class ListingManagement implements OnInit {
       console.error('Could not get authenticated user:', userError);
       return;
     }
+
+    this.currentSellerId.set(userData.user.id);
 
     const { data, error } = await this.listingService.getListingsBySeller(userData.user.id);
 
