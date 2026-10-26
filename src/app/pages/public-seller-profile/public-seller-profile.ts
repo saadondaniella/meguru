@@ -5,7 +5,6 @@ import { ListingService } from '../../services/listing';
 import { Listing } from '../../models/listing';
 import { RouterLink } from '@angular/router';
 
-
 @Component({
   selector: 'app-public-seller-profile',
   imports: [RouterLink],
@@ -42,9 +41,8 @@ export class PublicSellerProfile implements OnInit {
     this.seller.set(data);
     console.log('Public seller profile:', data);
 
-    const { data: listings, error: listingsError } = await this.listingService.getListingsBySeller(
-      this.sellerId,
-    );
+    const { data: listings, error: listingsError } =
+      await this.listingService.getPublishedListingsBySeller(this.sellerId);
 
     if (listingsError) {
       console.error('Error loading seller listings:', listingsError);
