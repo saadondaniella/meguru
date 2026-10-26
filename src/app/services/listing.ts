@@ -32,7 +32,7 @@ export class ListingService {
       .from('listings')
       .select('*')
       .eq('seller_id', sellerId)
-      .eq('status', 'published')
+      .in('status', ['published', 'sold'])
       .order('created_at', { ascending: false });
   }
 

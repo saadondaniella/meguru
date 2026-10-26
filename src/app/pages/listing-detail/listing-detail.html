@@ -1,8 +1,14 @@
 @if (listing(); as listing) {
   <section class="listing-detail">
-    @if (imageUrl()) {
-      <img [src]="imageUrl()" [alt]="listing.title" />
-    }
+    <div class="listing-image">
+      @if (imageUrl()) {
+        <img [src]="imageUrl()" [alt]="listing.title" />
+      }
+
+      @if (listing.status === 'sold') {
+        <span class="sold-badge">SOLD</span>
+      }
+    </div>
 
     <h1>{{ listing.title }}</h1>
 
@@ -24,7 +30,6 @@
         </p>
       </div>
     }
-    
   </section>
 } @else {
   <p>Loading listing...</p>
