@@ -4,8 +4,12 @@
 
   <section class="marketplace-grid">
     @for (listing of listings(); track listing.id) {
-      <article class="listing-card">
-        <a [routerLink]="['/listings', listing.id]">
+      <article class="listing-card" [attr.data-listing-id]="listing.id">
+        <a
+          [routerLink]="['/listings', listing.id]"
+          [state]="{ fromMarketplace: true }"
+          (click)="saveScrollPosition(listing.id)"
+        >
           @if (listing.image_path) {
             <img [src]="getImageUrl(listing.image_path)" [alt]="listing.title" />
           }

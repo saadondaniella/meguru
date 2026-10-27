@@ -1,0 +1,80 @@
+<div class="image-upload-area">
+  @if (images()[0]; as main) {
+    <img class="listing-image-preview" [src]="main.url" alt="Preview of the main listing image" />
+  } @else {
+    <div class="image-placeholder">
+      <span class="image-placeholder-symbol" aria-hidden="true">+</span>
+      <p>YOUR PIECE GOES HERE.</p>
+      <small>Give it a second life.</small>
+    </div>
+  }
+</div>
+
+@if (images().length > 0) {
+  <ul class="image-preview-grid" aria-label="Listing images">
+    @for (image of images(); track image.key; let i = $index) {
+      <li class="image-preview-item">
+        <button
+          type="button"
+          class="select-main-image"
+          [attr.aria-label]="
+            i === 0 ? 'Image 1, current main image' : 'Set image ' + (i + 1) + ' as main image'
+          "
+          [attr.aria-pressed]="i === 0"
+          [disabled]="disabled() || loading()"
+          (click)="setMain(image.key)"
+        >
+          <img [src]="image.url" alt="" />
+        </button>
+
+        <button
+          type="button"
+          class="remove-image-button"
+          [attr.aria-label]="'Remove image ' + (i + 1) + (i === 0 ? ' (main image)' : '')"
+          [disabled]="disabled() || loading()"
+          (click)="remove(image.key)"
+        >
+          ×
+        </button>
+
+        @if (i === 0) {
+          <span class="main-image-label">MAIN IMAGE</span>
+        }
+      </li>
+    }
+  </ul>
+}
+
+<div class="image-upload-controls">
+  <label for="image" class="image-upload-label">
+    {{ images().length > 0 ? 'ADD MORE IMAGES +' : 'ADD IMAGES +' }}
+  </label>
+
+  <input
+    #imageInput
+    id="image"
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    multiple
+    (change)="onFilesSelected($event)"
+    [disabled]="disabled() || loading() || images().length >= maxImages"
+    [attr.aria-invalid]="errorMessage() ? 'true' : null"
+    [attr.aria-describedby]="errorMessage() ? 'image-help image-error' : 'image-help'"
+  />
+
+  <small id="image-help">JPG, PNG OR WEBP / MAX 5 MB EACH / UP TO {{ maxImages }} IMAGES</small>
+
+  <small class="image-count" role="status">
+    @if (loading()) {
+      Loading images...
+    } @else {
+      {{ images().length }} of {{ maxImages }} images
+    }
+  </small>
+
+  @if (errorMessage()) {
+    <p id="image-error" class="image-error-message" role="alert">
+      {{ errorMessage() }}
+    </p>
+  }
+</div>

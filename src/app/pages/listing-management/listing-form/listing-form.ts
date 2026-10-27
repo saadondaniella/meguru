@@ -1,29 +1,28 @@
-import {
-  Component,
-  ElementRef,
-  inject,
-  input,
-  model,
-  OnDestroy,
-  OnInit,
-  output,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, inject, input, model, OnInit, output, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ListingService } from '../../../services/listing';
 import { SUPABASE_CLIENT } from '../../../services/supabase';
 import { Listing, ListingCategory, ListingCondition } from '../../../models/listing';
+import { ListingImageItem } from '../../../models/listing-image';
+import { ListingImagePicker } from './listing-image-picker/listing-image-picker';
 
 export type ListingSavedType = 'published' | 'draft' | 'updated';
 
+type ListingFields = {
+  title: string | null;
+  description: string | null;
+  price: number | null;
+  category: ListingCategory;
+  condition: ListingCondition;
+};
+
 @Component({
   selector: 'app-listing-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ListingImagePicker],
   templateUrl: './listing-form.html',
   styleUrl: './listing-form.css',
 })
-export class ListingForm implements OnInit, OnDestroy {
+export class ListingForm implements OnInit {
   private fb = inject(FormBuilder);
   private supabase = inject(SUPABASE_CLIENT);
 
@@ -46,13 +45,15 @@ export class ListingForm implements OnInit, OnDestroy {
     condition: ['good', Validators.required],
   });
 
-  selectedImage: File | null = null;
-
-  imagePreviewUrl = signal<string | null>(null);
-  imageErrorMessage = signal('');
   formErrorMessage = signal('');
+  // Ordered images; the first one is the main image.
+  images = signal<ListingImageItem[]>([]);
+  isLoadingImages = signal(false);
+  // True when the saved images could not be loaded. Saving is blocked then,
+  // otherwise an empty list would wipe the listing's existing images.
+  imagesLoadFailed = signal(false);
 
-  imageInput = viewChild<ElementRef<HTMLInputElement>>('imageInput');
+  private initialImagePaths: string[] = [];
 
   ngOnInit() {
     const listing = this.listing();
@@ -65,91 +66,41 @@ export class ListingForm implements OnInit, OnDestroy {
         category: listing.category ?? 'budget',
         condition: listing.condition ?? 'good',
       });
+      void this.loadExistingImages(listing);
     }
   }
 
-  ngOnDestroy() {
-    const previewUrl = this.imagePreviewUrl();
+  private async loadExistingImages(listing: Listing) {
+    this.isLoadingImages.set(true);
 
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
+    const { data: paths, error } = await this.listingService.getListingImagePaths(listing);
+
+    this.isLoadingImages.set(false);
+
+    if (error || !paths) {
+      console.error('Could not load listing images:', error);
+      this.imagesLoadFailed.set(true);
+      this.formErrorMessage.set(
+        'Could not load the listing images. Close and reopen the form to try again.',
+      );
+      return;
     }
+
+    this.initialImagePaths = paths;
+    this.images.set(
+      paths.map((imagePath) => ({
+        kind: 'existing',
+        key: imagePath,
+        imagePath,
+        url: this.listingService.getListingImageUrl(imagePath),
+      })),
+    );
   }
 
   // CLOSE (blocked while saving)
   onClose() {
     if (this.isUploading()) return;
     this.closed.emit();
-  }
-
-  // IMAGE SELECTION
-  onImageSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-
-    this.imageErrorMessage.set('');
-
-    if (!file) return;
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-    const extension = file.name.split('.').pop()?.toLowerCase();
-
-    if (
-      !allowedTypes.includes(file.type.toLowerCase()) ||
-      !extension ||
-      !allowedExtensions.includes(extension)
-    ) {
-      this.imageErrorMessage.set('Please select a JPG, PNG or WebP image.');
-      input.value = '';
-      return;
-    }
-
-    const maxSize = 5 * 1024 * 1024;
-
-    if (file.size > maxSize) {
-      this.imageErrorMessage.set('Image must be smaller than 5 MB.');
-      input.value = '';
-      return;
-    }
-
-    this.selectedImage = file;
-
-    // Remove previous preview URL to avoid memory leaks
-    const previousPreview = this.imagePreviewUrl();
-
-    if (previousPreview) {
-      URL.revokeObjectURL(previousPreview);
-    }
-
-    // Create a temporary preview of the selected image
-    const previewUrl = URL.createObjectURL(file);
-
-    this.imagePreviewUrl.set(previewUrl);
-
-    console.log('Selected image:', file.name);
-  }
-
-  // REMOVE SELECTED IMAGE
-  onRemoveImage() {
-    if (this.isUploading()) return;
-
-    this.imageErrorMessage.set('');
-
-    const previewUrl = this.imagePreviewUrl();
-
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      this.imagePreviewUrl.set(null);
-    }
-
-    this.selectedImage = null;
-
-    const input = this.imageInput();
-
-    if (input) {
-      input.nativeElement.value = '';
-    }
   }
 
   // CATEGORY AND PRICE
@@ -166,7 +117,7 @@ export class ListingForm implements OnInit, OnDestroy {
 
   // SAVE LISTING AS DRAFT
   async onSaveDraft() {
-    if (this.isUploading()) return;
+    if (this.isUploading() || this.isLoadingImages()) return;
     this.formErrorMessage.set('');
 
     const editing = this.listing();
@@ -189,100 +140,21 @@ export class ListingForm implements OnInit, OnDestroy {
       return;
     }
 
-    const draftValues = {
-      title: values.title.trim() || null,
-      description: values.description.trim() || null,
-      price: values.category === 'free' ? 0 : values.price,
-      category: values.category as ListingCategory,
-      condition: values.condition as ListingCondition,
-      status: 'draft' as const,
-    };
-
-    this.isUploading.set(true);
-    let newImagePath: string | null = null;
-
-    try {
-      const { data: userData, error: userError } = await this.supabase.auth.getUser();
-
-      if (userError || !userData.user) {
-        this.formErrorMessage.set('You must be logged in to save a draft.');
-        return;
-      }
-
-      const userId = userData.user.id;
-
-      // Upload a new image only when the seller has selected one.
-      if (this.selectedImage) {
-        const { data: imageData, error: imageError } = await this.listingService.uploadListingImage(
-          userId,
-          this.selectedImage,
-        );
-
-        if (imageError) {
-          console.error('Could not upload draft image:', imageError);
-          this.formErrorMessage.set('Could not upload the image.');
-          return;
-        }
-
-        newImagePath = imageData.path;
-      }
-
-      if (editing) {
-        // Updating a draft preserves its existing image unless replaced.
-        const { error } = await this.listingService.updateListing(editing.id, {
-          ...draftValues,
-          ...(newImagePath ? { image_path: newImagePath } : {}),
-        });
-
-        if (error) {
-          console.error('Could not update draft:', error);
-          if (newImagePath) {
-            await this.listingService.deleteListingImage(newImagePath);
-          }
-          this.formErrorMessage.set('Could not update draft.');
-          return;
-        }
-
-        // Remove the previous image only after the database update succeeds.
-        if (newImagePath && editing.image_path) {
-          const { error: cleanupError } = await this.listingService.deleteListingImage(
-            editing.image_path,
-          );
-          if (cleanupError) console.error('Could not remove previous image:', cleanupError);
-        }
-
-        console.log('Draft updated successfully');
-      } else {
-        const { data: draft, error } = await this.listingService.createListing({
-          seller_id: userId,
-          ...draftValues,
-          image_path: newImagePath,
-        });
-
-        if (error) {
-          console.error('Could not create draft:', error);
-          if (newImagePath) {
-            await this.listingService.deleteListingImage(newImagePath);
-          }
-          this.formErrorMessage.set('Could not save draft.');
-          return;
-        }
-
-        console.log('Draft saved successfully:', draft);
-      }
-
-      this.saved.emit('draft');
-    } catch (error) {
-      console.error('Unexpected error saving draft:', error);
-      this.formErrorMessage.set('Something went wrong. Please try again.');
-    } finally {
-      this.isUploading.set(false);
-    }
+    await this.save(
+      {
+        title: values.title.trim() || null,
+        description: values.description.trim() || null,
+        price: values.category === 'free' ? 0 : values.price,
+        category: values.category as ListingCategory,
+        condition: values.condition as ListingCondition,
+      },
+      'draft',
+    );
   }
 
   // CREATE OR UPDATE LISTING
   async onSubmit() {
-    if (this.isUploading()) return;
+    if (this.isUploading() || this.isLoadingImages()) return;
     this.formErrorMessage.set('');
 
     if (this.listingForm.invalid) {
@@ -297,6 +169,24 @@ export class ListingForm implements OnInit, OnDestroy {
       return;
     }
 
+    await this.save(
+      {
+        title: values.title.trim(),
+        description: values.description.trim() || null,
+        price: values.category === 'free' ? 0 : values.price!,
+        category: values.category as ListingCategory,
+        condition: values.condition as ListingCondition,
+      },
+      'published',
+    );
+  }
+
+  private async save(fields: ListingFields, targetStatus: 'draft' | 'published') {
+    if (this.imagesLoadFailed()) {
+      this.formErrorMessage.set('The listing images could not be loaded, so nothing was saved.');
+      return;
+    }
+
     this.isUploading.set(true);
 
     try {
@@ -307,129 +197,126 @@ export class ListingForm implements OnInit, OnDestroy {
         return;
       }
 
-      const userId = userData.user.id;
       const editing = this.listing();
+      const userId = userData.user.id;
 
-      console.log('Editing existing listing:', editing);
+      const savedType = editing
+        ? await this.updateExisting(editing, userId, fields, targetStatus)
+        : await this.createNew(userId, fields, targetStatus);
 
-      // Shared form values for Create and Update
-      const listingValues = {
-        title: values.title.trim(),
-        description: values.description.trim() || null,
-        price: values.category === 'free' ? 0 : values.price!,
-        category: values.category as ListingCategory,
-        condition: values.condition as ListingCondition,
-      };
-
-      // UPDATE EXISTING LISTING
-      if (editing) {
-        let newImagePath: string | null = null;
-
-        // Upload a replacement image if selected
-        if (this.selectedImage) {
-          const { data: imageData, error: imageError } =
-            await this.listingService.uploadListingImage(userId, this.selectedImage);
-
-          if (imageError) {
-            console.error('Image upload failed:', imageError);
-            this.formErrorMessage.set('Could not upload the new image.');
-            return;
-          }
-
-          newImagePath = imageData.path;
-        }
-
-        // Include the new image path only if a new image was uploaded
-        const updates = {
-          ...listingValues,
-          ...(editing.status === 'draft' ? { status: 'published' as const } : {}),
-          ...(newImagePath !== null ? { image_path: newImagePath } : {}),
-        };
-
-        const { error: updateError } = await this.listingService.updateListing(editing.id, updates);
-
-        if (updateError) {
-          console.error('Error updating listing:', updateError);
-
-          // Remove newly uploaded image if database update failed
-          if (newImagePath) {
-            const { error: cleanupError } =
-              await this.listingService.deleteListingImage(newImagePath);
-
-            if (cleanupError) {
-              console.error('Could not clean up new image:', cleanupError);
-            }
-          }
-
-          this.formErrorMessage.set('Could not update listing.');
-          return;
-        }
-
-        // Remove old image after successful database update
-        if (newImagePath && editing.image_path) {
-          const { error: deleteError } = await this.listingService.deleteListingImage(
-            editing.image_path,
-          );
-
-          if (deleteError) {
-            console.error('Could not delete previous image:', deleteError);
-          }
-        }
-
-        console.log('Listing updated successfully');
-
-        this.saved.emit(editing.status === 'draft' ? 'published' : 'updated');
-
-        return;
+      if (savedType) {
+        this.saved.emit(savedType);
       }
-
-      // CREATE NEW LISTING
-      let imagePath: string | null = null;
-
-      if (this.selectedImage) {
-        const { data: imageData, error: imageError } = await this.listingService.uploadListingImage(
-          userId,
-          this.selectedImage,
-        );
-
-        if (imageError) {
-          console.error('Image upload failed:', imageError);
-          this.formErrorMessage.set('Could not upload image.');
-          return;
-        }
-
-        imagePath = imageData.path;
-      }
-
-      const { data: listing, error: listingError } = await this.listingService.createListing({
-        seller_id: userId,
-        ...listingValues,
-        image_path: imagePath,
-      });
-
-      if (listingError) {
-        console.error('Error creating listing:', listingError);
-
-        // Clean up uploaded image if listing creation failed
-        if (imagePath) {
-          const { error: cleanupError } = await this.listingService.deleteListingImage(imagePath);
-
-          if (cleanupError) {
-            console.error('Could not clean up uploaded image:', cleanupError);
-          }
-        }
-
-        this.formErrorMessage.set('Could not create listing.');
-        return;
-      }
-
-      console.log('Listing created successfully:', listing);
-      this.saved.emit('published');
     } catch (error) {
       console.error('Unexpected error saving listing:', error);
       this.formErrorMessage.set('Something went wrong. Please try again.');
     } finally {
       this.isUploading.set(false);
     }
+  }
+
+  // Returns the saved type, or null after setting an error message.
+  private async createNew(
+    userId: string,
+    fields: ListingFields,
+    status: 'draft' | 'published',
+  ): Promise<ListingSavedType | null> {
+    const { data: listing, error: createError } = await this.listingService.createListing({
+      seller_id: userId,
+      ...fields,
+      image_path: null,
+      status,
+    });
+
+    if (createError || !listing) {
+      console.error('Could not create listing:', createError);
+      this.formErrorMessage.set(
+        status === 'draft' ? 'Could not save draft.' : 'Could not create listing.',
+      );
+      return null;
+    }
+
+    if (this.images().length > 0) {
+      const { error: imageError } = await this.listingService.saveListingImages(
+        listing.id,
+        userId,
+        this.images(),
+      );
+
+      if (imageError) {
+        console.error('Could not save images, rolling back listing:', imageError);
+
+        // listing_images rows are removed by ON DELETE CASCADE. The uploaded
+        // files were already cleaned up by saveListingImages.
+        const { error: rollbackError } = await this.listingService.deleteListing(listing.id);
+
+        this.formErrorMessage.set(
+          rollbackError
+            ? 'The listing was created, but its images could not be saved. Please check your listings.'
+            : 'Could not save the images. Nothing was saved, please try again.',
+        );
+        return null;
+      }
+    }
+
+    return status;
+  }
+
+  private async updateExisting(
+    editing: Listing,
+    userId: string,
+    fields: ListingFields,
+    targetStatus: 'draft' | 'published',
+  ): Promise<ListingSavedType | null> {
+    // Images first: if this fails nothing else has changed, and publishing a
+    // draft never happens with a half-saved image set.
+    if (this.imagesChanged()) {
+      const { error: imageError } = await this.listingService.saveListingImages(
+        editing.id,
+        userId,
+        this.images(),
+      );
+
+      if (imageError) {
+        console.error('Could not save images:', imageError);
+        this.formErrorMessage.set('Could not save the images. Your listing was not changed.');
+        return null;
+      }
+    }
+
+    const publishing = editing.status === 'draft' && targetStatus === 'published';
+
+    const { error: updateError } = await this.listingService.updateListing(editing.id, {
+      ...fields,
+      ...(publishing ? { status: 'published' as const } : {}),
+    });
+
+    if (updateError) {
+      console.error('Error updating listing:', updateError);
+      this.formErrorMessage.set(
+        this.imagesChanged()
+          ? 'Your images were saved, but the listing details could not be updated. Please try again.'
+          : 'Could not update listing.',
+      );
+      return null;
+    }
+
+    if (editing.status === 'draft') {
+      return targetStatus === 'published' ? 'published' : 'draft';
+    }
+
+    return 'updated';
+  }
+
+  // True when the ordered image set differs from what is saved.
+  private imagesChanged(): boolean {
+    const current = this.images();
+
+    return (
+      current.length !== this.initialImagePaths.length ||
+      current.some(
+        (image, i) => image.kind === 'new' || image.imagePath !== this.initialImagePaths[i],
+      )
+    );
   }
 }
