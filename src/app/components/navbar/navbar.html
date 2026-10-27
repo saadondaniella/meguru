@@ -1,7 +1,88 @@
-<nav>
-  <a href="/">MEGURU</a>
-  <ul>
-    <li><a href="/">Explore</a></li>
-    <li><a href="/login">Log in</a></li>
-  </ul>
+<!-- FIXED SIDEBAR -->
+<nav class="sidebar" aria-label="Main navigation">
+  <button
+    #menuButton
+    type="button"
+    class="menu-toggle"
+    aria-label="Open navigation menu"
+    aria-controls="meguru-menu"
+    [attr.aria-expanded]="isMenuOpen()"
+    (click)="toggleMenu()"
+  >
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <a routerLink="/" class="sidebar-logo" (click)="closeMenu()"> MEGURU </a>
 </nav>
+
+<!-- BACKDROP -->
+@if (isMenuOpen()) {
+  <div class="menu-backdrop" (click)="closeMenu()"></div>
+}
+
+<!-- EXPANDED MENU -->
+<aside
+  id="meguru-menu"
+  (keydown.tab)="onMenuTab($event)"
+  class="menu-panel"
+  [class.is-open]="isMenuOpen()"
+  [attr.aria-hidden]="!isMenuOpen()"
+  [attr.inert]="!isMenuOpen() ? '' : null"
+  aria-label="Navigation panel"
+>
+  <div class="menu-panel-header">
+    <button
+      #closeButton
+      type="button"
+      class="menu-close"
+      aria-label="Close navigation menu"
+      (click)="closeMenu()"
+    >
+      ×
+    </button>
+  </div>
+
+  <div class="menu-panel-content">
+    <div class="menu-brand">
+      <span>MEGURU</span>
+      <p>WEAR IT. OWN IT. PASS IT ON.</p>
+    </div>
+
+    <div class="menu-links">
+      <a routerLink="/marketplace" (click)="closeMenu()"> EXPLORE </a>
+
+      @if (isLoggedIn()) {
+        <a routerLink="/listing-management" (click)="closeMenu()"> MY LISTINGS </a>
+
+        <a routerLink="/seller-profile" (click)="closeMenu()"> MY PROFILE </a>
+
+        <button type="button" (click)="onLogout()" [disabled]="isLoggingOut()">
+          {{ isLoggingOut() ? 'LOGGING OUT...' : 'LOG OUT' }}
+        </button>
+      } @else {
+        <a routerLink="/login" (click)="closeMenu(); clearLogoutMessage()"> LOG IN </a>
+
+        <a routerLink="/register" (click)="closeMenu()"> CREATE ACCOUNT </a>
+      }
+    </div>
+  </div>
+
+  <div class="menu-panel-footer">
+    <span>PRE-LOVED CLOTHING / KEEP IT MOVING</span>
+    <span>© MEGURU</span>
+  </div>
+</aside>
+
+@if (logoutError()) {
+  <p class="error-message" role="alert">
+    {{ logoutError() }}
+  </p>
+}
+
+@if (logoutSuccess()) {
+  <p class="success-message" role="status">
+    {{ logoutSuccess() }}
+  </p>
+}

@@ -1,0 +1,41 @@
+@if (seller(); as seller) {
+  <section class="public-seller-profile">
+    <h1>{{ seller.display_name }}</h1>
+
+    @if (seller.city) {
+      <p>{{ seller.city }}</p>
+    }
+
+    @if (seller.bio) {
+      <p>{{ seller.bio }}</p>
+    }
+  </section>
+  <section class="seller-listings">
+    <h2>Items for sale</h2>
+
+    @for (listing of listings(); track listing.id) {
+      <article class="listing-card">
+        <a [routerLink]="['/listings', listing.id]">
+          <div class="listing-image">
+            @if (listing.image_path) {
+              <img [src]="getImageUrl(listing.image_path)" [alt]="listing.title" />
+            }
+
+            @if (listing.status === 'sold') {
+              <span class="sold-badge">SOLD</span>
+            }
+          </div>
+
+          <h3>{{ listing.title }}</h3>
+        </a>
+
+        <p>{{ listing.price }} kr</p>
+        <p>{{ listing.condition }}</p>
+      </article>
+    } @empty {
+      <p>This seller hasn't listed any items yet.</p>
+    }
+  </section>
+} @else {
+  <p>Loading seller profile...</p>
+}

@@ -1,0 +1,211 @@
+<section class="register">
+  <h1>Create an account</h1>
+  <p>Join MEGURU. Give your clothes a new story.</p>
+
+  <form #registerForm="ngForm" (ngSubmit)="onSubmit()">
+    <div>
+      <label for="email">Email *</label>
+
+      <input
+        type="email"
+        id="email"
+        name="email"
+        [(ngModel)]="email"
+        #emailControl="ngModel"
+        placeholder="Your email"
+        autocomplete="email"
+        required
+        email
+        [attr.aria-invalid]="emailControl.touched && emailControl.invalid"
+        [attr.aria-describedby]="
+          emailControl.touched && emailControl.invalid ? 'email-error' : null
+        "
+      />
+
+      @if (emailControl.touched && emailControl.invalid) {
+        <p id="email-error" class="error-message">
+          @if (emailControl.errors?.['required']) {
+            Please enter your email address.
+          } @else if (emailControl.errors?.['email']) {
+            Please enter a valid email address.
+          }
+        </p>
+      }
+    </div>
+
+    <div>
+      <label for="password">Password *</label>
+
+      <div class="password-wrapper">
+        <input
+          [type]="showPassword() ? 'text' : 'password'"
+          id="password"
+          name="password"
+          [(ngModel)]="password"
+          #passwordControl="ngModel"
+          [attr.aria-invalid]="passwordControl.touched && passwordControl.invalid"
+          [attr.aria-describedby]="
+            passwordControl.touched && passwordControl.invalid ? 'password-error' : null
+          "
+          placeholder="Your password"
+          minlength="8"
+          autocomplete="new-password"
+          required
+        />
+
+        <button
+          type="button"
+          class="password-toggle"
+          (click)="showPassword.set(!showPassword())"
+          [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+          [attr.aria-pressed]="showPassword()"
+        >
+          @if (showPassword()) {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 3l18 18" />
+              <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+              <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c5 0 9 4 10 7a12.8 12.8 0 0 1-4 4.9" />
+              <path d="M6.2 6.2A12.7 12.7 0 0 0 2 12c1 3 5 7 10 7a10.6 10.6 0 0 0 4.2-.9" />
+            </svg>
+          } @else {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          }
+        </button>
+      </div>
+      @if (passwordControl.touched && passwordControl.invalid) {
+        <p id="password-error" class="error-message">
+          @if (passwordControl.errors?.['required']) {
+            Please enter a password.
+          } @else if (passwordControl.errors?.['minlength']) {
+            Your password must be at least 8 characters long.
+          }
+        </p>
+      }
+    </div>
+
+    <div>
+      <label for="confirmPassword">Confirm password *</label>
+
+      <div class="password-wrapper">
+        <input
+          [type]="showConfirmPassword() ? 'text' : 'password'"
+          id="confirmPassword"
+          name="confirmPassword"
+          [(ngModel)]="confirmPassword"
+          #confirmControl="ngModel"
+          [attr.aria-invalid]="
+            confirmControl.touched && (confirmControl.invalid || password !== confirmPassword)
+          "
+          placeholder="Confirm your password"
+          autocomplete="new-password"
+          [attr.aria-describedby]="
+            confirmControl.touched && (confirmControl.invalid || password !== confirmPassword)
+              ? 'password-match-error'
+              : null
+          "
+          required
+        />
+
+        <button
+          type="button"
+          class="password-toggle"
+          (click)="showConfirmPassword.set(!showConfirmPassword())"
+          [attr.aria-label]="showConfirmPassword() ? 'Hide password' : 'Show password'"
+          [attr.aria-pressed]="showConfirmPassword()"
+        >
+          @if (showConfirmPassword()) {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M3 3l18 18" />
+              <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+              <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c5 0 9 4 10 7a12.8 12.8 0 0 1-4 4.9" />
+              <path d="M6.2 6.2A12.7 12.7 0 0 0 2 12c1 3 5 7 10 7a10.6 10.6 0 0 0 4.2-.9" />
+            </svg>
+          } @else {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          }
+        </button>
+      </div>
+
+      @if (confirmControl.touched && (confirmControl.invalid || password !== confirmPassword)) {
+        <p id="password-match-error" class="error-message">
+          @if (confirmControl.errors?.['required']) {
+            Please confirm your password.
+          } @else if (password !== confirmPassword) {
+            Passwords do not match.
+          }
+        </p>
+      }
+    </div>
+
+    <div class="submit-wrapper">
+      <button
+        type="submit"
+        [disabled]="registerForm.invalid || password !== confirmPassword || isLoading()"
+      >
+        {{ isLoading() ? 'Creating account...' : 'Create account' }}
+      </button>
+    </div>
+  </form>
+
+  @if (errorMessage()) {
+    <p class="error-message" role="alert">
+      {{ errorMessage() }}
+    </p>
+  }
+
+  @if (successMessage()) {
+    <p class="success-message" role="status">
+      {{ successMessage() }}
+    </p>
+  }
+</section>

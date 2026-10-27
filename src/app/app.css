@@ -1,0 +1,8 @@
+@media (min-width: 769px) {
+  :host {
+    display: block;
+    box-sizing: border-box;
+    min-height: 100dvh;
+    padding-left: 70px;
+  }
+}

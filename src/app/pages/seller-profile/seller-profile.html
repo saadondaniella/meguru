@@ -1,0 +1,205 @@
+<section class="seller-profile">
+  <h1>Your seller profile</h1>
+  <p class="profile-intro">Tell buyers a little about yourself.</p>
+
+  @if (isLoading()) {
+    <p class="status-message" role="status">Loading your profile...</p>
+  }
+
+  @if (loadError()) {
+    <p class="error-message form-feedback" role="alert">
+      {{ errorMessage() }}
+    </p>
+
+    <button type="button" class="retry-btn" (click)="loadProfile()">Try again</button>
+  }
+
+  @if (!isLoading() && !loadError()) {
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" novalidate>
+      <!-- DISPLAY NAME -->
+      <div class="form-field">
+        <label for="display_name">Display name *</label>
+
+        <input
+          id="display_name"
+          type="text"
+          formControlName="display_name"
+          maxlength="50"
+          autocomplete="nickname"
+          [attr.aria-invalid]="
+            profileForm.controls.display_name.touched && profileForm.controls.display_name.invalid
+          "
+          [attr.aria-describedby]="
+            profileForm.controls.display_name.touched && profileForm.controls.display_name.invalid
+              ? 'display-name-error'
+              : null
+          "
+        />
+
+        @if (
+          profileForm.controls.display_name.touched && profileForm.controls.display_name.invalid
+        ) {
+          <p id="display-name-error" class="error-message">
+            @if (profileForm.controls.display_name.hasError('required')) {
+              Please enter a display name.
+            } @else if (profileForm.controls.display_name.hasError('maxlength')) {
+              Display name must be 50 characters or fewer.
+            }
+          </p>
+        }
+      </div>
+
+      <!-- BIO -->
+      <div class="form-field">
+        <label for="bio">About you</label>
+
+        <textarea
+          id="bio"
+          formControlName="bio"
+          maxlength="500"
+          rows="3"
+          placeholder="A little about you and your style..."
+          [attr.aria-invalid]="profileForm.controls.bio.touched && profileForm.controls.bio.invalid"
+          [attr.aria-describedby]="
+            profileForm.controls.bio.touched && profileForm.controls.bio.invalid
+              ? 'bio-counter bio-error'
+              : 'bio-counter'
+          "
+        ></textarea>
+
+        <small id="bio-counter" class="character-counter">
+          {{ profileForm.controls.bio.value?.length ?? 0 }} / 500
+        </small>
+
+        @if (profileForm.controls.bio.touched && profileForm.controls.bio.hasError('maxlength')) {
+          <p id="bio-error" class="error-message">Your bio must be 500 characters or fewer.</p>
+        }
+      </div>
+
+      <!-- CITY -->
+      <div class="form-field">
+        <label for="city">City</label>
+
+        <input
+          id="city"
+          type="text"
+          formControlName="city"
+          maxlength="50"
+          autocomplete="address-level2"
+          placeholder="e.g. Gothenburg"
+          [attr.aria-invalid]="
+            profileForm.controls.city.touched && profileForm.controls.city.invalid
+          "
+          [attr.aria-describedby]="
+            profileForm.controls.city.touched && profileForm.controls.city.invalid
+              ? 'city-error'
+              : null
+          "
+        />
+
+        @if (profileForm.controls.city.touched && profileForm.controls.city.hasError('maxlength')) {
+          <p id="city-error" class="error-message">City must be 50 characters or fewer.</p>
+        }
+      </div>
+
+      <!-- CONTACT EMAIL -->
+      <div class="form-field">
+        <label for="contact_email">Contact email</label>
+
+        <input
+          id="contact_email"
+          type="email"
+          formControlName="contact_email"
+          maxlength="254"
+          autocomplete="email"
+          placeholder="you@example.com"
+          [attr.aria-invalid]="
+            profileForm.controls.contact_email.touched && profileForm.controls.contact_email.invalid
+          "
+          [attr.aria-describedby]="
+            profileForm.controls.contact_email.touched && profileForm.controls.contact_email.invalid
+              ? 'contact-email-error'
+              : null
+          "
+        />
+
+        @if (
+          profileForm.controls.contact_email.touched && profileForm.controls.contact_email.invalid
+        ) {
+          <p id="contact-email-error" class="error-message">
+            @if (profileForm.controls.contact_email.hasError('email')) {
+              Please enter a valid email address.
+            } @else if (profileForm.controls.contact_email.hasError('maxlength')) {
+              Email address is too long.
+            }
+          </p>
+        }
+      </div>
+
+      <!-- INSTAGRAM -->
+      <div class="form-field">
+        <div class="label-with-info">
+          <label for="instagram">Instagram</label>
+
+          <span class="info-tooltip">
+            <button
+              type="button"
+              class="info-icon"
+              aria-label="Instagram username requirements"
+              aria-describedby="instagram-help"
+            >
+              ⓘ
+            </button>
+
+            <span id="instagram-help" class="tooltip-text" role="tooltip">
+              Max 30 characters. Letters, numbers, periods and underscores. @ is optional.
+            </span>
+          </span>
+        </div>
+
+        <input
+          id="instagram"
+          type="text"
+          formControlName="instagram"
+          placeholder="@username"
+          maxlength="31"
+          [attr.aria-invalid]="
+            profileForm.controls.instagram.touched && profileForm.controls.instagram.invalid
+          "
+          [attr.aria-describedby]="
+            profileForm.controls.instagram.touched && profileForm.controls.instagram.invalid
+              ? 'instagram-help instagram-error'
+              : 'instagram-help'
+          "
+        />
+
+        @if (profileForm.controls.instagram.touched && profileForm.controls.instagram.invalid) {
+          <p id="instagram-error" class="error-message">
+            Use up to 30 letters, numbers, periods or underscores. An @ at the beginning is
+            optional.
+          </p>
+        }
+      </div>
+
+      <!-- FEEDBACK -->
+      @if (errorMessage()) {
+        <p class="error-message form-feedback" role="alert">
+          {{ errorMessage() }}
+        </p>
+      }
+
+      @if (successMessage()) {
+        <p class="success-message form-feedback" role="status">
+          {{ successMessage() }}
+        </p>
+      }
+
+      <!-- SUBMIT -->
+      <div class="submit-wrapper">
+        <button type="submit" [disabled]="profileForm.invalid || isSaving()">
+          {{ isSaving() ? 'Saving...' : 'Save profile' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

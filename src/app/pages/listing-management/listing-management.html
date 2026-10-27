@@ -1,0 +1,369 @@
+<section class="listing-management">
+  <header class="listing-management-header">
+    <div>
+      <h1>My listings</h1>
+      <p>Manage your pre-loved pieces.</p>
+    </div>
+
+    <button
+      #newListingButton
+      type="button"
+      class="new-listing-btn"
+      (click)="onCreateListing($event)"
+    >
+      + New listing
+    </button>
+
+    <a routerLink="/seller-profile" class="dashboard-profile-link"> Edit profile </a>
+
+    @if (currentSellerId(); as sellerId) {
+      <a [routerLink]="['/sellers', sellerId]" class="dashboard-profile-link">
+        View public profile
+      </a>
+    }
+  </header>
+
+  <!-- DASHBOARD OVERVIEW -->
+  <div class="dashboard-overview">
+    <div class="dashboard-stat">
+      <h2>Published</h2>
+      <p>{{ publishedListings().length }}</p>
+    </div>
+
+    <div class="dashboard-stat">
+      <h2>Drafts</h2>
+      <p>{{ draftListings().length }}</p>
+    </div>
+
+    <div class="dashboard-stat">
+      <h2>Sold</h2>
+      <p>{{ soldListings().length }}</p>
+    </div>
+  </div>
+
+  @if (soldErrorMessage() && !statusChangeTarget()) {
+    <p class="listing-page-error" role="alert">
+      {{ soldErrorMessage() }}
+    </p>
+  }
+
+  @if (pageSuccessMessage() && !successPopup()) {
+    <p class="listing-page-success" role="status">
+      {{ pageSuccessMessage() }}
+    </p>
+  }
+
+  <!-- CREATE / EDIT LISTING MODAL -->
+  @if (isModalOpen()) {
+    <app-listing-form
+      [listing]="editingListing()"
+      [(isUploading)]="isUploading"
+      (saved)="onListingSaved($event)"
+      (closed)="onCloseModal()"
+    />
+  }
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  @if (deleteTarget()) {
+    <div class="delete-overlay" (click)="onCancelDelete()">
+      <div
+        #deleteDialog
+        class="delete-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+        (click)="$event.stopPropagation()"
+        (keydown)="onDeleteDialogKeydown($event)"
+      >
+        <span class="delete-dialog-eyebrow"> MEGURU® / CONFIRM ACTION </span>
+
+        <h2 id="delete-dialog-title">Delete this listing?</h2>
+
+        <p id="delete-dialog-description">This action can't be undone.</p>
+
+        @if (deleteErrorMessage()) {
+          <p class="delete-dialog-error" role="alert">
+            {{ deleteErrorMessage() }}
+          </p>
+        }
+
+        <div class="delete-dialog-actions">
+          <button
+            data-delete-cancel
+            type="button"
+            class="delete-cancel-btn"
+            (click)="onCancelDelete()"
+            [disabled]="isDeleting()"
+          >
+            CANCEL
+          </button>
+
+          <button
+            type="button"
+            class="delete-confirm-btn"
+            (click)="onConfirmDelete()"
+            [disabled]="isDeleting()"
+          >
+            {{ isDeleting() ? 'DELETING...' : 'DELETE' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- PUBLISHED LISTINGS -->
+  <div class="my-listings">
+    <h2>Published listings</h2>
+    <p>
+      Number of listings:
+      {{ publishedListings().length }}
+    </p>
+
+    @if (publishedListings().length === 0) {
+      <p>You haven't published any listings yet.</p>
+    } @else {
+      <div class="listings-grid">
+        @for (listing of publishedListings(); track listing.id) {
+          <article class="listing-card">
+            @if (listing.image_path) {
+              <img
+                [src]="listingService.getListingImageUrl(listing.image_path)"
+                [alt]="listing.title || 'Listing image'"
+              />
+            }
+
+            <h3>{{ listing.title }}</h3>
+
+            @if (listing.price !== null) {
+              <p>{{ listing.price }} SEK</p>
+            }
+
+            @if (listing.condition) {
+              <p>{{ listing.condition }}</p>
+            }
+
+            <button type="button" (click)="onEditListing(listing, $event)">Edit listing</button>
+
+            <button
+              #statusTrigger
+              type="button"
+              (click)="openStatusConfirmation(listing, 'sold', statusTrigger)"
+              [disabled]="isMarkingSold()"
+            >
+              {{ isMarkingSold() ? 'UPDATING...' : 'Mark as sold' }}
+            </button>
+
+            <button type="button" (click)="onDeleteListing(listing.id, $event)">
+              Delete listing
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- DRAFT LISTINGS -->
+  <div class="my-listings drafts-section">
+    <h2>Drafts</h2>
+    <p>
+      Number of drafts:
+      {{ draftListings().length }}
+    </p>
+
+    @if (draftListings().length === 0) {
+      <p>You don't have any drafts yet.</p>
+    } @else {
+      <div class="listings-grid">
+        @for (listing of draftListings(); track listing.id) {
+          <article class="listing-card">
+            @if (listing.image_path) {
+              <img
+                [src]="listingService.getListingImageUrl(listing.image_path)"
+                [alt]="listing.title || 'Draft listing image'"
+              />
+            }
+
+            <h3>{{ listing.title || 'Untitled draft' }}</h3>
+
+            <span class="listing-status">Draft</span>
+
+            @if (listing.price !== null) {
+              <p>{{ listing.price }} SEK</p>
+            }
+
+            @if (listing.condition) {
+              <p>{{ listing.condition }}</p>
+            }
+
+            <button type="button" (click)="onEditListing(listing, $event)">Continue editing</button>
+
+            <button type="button" (click)="onDeleteListing(listing.id, $event)">
+              Delete draft
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- SOLD LISTINGS -->
+  <div class="my-listings sold-section">
+    <h2>Sold listings</h2>
+    <p>Number of sold listings: {{ soldListings().length }}</p>
+
+    @if (soldListings().length === 0) {
+      <p>You haven't sold any pieces yet.</p>
+    } @else {
+      <div class="listings-grid">
+        @for (listing of soldListings(); track listing.id) {
+          <article class="listing-card">
+            @if (listing.image_path) {
+              <img
+                [src]="listingService.getListingImageUrl(listing.image_path)"
+                [alt]="listing.title || 'Sold listing image'"
+              />
+            }
+
+            <h3>{{ listing.title }}</h3>
+
+            <span class="listing-status">Sold</span>
+
+            @if (listing.price !== null) {
+              <p>{{ listing.price }} SEK</p>
+            }
+
+            <button
+              #statusTrigger
+              type="button"
+              (click)="openStatusConfirmation(listing, 'published', statusTrigger)"
+              [disabled]="isMarkingSold()"
+            >
+              {{ isMarkingSold() ? 'UPDATING...' : 'Mark as available' }}
+            </button>
+
+            <button type="button" (click)="onDeleteListing(listing.id, $event)">
+              Delete listing
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- STATUS CHANGE CONFIRMATION MODAL -->
+  @if (statusChangeTarget(); as listing) {
+    <div class="delete-overlay" (click)="!isMarkingSold() && closeStatusConfirmation()">
+      <div
+        #statusDialog
+        class="delete-dialog"
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+        aria-labelledby="status-dialog-title"
+        aria-describedby="status-dialog-description"
+        (click)="$event.stopPropagation()"
+        (keydown)="onStatusDialogKeydown($event)"
+      >
+        <span class="delete-dialog-eyebrow"> MEGURU® / CONFIRM ACTION </span>
+
+        <h2 id="status-dialog-title">
+          @if (statusChangeTo() === 'sold') {
+            Mark as sold?
+          } @else {
+            Make available again?
+          }
+        </h2>
+
+        <p id="status-dialog-description">
+          @if (statusChangeTo() === 'sold') {
+            "{{ listing.title }}" will be marked as sold and removed from the marketplace.
+          } @else {
+            "{{ listing.title }}" will be available in the marketplace again.
+          }
+        </p>
+
+        @if (soldErrorMessage()) {
+          <p class="delete-dialog-error" role="alert">
+            {{ soldErrorMessage() }}
+          </p>
+        }
+
+        <div class="delete-dialog-actions">
+          <button
+            type="button"
+            class="delete-cancel-btn"
+            (click)="closeStatusConfirmation()"
+            [disabled]="isMarkingSold()"
+          >
+            CANCEL
+          </button>
+
+          <button
+            type="button"
+            class="delete-confirm-btn"
+            (click)="confirmStatusChange()"
+            [disabled]="isMarkingSold()"
+          >
+            {{ isMarkingSold() ? 'UPDATING...' : 'CONFIRM' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- SUCCESS POPUP -->
+  @if (successPopup()) {
+    <div class="success-overlay" (keydown.escape)="closeSuccessPopup()">
+      <div
+        class="success-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="success-dialog-title"
+        aria-describedby="success-dialog-description"
+      >
+        <span class="success-eyebrow"> MEGURU® / SUCCESS </span>
+
+        <span class="success-check" aria-hidden="true">✓</span>
+
+        <h2 id="success-dialog-title">
+          @switch (successPopup()) {
+            @case ('published') {
+              It's live!
+            }
+            @case ('draft') {
+              Saved for later.
+            }
+            @case ('updated') {
+              Changes saved.
+            }
+          }
+        </h2>
+
+        <p id="success-dialog-description">
+          @switch (successPopup()) {
+            @case ('published') {
+              Your listing has been published.
+            }
+            @case ('draft') {
+              Your draft is saved and ready when you are.
+            }
+            @case ('updated') {
+              Your listing has been updated.
+            }
+          }
+        </p>
+
+        <button
+          #successCloseButton
+          type="button"
+          class="success-close-btn"
+          (click)="closeSuccessPopup()"
+          (keydown.tab)="$event.preventDefault()"
+        >
+          GOT IT
+        </button>
+      </div>
+    </div>
+  }
+</section>

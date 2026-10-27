@@ -1,0 +1,159 @@
+.marketplace {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 80px 40px 120px;
+  color: #4d5d46;
+}
+
+.marketplace h1 {
+  margin: 0;
+  font-size: clamp(3.5rem, 8vw, 8rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.marketplace > p {
+  margin: 24px 0 64px;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+/* PRODUCT GRID */
+
+.marketplace-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 64px;
+}
+
+.listing-card {
+  min-width: 0;
+}
+
+.listing-card a {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.listing-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: #e9e5dd;
+  transition: transform 0.35s ease;
+}
+
+.listing-card a:hover img {
+  transform: scale(0.98);
+}
+
+.listing-card h2 {
+  margin: 16px 0 6px;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.listing-card p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.listing-card p:first-of-type {
+  color: #9e5a44;
+  font-weight: 600;
+}
+
+.listing-card p:last-of-type {
+  text-transform: capitalize;
+}
+
+/* TABLET */
+
+@media (max-width: 900px) {
+  .marketplace {
+    padding: 60px 24px 100px;
+  }
+
+  .marketplace-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 48px 16px;
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .marketplace {
+    padding: 48px 16px 80px;
+  }
+
+  .marketplace h1 {
+    font-size: clamp(2.5rem, 11vw, 4rem);
+  }
+
+  .marketplace > p {
+    margin: 16px 0 40px;
+  }
+
+  .marketplace-grid {
+    gap: 36px 12px;
+  }
+
+  .listing-card h2 {
+    font-size: 14px;
+    margin-top: 12px;
+  }
+
+  .listing-card p {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listing-card img {
+    transition: none;
+  }
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 80px;
+}
+
+.pagination button {
+  border: none;
+  background: transparent;
+  color: #4d5d46;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 10px 14px;
+}
+
+.pagination button.active {
+  background: #4d5d46;
+  color: #f5f2eb;
+}
+
+.pagination button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pagination button:not(:disabled):hover {
+  text-decoration: underline;
+}
+
+.pagination button:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 3px;
+}

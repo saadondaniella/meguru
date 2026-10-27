@@ -1,0 +1,190 @@
+.public-seller-profile {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 80px 5%;
+  color: #4d5d46;
+}
+
+/* Seller information */
+
+.public-seller-profile > h1 {
+  font-size: clamp(3.5rem, 8vw, 8rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  margin: 0 0 30px;
+  overflow-wrap: anywhere;
+}
+
+.public-seller-profile > p {
+  max-width: 550px;
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 15px;
+}
+
+.public-seller-profile > p:first-of-type {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #9e5a44;
+}
+
+/* Listings */
+
+.seller-listings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 50px 28px;
+
+  max-width: 1150px;
+  margin: 100px auto 0;
+  padding: 0 24px;
+}
+
+.seller-listings > h2 {
+  grid-column: 1 / -1;
+  font-size: clamp(2rem, 4vw, 4rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  border-bottom: 1px solid #4d5d46;
+  padding-bottom: 20px;
+  margin: 0 0 15px;
+}
+
+/* Product cards */
+
+.listing-image {
+  position: relative;
+}
+
+.listing-card {
+  min-width: 0;
+}
+
+.listing-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: #e8e5df;
+  margin-bottom: 18px;
+  transition: opacity 0.3s ease;
+}
+
+.listing-card:hover img {
+  opacity: 0.85;
+}
+
+.listing-card h3 {
+  font-size: 1.15rem;
+  font-weight: 500;
+  margin: 0 0 8px;
+}
+
+.listing-card p {
+  font-size: 0.85rem;
+  margin: 0 0 5px;
+}
+
+.listing-card p:last-child {
+  color: #9e5a44;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+/* Tablet */
+
+@media (max-width: 900px) {
+  .seller-listings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .public-seller-profile {
+    padding: 50px 20px;
+  }
+
+  .seller-listings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 35px 12px;
+    margin-top: 70px;
+  }
+
+  .seller-listings > h2 {
+    padding-bottom: 15px;
+  }
+
+  .listing-card h3 {
+    font-size: 0.95rem;
+  }
+
+  .listing-card p {
+    font-size: 0.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listing-card img {
+    transition: none;
+  }
+}
+
+.sold-badge {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 65px;
+  height: 105px;
+  padding-top: 10px;
+
+  background: #9e5a44;
+  color: #f5f2eb;
+
+  font-family: 'Noto Serif', serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+
+  transform: rotate(12deg);
+  box-shadow: 3px 5px 12px rgba(0, 0, 0, 0.18);
+}
+
+.sold-badge::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 8px;
+  height: 8px;
+  border: 2px solid #f5f2eb;
+  border-radius: 50%;
+  background: #4d5d46;
+}
+
+.sold-badge::after {
+  content: '';
+  position: absolute;
+  bottom: calc(100% - 14px);
+  left: 50%;
+
+  width: 1px;
+  height: 28px;
+  background: #1a1a1a;
+
+  transform: rotate(-15deg);
+  transform-origin: bottom;
+}

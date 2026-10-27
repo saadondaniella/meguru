@@ -1,0 +1,246 @@
+<div class="modal-overlay">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="listing-modal-title">
+    <button
+      type="button"
+      class="modal-close"
+      (click)="onClose()"
+      [disabled]="isUploading()"
+      aria-label="Close modal"
+    >
+      ✕
+    </button>
+
+    <form class="listing-modal-form" [formGroup]="listingForm" (ngSubmit)="onSubmit()" novalidate>
+      <!-- LEFT: IMAGE AREA -->
+      <div class="listing-image-panel">
+        <div class="image-panel-heading">
+          <span>MEGURU® / LISTING STUDIO</span>
+          <span>01 / IMAGE</span>
+        </div>
+
+        <app-listing-image-picker
+          [(images)]="images"
+          [disabled]="isUploading()"
+          [loading]="isLoadingImages()"
+        />
+      </div>
+
+      <!-- RIGHT: LISTING DETAILS -->
+      <div class="listing-details-panel">
+        <div class="details-panel-heading">
+          <span>02 / THE DETAILS</span>
+          <span>PRE-LOVED CLOTHING</span>
+        </div>
+
+        <div class="listing-form-content">
+          <h2 id="listing-modal-title">
+            {{
+              listing()
+                ? listing()?.status === 'draft'
+                  ? 'Continue your draft.'
+                  : 'Edit your listing.'
+                : 'Pass it on.'
+            }}
+          </h2>
+
+          <p class="listing-form-intro">Every piece has a story. Tell us yours.</p>
+
+          <!-- TITLE -->
+          <div class="listing-field">
+            <label for="title">ITEM TITLE *</label>
+
+            <input
+              id="title"
+              type="text"
+              formControlName="title"
+              maxlength="100"
+              placeholder="e.g. Vintage leather jacket"
+              [attr.aria-invalid]="
+                listingForm.controls.title.touched && listingForm.controls.title.invalid
+              "
+              [attr.aria-describedby]="
+                listingForm.controls.title.touched && listingForm.controls.title.invalid
+                  ? 'title-error'
+                  : null
+              "
+            />
+
+            @if (listingForm.controls.title.touched && listingForm.controls.title.invalid) {
+              <p id="title-error" class="listing-field-error">
+                @if (listingForm.controls.title.hasError('required')) {
+                  Please enter an item title to publish.
+                } @else if (listingForm.controls.title.hasError('maxlength')) {
+                  Title must be 100 characters or fewer.
+                }
+              </p>
+            }
+          </div>
+
+          <!-- DESCRIPTION -->
+          <div class="listing-field">
+            <label for="description">DESCRIPTION</label>
+
+            <textarea
+              id="description"
+              formControlName="description"
+              maxlength="2000"
+              rows="3"
+              placeholder="Tell us about your item..."
+              [attr.aria-invalid]="
+                listingForm.controls.description.touched && listingForm.controls.description.invalid
+              "
+              [attr.aria-describedby]="
+                listingForm.controls.description.touched && listingForm.controls.description.invalid
+                  ? 'description-counter description-error'
+                  : 'description-counter'
+              "
+            ></textarea>
+
+            <small id="description-counter">
+              {{ listingForm.controls.description.value.length }} / 2000
+            </small>
+
+            @if (
+              listingForm.controls.description.touched &&
+              listingForm.controls.description.hasError('maxlength')
+            ) {
+              <p id="description-error" class="listing-field-error">
+                Description must be 2000 characters or fewer.
+              </p>
+            }
+          </div>
+
+          <!-- PRICE / CATEGORY -->
+          <div class="listing-field-row">
+            <div class="listing-field">
+              <label for="price">PRICE (SEK) *</label>
+
+              <input
+                id="price"
+                type="number"
+                formControlName="price"
+                min="0"
+                step="0.01"
+                [readOnly]="listingForm.controls.category.value === 'free'"
+                [attr.aria-invalid]="
+                  listingForm.controls.price.touched && listingForm.controls.price.invalid
+                "
+                [attr.aria-describedby]="
+                  listingForm.controls.price.touched && listingForm.controls.price.invalid
+                    ? 'price-error'
+                    : null
+                "
+              />
+
+              @if (listingForm.controls.price.touched && listingForm.controls.price.invalid) {
+                <p id="price-error" class="listing-field-error">
+                  @if (listingForm.controls.price.hasError('required')) {
+                    Please enter a price to publish.
+                  } @else if (listingForm.controls.price.hasError('min')) {
+                    Price cannot be negative.
+                  }
+                </p>
+              }
+            </div>
+
+            <div class="listing-field">
+              <label for="category">CATEGORY *</label>
+
+              <select
+                id="category"
+                formControlName="category"
+                (change)="onCategoryChange()"
+                [attr.aria-invalid]="
+                  listingForm.controls.category.touched && listingForm.controls.category.invalid
+                "
+                [attr.aria-describedby]="
+                  listingForm.controls.category.touched && listingForm.controls.category.invalid
+                    ? 'category-error'
+                    : null
+                "
+              >
+                <option value="exclusive">Exclusive</option>
+                <option value="budget">Budget</option>
+                <option value="free">Free / Bortskänkes</option>
+              </select>
+
+              @if (listingForm.controls.category.touched && listingForm.controls.category.invalid) {
+                <p id="category-error" class="listing-field-error">Please select a category.</p>
+              }
+            </div>
+          </div>
+
+          <!-- CONDITION -->
+          <div class="listing-field">
+            <label for="condition">CONDITION *</label>
+
+            <select
+              id="condition"
+              formControlName="condition"
+              [attr.aria-invalid]="
+                listingForm.controls.condition.touched && listingForm.controls.condition.invalid
+              "
+              [attr.aria-describedby]="
+                listingForm.controls.condition.touched && listingForm.controls.condition.invalid
+                  ? 'condition-error'
+                  : null
+              "
+            >
+              <option value="new_with_tags">New with tags</option>
+              <option value="like_new">Like new</option>
+              <option value="very_good">Very good</option>
+              <option value="good">Good</option>
+              <option value="well_worn">Well worn</option>
+            </select>
+
+            @if (listingForm.controls.condition.touched && listingForm.controls.condition.invalid) {
+              <p id="condition-error" class="listing-field-error">
+                Please select the item's condition.
+              </p>
+            }
+          </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="modal-actions">
+          @if (formErrorMessage()) {
+            <p class="listing-form-feedback" role="alert">
+              {{ formErrorMessage() }}
+            </p>
+          }
+
+          <button
+            class="publish-btn"
+            type="submit"
+            [disabled]="listingForm.invalid || isUploading() || isLoadingImages()"
+          >
+            {{
+              isUploading()
+                ? 'Saving...'
+                : listing()?.status === 'draft'
+                  ? 'Publish listing'
+                  : listing()
+                    ? 'Save changes'
+                    : 'Publish listing'
+            }}
+          </button>
+
+          @if (!listing() || listing()?.status === 'draft') {
+            <button
+              class="draft-btn"
+              type="button"
+              [disabled]="isUploading() || isLoadingImages()"
+              (click)="onSaveDraft()"
+            >
+              Save as draft
+            </button>
+          }
+
+          <button class="cancel-btn" type="button" [disabled]="isUploading()" (click)="onClose()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
