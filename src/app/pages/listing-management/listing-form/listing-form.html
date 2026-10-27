@@ -18,63 +18,11 @@
           <span>01 / IMAGE</span>
         </div>
 
-        <div class="image-upload-area">
-          @if (imagePreviewUrl()) {
-            <img
-              class="listing-image-preview"
-              [src]="imagePreviewUrl()!"
-              alt="Preview of selected listing image"
-            />
-          } @else if (listing()?.image_path) {
-            <img
-              class="listing-image-preview"
-              [src]="listingService.getListingImageUrl(listing()!.image_path!)"
-              alt="Current listing image"
-            />
-          } @else {
-            <div class="image-placeholder">
-              <span class="image-placeholder-symbol">+</span>
-              <p>YOUR PIECE GOES HERE.</p>
-              <small>Give it a second life.</small>
-            </div>
-          }
-        </div>
-
-        <div class="image-upload-controls">
-          <label for="image" class="image-upload-label">
-            {{ imagePreviewUrl() || listing()?.image_path ? 'CHANGE IMAGE +' : 'ADD IMAGE +' }}
-          </label>
-
-          @if (imagePreviewUrl()) {
-            <button
-              type="button"
-              class="remove-image-btn"
-              (click)="onRemoveImage()"
-              [disabled]="isUploading()"
-            >
-              REMOVE IMAGE ×
-            </button>
-          }
-
-          <input
-            #imageInput
-            id="image"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            (change)="onImageSelected($event)"
-            [disabled]="isUploading()"
-            [attr.aria-invalid]="imageErrorMessage() ? 'true' : null"
-            [attr.aria-describedby]="imageErrorMessage() ? 'image-help image-error' : 'image-help'"
-          />
-
-          <small id="image-help"> JPG, PNG OR WEBP / MAX 5 MB </small>
-
-          @if (imageErrorMessage()) {
-            <p id="image-error" class="image-error-message" role="alert">
-              {{ imageErrorMessage() }}
-            </p>
-          }
-        </div>
+        <app-listing-image-picker
+          [(images)]="images"
+          [disabled]="isUploading()"
+          [loading]="isLoadingImages()"
+        />
       </div>
 
       <!-- RIGHT: LISTING DETAILS -->
@@ -264,7 +212,7 @@
           <button
             class="publish-btn"
             type="submit"
-            [disabled]="listingForm.invalid || isUploading()"
+            [disabled]="listingForm.invalid || isUploading() || isLoadingImages()"
           >
             {{
               isUploading()
@@ -281,7 +229,7 @@
             <button
               class="draft-btn"
               type="button"
-              [disabled]="isUploading()"
+              [disabled]="isUploading() || isLoadingImages()"
               (click)="onSaveDraft()"
             >
               Save as draft

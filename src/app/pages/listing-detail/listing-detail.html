@@ -1,12 +1,63 @@
 @if (listing(); as listing) {
   <section class="listing-detail">
-    <div class="listing-image">
-      @if (imageUrl()) {
-        <img [src]="imageUrl()" [alt]="listing.title" />
-      }
+    <button type="button" class="back-to-marketplace" (click)="goBack()">
+      <span aria-hidden="true">←</span>
+      BACK TO MARKETPLACE
+    </button>
+    <div
+      class="listing-gallery"
+      role="group"
+      aria-roledescription="carousel"
+      [attr.aria-label]="'Images of ' + listing.title"
+      (keydown)="onGalleryKeydown($event)"
+    >
+      <div class="listing-image">
+        @if (selectedImageUrl(); as url) {
+          <img
+            [src]="url"
+            [alt]="
+              listing.title + ', image ' + (selectedImageIndex() + 1) + ' of ' + imageUrls().length
+            "
+          />
+        }
 
-      @if (listing.status === 'sold') {
-        <span class="sold-badge">SOLD</span>
+        @if (listing.status === 'sold') {
+          <span class="sold-badge">SOLD</span>
+        }
+      </div>
+
+      @if (imageUrls().length > 1) {
+        <div class="gallery-controls">
+          <button type="button" class="gallery-step" (click)="stepImage(-1)">
+            <span aria-hidden="true">←</span>
+            <span class="visually-hidden">Previous image</span>
+          </button>
+
+          <p class="gallery-status" aria-live="polite">
+            Image {{ selectedImageIndex() + 1 }} of {{ imageUrls().length }}
+          </p>
+
+          <button type="button" class="gallery-step" (click)="stepImage(1)">
+            <span aria-hidden="true">→</span>
+            <span class="visually-hidden">Next image</span>
+          </button>
+        </div>
+
+        <ul class="gallery-thumbnails" aria-label="Choose an image">
+          @for (url of imageUrls(); track url; let i = $index) {
+            <li>
+              <button
+                type="button"
+                class="gallery-thumbnail"
+                [attr.aria-label]="'Show image ' + (i + 1) + ' of ' + imageUrls().length"
+                [attr.aria-pressed]="i === selectedImageIndex()"
+                (click)="selectImage(i)"
+              >
+                <img [src]="url" alt="" />
+              </button>
+            </li>
+          }
+        </ul>
       }
     </div>
 

@@ -140,7 +140,7 @@ describe('SellerProfile', () => {
 
     expect(mockUpdateProfile).toHaveBeenCalled();
 
-    expect(component.errorMessage()).toBe('Something went wrong. Please try again.');
+    expect(component.errorMessage()).toBe('Could not save your profile. Please try again.');
     expect(component.successMessage()).toBe('');
     expect(component.isSaving()).toBe(false);
   });
@@ -192,7 +192,7 @@ describe('SellerProfile', () => {
 
     expect(mockUpdateProfile).not.toHaveBeenCalled();
     expect(mockCreateProfile).not.toHaveBeenCalled();
-    expect(component.errorMessage()).toBe('Please enter a valid display name.');
+    expect(component.errorMessage()).toBe('Please correct the highlighted fields.');
   });
 
   it('should reset hasProfile when no profile is found', async () => {
