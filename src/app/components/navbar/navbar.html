@@ -17,6 +17,80 @@
   <a routerLink="/" class="sidebar-logo" (click)="closeMenu()"> MEGURU </a>
 </nav>
 
+<!-- MOBILE BOTTOM NAVIGATION -->
+<nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+  <!-- EXPLORE -->
+  <a routerLink="/marketplace" (click)="closeMenu()" aria-label="Explore marketplace">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6 7h12l1 13H5L6 7Z" />
+      <path d="M9 9V6a3 3 0 0 1 6 0v3" />
+    </svg>
+    <span>EXPLORE</span>
+  </a>
+
+  <!-- PROFILE -->
+  <button type="button" (click)="goToMyProfile()" aria-label="My profile">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+    <span>PROFILE</span>
+  </button>
+
+  <!-- LOG OUT / LOG IN -->
+  @if (isLoggedIn()) {
+    <button type="button" (click)="onLogout()" [disabled]="isLoggingOut()" aria-label="Log out">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M10 17l5-5-5-5" />
+        <path d="M15 12H3" />
+        <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7" />
+      </svg>
+      <span>{{ isLoggingOut() ? 'WAIT...' : 'LOG OUT' }}</span>
+    </button>
+  } @else {
+    <a routerLink="/login" (click)="closeMenu(); clearLogoutMessage()" aria-label="Log in">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M14 17l5-5-5-5" />
+        <path d="M19 12H7" />
+        <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7" />
+      </svg>
+      <span>LOG IN</span>
+    </a>
+  }
+</nav>
+
 <!-- BACKDROP -->
 @if (isMenuOpen()) {
   <div class="menu-backdrop" (click)="closeMenu()"></div>
@@ -72,17 +146,18 @@
   </div>
 
   <div class="menu-panel-footer">
-    <!-- <span>PRE-LOVED CLOTHING / KEEP IT MOVING</span> -->
     <span>© MEGURU</span>
   </div>
 </aside>
 
+<!-- LOGOUT ERROR TOAST -->
 @if (logoutError()) {
   <p class="error-message" [class.toast-leaving]="isToastLeaving()" role="alert">
     {{ logoutError() }}
   </p>
 }
 
+<!-- LOGOUT SUCCESS TOAST -->
 @if (logoutSuccess()) {
   <p class="success-message" [class.toast-leaving]="isToastLeaving()" role="status">
     {{ logoutSuccess() }}
