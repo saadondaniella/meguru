@@ -2,6 +2,14 @@
   <h1>THE MARKETPLACE</h1>
   <p>Pre-loved fashion. Ready for its next chapter.</p>
 
+  <!-- Search and filters -->
+  <app-listing-filters
+    [filters]="filters()"
+    [disabled]="isLoading()"
+    (filtersChange)="applyFilters($event)"
+  />
+
+  <!-- Listings -->
   <section class="marketplace-grid">
     @for (listing of listings(); track listing.id) {
       <article class="listing-card" [attr.data-listing-id]="listing.id">
@@ -21,16 +29,19 @@
         <p>{{ listing.condition }}</p>
       </article>
     } @empty {
-      <p>No listings available yet.</p>
+      @if (!isLoading()) {
+        <p>No listings match your search.</p>
+      }
     }
   </section>
 
+  <!-- Pagination -->
   @if (totalPages() > 1) {
     <nav class="pagination" aria-label="Marketplace pagination">
       <button
         type="button"
         (click)="changePage(currentPage() - 1)"
-        [disabled]="currentPage() === 1"
+        [disabled]="currentPage() === 1 || isLoading()"
       >
         ← Previous
       </button>
@@ -41,6 +52,7 @@
           (click)="changePage(page)"
           [class.active]="currentPage() === page"
           [attr.aria-current]="currentPage() === page ? 'page' : null"
+          [disabled]="isLoading()"
         >
           {{ page }}
         </button>
@@ -49,7 +61,7 @@
       <button
         type="button"
         (click)="changePage(currentPage() + 1)"
-        [disabled]="currentPage() === totalPages()"
+        [disabled]="currentPage() === totalPages() || isLoading()"
       >
         Next →
       </button>

@@ -110,6 +110,77 @@
             }
           </div>
 
+          <!-- BRAND -->
+          <div class="listing-field">
+            <label for="brand">BRAND <span>(OPTIONAL)</span></label>
+
+            <input
+              id="brand"
+              type="text"
+              formControlName="brand"
+              maxlength="100"
+              placeholder="e.g. Acne Studios, Arket, COS"
+              [attr.aria-invalid]="
+                listingForm.controls.brand.touched && listingForm.controls.brand.invalid
+              "
+              [attr.aria-describedby]="
+                listingForm.controls.brand.touched && listingForm.controls.brand.invalid
+                  ? 'brand-error'
+                  : null
+              "
+            />
+
+            @if (
+              listingForm.controls.brand.touched && listingForm.controls.brand.hasError('maxlength')
+            ) {
+              <p id="brand-error" class="listing-field-error">
+                Brand must be 100 characters or fewer.
+              </p>
+            }
+          </div>
+
+          <!-- SIZE -->
+          <div class="listing-field-row">
+            <div class="listing-field">
+              <label for="size-type">SIZE TYPE <span>(OPTIONAL)</span></label>
+
+              <select id="size-type" formControlName="size_type">
+                <option [ngValue]="null">Select size type</option>
+                <option value="international">International</option>
+                <option value="eu_clothing">EU Clothing</option>
+                <option value="eu_shoes">EU Shoes</option>
+              </select>
+            </div>
+
+            <div class="listing-field">
+              <label for="size">SIZE</label>
+
+              <select id="size" formControlName="size">
+                <option [ngValue]="null">Select size</option>
+
+                @switch (listingForm.controls.size_type.value) {
+                  @case ('international') {
+                    @for (size of ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL']; track size) {
+                      <option [value]="size">{{ size }}</option>
+                    }
+                  }
+
+                  @case ('eu_clothing') {
+                    @for (size of ['34', '36', '38', '40', '42', '44']; track size) {
+                      <option [value]="size">{{ size }}</option>
+                    }
+                  }
+
+                  @case ('eu_shoes') {
+                    @for (size of ['36', '37', '38', '39', '40', '41', '42']; track size) {
+                      <option [value]="size">{{ size }}</option>
+                    }
+                  }
+                }
+              </select>
+            </div>
+          </div>
+
           <!-- PRICE / CATEGORY -->
           <div class="listing-field-row">
             <div class="listing-field">
