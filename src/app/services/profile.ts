@@ -10,6 +10,21 @@ export class Profile {
     return await this.supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
   }
 
+  async searchProfiles(search: string) {
+    const term = search.trim();
+
+    if (!term) {
+      return { data: [], error: null };
+    }
+
+    return await this.supabase
+      .from('profiles')
+      .select('id, display_name')
+      .ilike('display_name', `%${term.replace(/[%_\\]/g, '\\$&')}%`)
+      .order('display_name', { ascending: true })
+      .limit(10);
+  }
+
   async createProfile(profile: {
     display_name: string;
     bio: string | null;

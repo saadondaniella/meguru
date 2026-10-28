@@ -176,3 +176,170 @@
   outline: 2px solid var(--rust);
   outline-offset: 3px;
 }
+
+/* TOAST NOTIFICATIONS */
+
+.success-message,
+.error-message {
+  position: fixed;
+  top: 28px;
+  right: 28px;
+  z-index: 2000;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  max-width: min(360px, calc(100vw - 40px));
+  padding: 20px 26px;
+  box-sizing: border-box;
+
+  background: var(--green);
+  color: var(--cream);
+  border-left: 4px solid var(--rust);
+
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+
+  box-shadow: 0 12px 35px rgba(28, 25, 23, 0.15);
+
+  animation: toast-enter 0.45s ease-out both;
+}
+
+.success-message::before {
+  content: '✓';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  width: 28px;
+  height: 28px;
+
+  border: 1px solid var(--cream);
+  border-radius: 50%;
+
+  font-family: sans-serif;
+  font-size: 14px;
+}
+
+.error-message {
+  background: var(--rust);
+  border-left-color: var(--green);
+}
+
+.error-message::before {
+  content: '!';
+}
+
+/* Enter animation */
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Exit animation */
+
+.toast-leaving {
+  animation: toast-exit 0.35s ease-in forwards;
+}
+
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .success-message,
+  .error-message {
+    top: 16px;
+    right: 16px;
+    left: 76px;
+    max-width: none;
+    padding: 16px 18px;
+    font-size: 10px;
+  }
+}
+
+/* Reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .success-message,
+  .error-message,
+  .toast-leaving {
+    animation: none;
+  }
+}
+
+/* MOBILE HEADER */
+
+@media (max-width: 600px) {
+  :host {
+    --sidebar-width: 0px;
+    --mobile-header-height: 58px;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: var(--mobile-header-height);
+    flex-direction: row;
+    justify-content: center;
+    background: var(--cream);
+    border-right: none;
+    border-bottom: 1px solid rgba(77, 93, 70, 0.2);
+  }
+
+  .menu-toggle {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    padding: 0;
+
+    border: 1px solid var(--green);
+    border-radius: 50%;
+    gap: 3px;
+  }
+
+  .menu-toggle span {
+    width: 12px;
+    height: 1px;
+    background: var(--green);
+  }
+
+  .sidebar-logo {
+    position: static;
+    transform: none;
+    color: var(--green);
+    font-size: 23px;
+    letter-spacing: -0.03em;
+  }
+
+  .menu-panel {
+    width: min(88vw, 360px);
+    padding: 24px;
+  }
+}

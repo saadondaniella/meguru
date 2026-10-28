@@ -1,12 +1,40 @@
 <section class="home">
+  <!-- Search -->
+  <form class="home-search" (ngSubmit)="onSearch()" role="search">
+    <label for="home-search-input" class="visually-hidden">
+      Search products, brands or sellers
+    </label>
+
+    <div class="home-search-field">
+      <button type="submit" class="home-search-button" aria-label="Search">
+        <span aria-hidden="true">⌕</span>
+      </button>
+
+      <input
+        id="home-search-input"
+        type="search"
+        name="search"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        placeholder="SEARCH BRAND, PRODUCT, PROFILE"
+      />
+    </div>
+  </form>
+
+  <!-- Home content -->
   <h1>MEGURU</h1>
   <p>Welcome to MEGURU – your secondhand fashion marketplace.</p>
 
   <nav class="home-links">
     <a routerLink="/marketplace">Marketplace</a>
-    <a routerLink="/seller-profile">My profile</a>
-    <a routerLink="/listing-management">My listings</a>
-    <a routerLink="/login">Login</a>
-    <a routerLink="/register">Register</a>
+
+    @if (isLoggedIn()) {
+      <button type="button" (click)="goToMyProfile()">My profile</button>
+
+      <a routerLink="/listing-management">My listings</a>
+    } @else {
+      <a routerLink="/login">Login</a>
+      <a routerLink="/register">Register</a>
+    }
   </nav>
 </section>

@@ -1,4 +1,4 @@
-<!-- FIXED SIDEBAR -->
+<!-- DESKTOP SIDEBAR / MOBILE HEADER -->
 <nav class="sidebar" aria-label="Main navigation">
   <button
     #menuButton
@@ -51,12 +51,14 @@
     </div>
 
     <div class="menu-links">
+      <a routerLink="/" (click)="closeMenu()"> HOME </a>
+
       <a routerLink="/marketplace" (click)="closeMenu()"> EXPLORE </a>
 
       @if (isLoggedIn()) {
         <a routerLink="/listing-management" (click)="closeMenu()"> MY LISTINGS </a>
 
-        <a routerLink="/seller-profile" (click)="closeMenu()"> MY PROFILE </a>
+        <button type="button" (click)="goToMyProfile()">MY PROFILE</button>
 
         <button type="button" (click)="onLogout()" [disabled]="isLoggingOut()">
           {{ isLoggingOut() ? 'LOGGING OUT...' : 'LOG OUT' }}
@@ -76,13 +78,13 @@
 </aside>
 
 @if (logoutError()) {
-  <p class="error-message" role="alert">
+  <p class="error-message" [class.toast-leaving]="isToastLeaving()" role="alert">
     {{ logoutError() }}
   </p>
 }
 
 @if (logoutSuccess()) {
-  <p class="success-message" role="status">
+  <p class="success-message" [class.toast-leaving]="isToastLeaving()" role="status">
     {{ logoutSuccess() }}
   </p>
 }

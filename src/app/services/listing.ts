@@ -57,19 +57,26 @@ export class ListingService {
       .range(from, to);
   }
 
-  // Single place for brand and size filter logic
   private applyListingFilters<
     T extends {
-      ilike: (column: string, pattern: string) => T;
+      or: (filters: string) => T;
       eq: (column: string, value: string) => T;
     },
   >(query: T, filters?: ListingFilterValues): T {
     if (!filters) return query;
 
-    const brand = filters.brand.trim();
+    const search = filters.search.trim();
 
-    if (brand) {
-      query = query.ilike('brand', `%${brand}%`);
+    if (search) {
+      // Escape characters with special meaning in PostgREST filters.
+      const safeSearch = search
+        .replace(/[%_*(),."\\]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (safeSearch) {
+        query = query.or(`title.ilike.%${safeSearch}%,brand.ilike.%${safeSearch}%`);
+      }
     }
 
     if (filters.sizeType && filters.size) {
