@@ -6,9 +6,12 @@ import {
   HostListener,
   viewChild,
   ElementRef,
+  OnDestroy,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, NavigationStart } from '@angular/router';
 import { Auth } from '../../services/auth';
+import { SUPABASE_CLIENT } from '../../services/supabase';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   imports: [RouterLink],
@@ -16,27 +19,39 @@ import { Auth } from '../../services/auth';
   styleUrl: './navbar.css',
   templateUrl: './navbar.html',
 })
-export class Navbar {
+export class Navbar implements OnDestroy {
   private auth = inject(Auth);
   private router = inject(Router);
+  private supabase = inject(SUPABASE_CLIENT);
 
   readonly isLoggedIn = this.auth.isLoggedIn;
   static readonly menuOpen = signal(false);
   readonly isMenuOpen = Navbar.menuOpen;
+
   readonly logoutError = signal('');
   readonly logoutSuccess = signal('');
   readonly isLoggingOut = signal(false);
+  readonly isToastLeaving = signal(false);
+
+  private toastTimer?: ReturnType<typeof setTimeout>;
+  private toastRemoveTimer?: ReturnType<typeof setTimeout>;
+
+  readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
+  readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
 
   constructor() {
     effect(() => {
       if (this.isLoggedIn()) {
-        this.logoutSuccess.set('');
+        this.clearLogoutMessage();
+      }
+    });
+
+    this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.clearLogoutMessage();
       }
     });
   }
-
-  readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
-  readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
 
   toggleMenu() {
     const willOpen = !this.isMenuOpen();
@@ -88,33 +103,75 @@ export class Navbar {
     }
   }
 
+  private clearToastTimers() {
+    clearTimeout(this.toastTimer);
+    clearTimeout(this.toastRemoveTimer);
+  }
+
   clearLogoutMessage() {
+    this.clearToastTimers();
+    this.isToastLeaving.set(false);
     this.logoutSuccess.set('');
     this.logoutError.set('');
+  }
+
+  private showToast(message: string, isError = false) {
+    this.clearLogoutMessage();
+
+    if (isError) {
+      this.logoutError.set(message);
+    } else {
+      this.logoutSuccess.set(message);
+    }
+
+    this.toastTimer = setTimeout(() => {
+      this.isToastLeaving.set(true);
+
+      this.toastRemoveTimer = setTimeout(() => {
+        this.clearLogoutMessage();
+      }, 350);
+    }, 3000);
   }
 
   async onLogout() {
     if (this.isLoggingOut()) return;
 
-    this.logoutError.set('');
-    this.logoutSuccess.set('');
+    this.clearLogoutMessage();
     this.isLoggingOut.set(true);
 
     try {
       const { error } = await this.auth.signOut();
 
       if (error) {
-        this.logoutError.set('Could not log out. Please try again.');
+        this.showToast('Could not log out. Please try again.', true);
         return;
       }
 
       this.closeMenu();
-      this.logoutSuccess.set('You have been logged out successfully.');
       await this.router.navigate(['/']);
+
+      this.showToast('You have been logged out successfully.');
     } catch {
-      this.logoutError.set('Something went wrong. Please try again.');
+      this.showToast('Something went wrong. Please try again.', true);
     } finally {
       this.isLoggingOut.set(false);
     }
+  }
+
+  async goToMyProfile() {
+    const { data, error } = await this.supabase.auth.getUser();
+
+    if (error || !data.user) {
+      this.closeMenu();
+      await this.router.navigate(['/login']);
+      return;
+    }
+
+    this.closeMenu();
+    await this.router.navigate(['/sellers', data.user.id]);
+  }
+
+  ngOnDestroy() {
+    this.clearToastTimers();
   }
 }

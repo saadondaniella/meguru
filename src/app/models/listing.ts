@@ -13,7 +13,7 @@ export const SIZE_OPTIONS: Record<ListingSizeType, string[]> = {
 };
 
 export interface ListingFilterValues {
-  brand: string;
+  search: string;
   sizeType: ListingSizeType | null;
   size: string | null;
 }

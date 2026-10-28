@@ -45,3 +45,11 @@ img {
   outline: 2px solid var(--color-secondary);
   outline-offset: 3px;
 }
+
+/* Mobile layout spacing */
+
+@media (max-width: 600px) {
+  main {
+    padding-top: 82px;
+  }
+}

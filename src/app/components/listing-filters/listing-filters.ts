@@ -2,7 +2,11 @@ import { Component, input, linkedSignal, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ListingFilterValues, ListingSizeType, SIZE_OPTIONS } from '../../models/listing';
 
-const EMPTY_FILTERS: ListingFilterValues = { brand: '', sizeType: null, size: null };
+const EMPTY_FILTERS: ListingFilterValues = {
+  search: '',
+  sizeType: null,
+  size: null,
+};
 
 @Component({
   selector: 'app-listing-filters',
@@ -20,8 +24,8 @@ export class ListingFilters {
 
   readonly sizeOptions = SIZE_OPTIONS;
 
-  onBrandChange(brand: string) {
-    this.draft.update((draft) => ({ ...draft, brand }));
+  onSearchChange(search: string) {
+    this.draft.update((draft) => ({ ...draft, search }));
   }
 
   // Reset size when changing size system

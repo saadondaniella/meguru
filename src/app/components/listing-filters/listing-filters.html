@@ -1,15 +1,15 @@
 <form class="listing-filters" (ngSubmit)="submit()">
   <div class="brand-search">
-    <label for="brand-search">SEARCH BY BRAND</label>
+    <label for="listing-search">SEARCH</label>
 
     <div class="brand-search-field">
       <input
-        id="brand-search"
+        id="listing-search"
         type="search"
-        name="brand"
-        [ngModel]="draft().brand"
-        (ngModelChange)="onBrandChange($event)"
-        placeholder="Search for a brand..."
+        name="search"
+        [ngModel]="draft().search"
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="Search products, brands or sellers..."
       />
     </div>
   </div>

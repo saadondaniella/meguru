@@ -1,6 +1,12 @@
 @if (seller(); as seller) {
   <section class="public-seller-profile">
-    <h1>{{ seller.display_name }}</h1>
+    <div class="seller-profile-header">
+      <h1>{{ seller.display_name }}</h1>
+
+      @if (isOwnProfile()) {
+        <a routerLink="/seller-profile" class="edit-profile-link"> EDIT PROFILE </a>
+      }
+    </div>
 
     @if (seller.city) {
       <p>{{ seller.city }}</p>

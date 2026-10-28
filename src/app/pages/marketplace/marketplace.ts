@@ -11,6 +11,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ListingService } from '../../services/listing';
 import { ListingFilters } from '../../components/listing-filters/listing-filters';
 import { Listing, ListingFilterValues, SIZE_OPTIONS } from '../../models/listing';
+import { Profile } from '../../services/profile';
 
 @Component({
   selector: 'app-marketplace',
@@ -23,15 +24,21 @@ export class Marketplace implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private injector = inject(Injector);
+  private profileService = inject(Profile);
 
   listings = signal<Listing[]>([]);
   currentPage = signal(1);
   pageSize = 9;
   totalListings = signal(0);
   isLoading = signal(false);
+  sellers = signal<{ id: string; display_name: string }[]>([]);
 
   // Search and filters
-  filters = signal<ListingFilterValues>({ brand: '', sizeType: null, size: null });
+  filters = signal<ListingFilterValues>({
+    search: '',
+    sizeType: null,
+    size: null,
+  });
 
   // Pagination
   totalPages = computed(() => Math.ceil(this.totalListings() / this.pageSize));
@@ -54,19 +61,42 @@ export class Marketplace implements OnInit {
     const size =
       sizeType && sizeParam && SIZE_OPTIONS[sizeType].includes(sizeParam) ? sizeParam : null;
 
-    this.filters.set({ brand: params.get('brand') ?? '', sizeType, size });
+    this.filters.set({
+      search: params.get('search') ?? '',
+      sizeType,
+      size,
+    });
 
     // Restore current page
     const pageParam = Number(params.get('page'));
     const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
 
-    await this.loadPage(page);
+    await Promise.all([this.loadPage(page), this.loadSellers()]);
 
     this.restoreMarketplacePosition();
   }
 
   getImageUrl(imagePath: string): string {
     return this.listingService.getListingImageUrl(imagePath);
+  }
+
+  async loadSellers() {
+    const search = this.filters().search.trim();
+
+    if (!search) {
+      this.sellers.set([]);
+      return;
+    }
+
+    const { data, error } = await this.profileService.searchProfiles(search);
+
+    if (error) {
+      console.error('Error searching sellers:', error);
+      this.sellers.set([]);
+      return;
+    }
+
+    this.sellers.set(data ?? []);
   }
 
   // Fetch listings with current filters
@@ -93,16 +123,16 @@ export class Marketplace implements OnInit {
     }
   }
 
-  // Apply search and filters
   async applyFilters(filters: ListingFilterValues) {
     this.filters.set(filters);
 
-    await this.loadPage(1);
+    await Promise.all([this.loadPage(1), this.loadSellers()]);
 
     await this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {
-        brand: filters.brand.trim() || null,
+        search: filters.search.trim() || null,
+        brand: null,
         sizeType: filters.sizeType,
         size: filters.sizeType ? filters.size : null,
         page: null,
