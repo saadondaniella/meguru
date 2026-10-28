@@ -51,5 +51,6 @@ img {
 @media (max-width: 600px) {
   main {
     padding-top: 82px;
+    padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px));
   }
 }
