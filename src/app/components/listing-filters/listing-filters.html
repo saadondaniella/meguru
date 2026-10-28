@@ -1,0 +1,60 @@
+<form class="listing-filters" (ngSubmit)="submit()">
+  <div class="brand-search">
+    <label for="brand-search">SEARCH BY BRAND</label>
+
+    <div class="brand-search-field">
+      <input
+        id="brand-search"
+        type="search"
+        name="brand"
+        [ngModel]="draft().brand"
+        (ngModelChange)="onBrandChange($event)"
+        placeholder="Search for a brand..."
+      />
+    </div>
+  </div>
+
+  <div class="size-filter">
+    <label for="size-type">SIZE TYPE</label>
+
+    <select
+      id="size-type"
+      name="sizeType"
+      [ngModel]="draft().sizeType"
+      (ngModelChange)="onSizeTypeChange($event)"
+    >
+      <option [ngValue]="null">All size types</option>
+      <option value="international">International</option>
+      <option value="eu_clothing">EU Clothing</option>
+      <option value="eu_shoes">EU Shoes</option>
+    </select>
+  </div>
+
+  <div class="size-filter">
+    <label for="size">SIZE</label>
+
+    <select
+      id="size"
+      name="size"
+      [ngModel]="draft().size"
+      (ngModelChange)="onSizeChange($event)"
+      [disabled]="!draft().sizeType"
+    >
+      <option [ngValue]="null">All sizes</option>
+
+      @if (draft().sizeType; as sizeType) {
+        @for (size of sizeOptions[sizeType]; track size) {
+          <option [value]="size">{{ size }}</option>
+        }
+      }
+    </select>
+  </div>
+
+  <div class="filter-actions">
+    <button type="submit" [disabled]="disabled()">SEARCH</button>
+
+    <button type="button" class="reset-filters" (click)="reset()" [disabled]="disabled()">
+      CLEAR FILTERS
+    </button>
+  </div>
+</form>

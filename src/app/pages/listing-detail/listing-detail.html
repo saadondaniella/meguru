@@ -71,6 +71,28 @@
 
     <p>Condition: {{ listing.condition }}</p>
 
+    @if (listing.brand) {
+      <p>Brand: {{ listing.brand }}</p>
+    }
+
+    @if (listing.size) {
+      <p>
+        Size:
+        @switch (listing.size_type) {
+          @case ('international') {
+            International ·
+          }
+          @case ('eu_clothing') {
+            EU Clothing ·
+          }
+          @case ('eu_shoes') {
+            EU Shoes ·
+          }
+        }
+        {{ listing.size }}
+      </p>
+    }
+
     @if (seller(); as seller) {
       <div class="seller-info">
         <p>
