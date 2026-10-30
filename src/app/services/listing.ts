@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { SUPABASE_CLIENT } from './supabase';
-import { Listing } from '../models/listing';
+import { Listing, ListingFilterValues } from '../models/listing';
 import { ListingImageItem } from '../models/listing-image';
 
 type CreateListing = Pick<
@@ -8,6 +8,9 @@ type CreateListing = Pick<
   'seller_id' | 'title' | 'description' | 'price' | 'category' | 'condition' | 'image_path'
 > & {
   status?: Listing['status'];
+  brand?: Listing['brand'];
+  size_type?: Listing['size_type'];
+  size?: Listing['size'];
 };
 
 @Injectable({
@@ -28,25 +31,67 @@ export class ListingService {
       .order('created_at', { ascending: false });
   }
 
-  async getPublishedListingsBySeller(sellerId: string) {
-    return await this.supabase
+  async getPublishedListingsBySeller(sellerId: string, filters?: ListingFilterValues) {
+    const query = this.supabase
       .from('listings')
       .select('*')
       .eq('seller_id', sellerId)
-      .in('status', ['published', 'sold'])
-      .order('created_at', { ascending: false });
+      .in('status', ['published', 'sold']);
+
+    return await this.applyListingFilters(query, filters).order('created_at', {
+      ascending: false,
+    });
   }
 
-  async getAllListings(page = 1, pageSize = 9) {
+  async getActiveListingsCountBySeller(sellerId: string) {
+    return await this.supabase
+      .from('listings')
+      .select('*', { count: 'exact', head: true })
+      .eq('seller_id', sellerId)
+      .eq('status', 'published');
+  }
+
+  async getAllListings(page = 1, pageSize = 9, filters?: ListingFilterValues) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    return await this.supabase
+    const query = this.supabase
       .from('listings')
       .select('*', { count: 'exact' })
-      .eq('status', 'published')
+      .eq('status', 'published');
+
+    return await this.applyListingFilters(query, filters)
       .order('created_at', { ascending: false })
       .range(from, to);
+  }
+
+  private applyListingFilters<
+    T extends {
+      or: (filters: string) => T;
+      eq: (column: string, value: string) => T;
+    },
+  >(query: T, filters?: ListingFilterValues): T {
+    if (!filters) return query;
+
+    const search = filters.search.trim();
+
+    if (search) {
+      // Escape characters with special meaning in PostgREST filters.
+      const safeSearch = search
+        .replace(/[%_*(),."\\]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (safeSearch) {
+        query = query.or(`title.ilike.%${safeSearch}%,brand.ilike.%${safeSearch}%`);
+      }
+    }
+
+    if (filters.sizeType && filters.size) {
+      query = query.eq('size_type', filters.sizeType).eq('size', filters.size);
+    }
+
+    return query;
   }
 
   async getListingById(listingId: string) {

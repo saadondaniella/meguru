@@ -2,6 +2,41 @@
   <h1>THE MARKETPLACE</h1>
   <p>Pre-loved fashion. Ready for its next chapter.</p>
 
+  <!-- Search and filters -->
+  <app-listing-filters
+    [filters]="filters()"
+    [disabled]="isLoading()"
+    (filtersChange)="applyFilters($event)"
+  />
+
+  <!-- Sellers: only show when searching -->
+  @if (filters().search.trim() && sellers().length > 0) {
+    <section class="marketplace-sellers">
+      <h2>SELLERS</h2>
+
+      <div class="seller-results">
+        @for (seller of sellers(); track seller.id) {
+          <a class="seller-result" [routerLink]="['/sellers', seller.id]">
+            <span class="seller-avatar">
+              {{ seller.display_name.charAt(0).toUpperCase() }}
+            </span>
+
+            <span class="seller-name">
+              {{ seller.display_name }}
+            </span>
+
+            <span class="seller-link">VIEW PROFILE →</span>
+          </a>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Listings -->
+  @if (filters().search.trim()) {
+    <h2 class="marketplace-section-title">LISTINGS</h2>
+  }
+
   <section class="marketplace-grid">
     @for (listing of listings(); track listing.id) {
       <article class="listing-card" [attr.data-listing-id]="listing.id">
@@ -21,16 +56,23 @@
         <p>{{ listing.condition }}</p>
       </article>
     } @empty {
-      <p>No listings available yet.</p>
+      @if (!isLoading()) {
+        @if (sellers().length === 0) {
+          <p>No results found. Try another search.</p>
+        } @else {
+          <p>No listings match your search.</p>
+        }
+      }
     }
   </section>
 
+  <!-- Pagination -->
   @if (totalPages() > 1) {
     <nav class="pagination" aria-label="Marketplace pagination">
       <button
         type="button"
         (click)="changePage(currentPage() - 1)"
-        [disabled]="currentPage() === 1"
+        [disabled]="currentPage() === 1 || isLoading()"
       >
         ← Previous
       </button>
@@ -41,6 +83,7 @@
           (click)="changePage(page)"
           [class.active]="currentPage() === page"
           [attr.aria-current]="currentPage() === page ? 'page' : null"
+          [disabled]="isLoading()"
         >
           {{ page }}
         </button>
@@ -49,7 +92,7 @@
       <button
         type="button"
         (click)="changePage(currentPage() + 1)"
-        [disabled]="currentPage() === totalPages()"
+        [disabled]="currentPage() === totalPages() || isLoading()"
       >
         Next →
       </button>
