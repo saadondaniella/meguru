@@ -1,107 +1,210 @@
 /* MEGURU — SELLER PROFILE */
 
 .seller-profile {
-  width: min(100% - 40px, 620px);
-  margin: 80px auto;
-  color: #1c1917;
+  --profile-green: #4d5d46;
+  --profile-rust: #9e5a44;
+  --profile-cream: #f5f2eb;
+  --profile-ink: #1c1917;
+  --profile-border: #b8b7ad;
+
+  width: min(calc(100% - 80px), 1280px);
+  margin: 0 auto;
+  padding: clamp(40px, 5vh, 70px) 0 60px;
+  color: var(--profile-ink);
 }
 
+/* TWO-COLUMN LAYOUT */
+
+.seller-profile form {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(50px, 7vw, 120px);
+  align-items: start;
+  width: 100%;
+  min-height: calc(100vh - 180px);
+}
+
+.profile-left,
+.profile-right {
+  min-width: 0;
+}
+
+.profile-left {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.profile-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 130px;
+}
+
+/* HEADING */
+
 .seller-profile h1 {
-  margin: 0 0 12px;
+  max-width: 500px;
+  margin: 0 0 20px;
   font-family: 'Noto Serif', serif;
-  font-size: clamp(40px, 5vw, 64px);
+  font-size: clamp(52px, 5.5vw, 88px);
   font-weight: 400;
-  line-height: 1.1;
+  line-height: 1.05;
+  letter-spacing: -0.045em;
 }
 
 .seller-profile .profile-intro {
-  margin: 0 0 48px;
+  margin: 0;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
-.seller-profile form {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: 100%;
-}
+/* PROFILE PICTURE */
 
-.seller-profile .form-field {
+.seller-profile .avatar-field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 14px;
+  padding-top: 28px;
+  border-top: 1px solid var(--profile-border);
 }
 
 .seller-profile label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.seller-profile input,
-.seller-profile textarea {
+.seller-profile .avatar-preview {
+  width: clamp(160px, 17vw, 230px);
+  height: clamp(160px, 17vw, 230px);
+  margin: 12px 0 4px;
+  border: 1px solid var(--profile-green);
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e9e7df;
+}
+
+.seller-profile .avatar-image {
+  display: block;
   width: 100%;
-  min-height: 50px;
-  padding: 12px 14px;
-  border: 1px solid #aaa69e;
+  height: 100%;
+  object-fit: cover;
+}
+
+.seller-profile .avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--profile-green);
+  font-size: 64px;
+}
+
+.seller-profile .avatar-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.seller-profile .avatar-actions input[type='file'] {
+  width: min(100%, 320px);
+  min-height: auto;
+  padding: 10px;
+  border: 1px solid var(--profile-border);
+  background: transparent;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+}
+
+.seller-profile .avatar-actions input::file-selector-button {
+  padding: 8px 12px;
+  margin-right: 10px;
+  border: 1px solid var(--profile-green);
+  background: transparent;
+  color: var(--profile-green);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.seller-profile .remove-avatar-btn {
+  width: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--profile-rust);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.seller-profile .remove-avatar-btn:hover {
+  color: var(--profile-green);
+}
+
+.seller-profile .avatar-field small {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 11px;
+  color: #77736e;
+}
+
+/* FORM FIELDS */
+
+.seller-profile .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.seller-profile .form-field input,
+.seller-profile .form-field textarea {
+  width: 100%;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid var(--profile-border);
   border-radius: 0;
   background: transparent;
-  color: #1c1917;
+  color: var(--profile-ink);
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
-.seller-profile textarea {
-  min-height: 140px;
+.seller-profile .form-field textarea {
+  min-height: 90px;
   resize: vertical;
 }
 
-.seller-profile input:focus,
-.seller-profile textarea:focus {
-  outline: 1px solid #4d5d46;
-  outline-offset: 0;
-  border-color: #4d5d46;
+.seller-profile input:focus-visible,
+.seller-profile textarea:focus-visible,
+.seller-profile button:focus-visible {
+  outline: 2px solid var(--profile-green);
+  outline-offset: 3px;
 }
 
 .seller-profile input[aria-invalid='true'],
 .seller-profile textarea[aria-invalid='true'] {
-  border-color: #9e5a44;
+  border-color: var(--profile-rust);
 }
 
 .seller-profile .character-counter {
   align-self: flex-end;
+  color: #77736e;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  color: #77736e;
-}
-
-.seller-profile .error-message {
-  margin: 0;
-  color: #9e5a44;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.seller-profile .success-message {
-  margin: 0;
-  color: #4d5d46;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.seller-profile .form-feedback {
-  margin-top: 8px;
-}
-
-.seller-profile .status-message {
-  font-size: 13px;
-  color: #4d5d46;
 }
 
 /* INSTAGRAM TOOLTIP */
@@ -109,7 +212,7 @@
 .seller-profile .label-with-info {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
 }
 
 .seller-profile .info-tooltip {
@@ -121,9 +224,9 @@
   border: none;
   background: transparent;
   padding: 0;
-  cursor: help;
+  color: var(--profile-green);
   font-size: 14px;
-  color: #4d5d46;
+  cursor: help;
 }
 
 .seller-profile .tooltip-text {
@@ -133,17 +236,16 @@
   transform: translateX(-50%);
   width: 220px;
   padding: 12px;
-  background: #4d5d46;
-  color: #f5f2eb;
+  background: var(--profile-green);
+  color: var(--profile-cream);
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 12px;
   line-height: 1.5;
-  border-radius: 4px;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s ease;
   z-index: 10;
   pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
 .seller-profile .info-tooltip:hover .tooltip-text,
@@ -152,27 +254,54 @@
   visibility: visible;
 }
 
+/* FEEDBACK */
+
+.seller-profile .error-message {
+  margin: 0;
+  color: var(--profile-rust);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.seller-profile .success-message {
+  margin: 0;
+  color: var(--profile-green);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.seller-profile .form-feedback {
+  margin-top: 4px;
+}
+
+.seller-profile .status-message {
+  font-size: 13px;
+  color: var(--profile-green);
+}
+
 /* BUTTONS */
 
 .seller-profile .submit-wrapper {
-  margin-top: 12px;
+  margin-top: 6px;
 }
 
 .seller-profile .submit-wrapper button,
 .seller-profile .retry-btn {
   width: 100%;
-  min-height: 52px;
-  padding: 14px 20px;
-  border: 1px solid #4d5d46;
+  min-height: 48px;
+  padding: 12px 20px;
+  border: 1px solid var(--profile-green);
   border-radius: 0;
-  background: #4d5d46;
-  color: #f5f2eb;
+  background: var(--profile-green);
+  color: var(--profile-cream);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  font-size: 11px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .seller-profile .submit-wrapper button:hover:not(:disabled),
@@ -185,14 +314,57 @@
   cursor: not-allowed;
 }
 
-/* MOBILE */
+/* TABLET & MOBILE */
+
+@media (max-width: 900px) {
+  .seller-profile {
+    width: min(calc(100% - 48px), 620px);
+    padding: 50px 0 70px;
+  }
+
+  .seller-profile form {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    min-height: auto;
+  }
+
+  .profile-left {
+    gap: 30px;
+  }
+
+  .profile-right {
+    gap: 22px;
+    padding-top: 0;
+  }
+
+  .seller-profile h1 {
+    font-size: clamp(42px, 7vw, 64px);
+  }
+
+  .seller-profile .avatar-preview {
+    width: 140px;
+    height: 140px;
+  }
+
+  .seller-profile .form-field textarea {
+    min-height: 110px;
+  }
+}
 
 @media (max-width: 600px) {
   .seller-profile {
-    margin: 48px auto;
+    width: calc(100% - 40px);
+    padding: 36px 0 60px;
   }
 
-  .seller-profile .profile-intro {
-    margin-bottom: 32px;
+  .seller-profile h1 {
+    font-size: clamp(40px, 11vw, 54px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seller-profile button,
+  .seller-profile .tooltip-text {
+    transition: none;
   }
 }

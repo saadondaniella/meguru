@@ -1,7 +1,23 @@
 @if (seller(); as seller) {
   <section class="public-seller-profile">
     <div class="seller-profile-header">
-      <h1>{{ seller.display_name }}</h1>
+      <div class="seller-identity">
+        <div class="seller-avatar">
+          @if (getAvatarUrl(seller.avatar_path); as avatarUrl) {
+            <img
+              [src]="avatarUrl"
+              [alt]="seller.display_name + ' profile picture'"
+              class="seller-avatar-image"
+            />
+          } @else {
+            <div class="seller-avatar-placeholder">
+              <span aria-hidden="true">👤</span>
+            </div>
+          }
+        </div>
+
+        <h1>{{ seller.display_name }}</h1>
+      </div>
 
       @if (isOwnProfile()) {
         <a routerLink="/seller-profile" class="edit-profile-link"> EDIT PROFILE </a>

@@ -43,6 +43,14 @@ export class ListingService {
     });
   }
 
+  async getActiveListingsCountBySeller(sellerId: string) {
+    return await this.supabase
+      .from('listings')
+      .select('*', { count: 'exact', head: true })
+      .eq('seller_id', sellerId)
+      .eq('status', 'published');
+  }
+
   async getAllListings(page = 1, pageSize = 9, filters?: ListingFilterValues) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;

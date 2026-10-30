@@ -38,18 +38,23 @@
 
   <!-- PROFILE -->
   <button type="button" (click)="goToMyProfile()" aria-label="My profile">
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 21a8 8 0 0 1 16 0" />
-    </svg>
+    @if (isLoggedIn() && avatarUrl()) {
+      <img [src]="avatarUrl()!" alt="" class="mobile-nav-avatar" />
+    } @else {
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </svg>
+    }
+
     <span>PROFILE</span>
   </button>
 
@@ -84,7 +89,7 @@
       >
         <path d="M14 17l5-5-5-5" />
         <path d="M19 12H7" />
-        <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7" />
+        <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1 2 2h-7" />
       </svg>
       <span>LOG IN</span>
     </a>
@@ -125,14 +130,66 @@
     </div>
 
     <div class="menu-links">
-      <a routerLink="/" (click)="closeMenu()"> HOME </a>
+      <!-- PROFILE CARD -->
+      @if (isLoggedIn()) {
+        <button
+          type="button"
+          class="menu-profile-card"
+          (click)="goToMyProfile()"
+          aria-label="View my seller profile"
+        >
+          <span class="menu-profile-avatar">
+            @if (avatarUrl(); as url) {
+              <img [src]="url" alt="" />
+            } @else {
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 21a8 8 0 0 1 16 0" />
+              </svg>
+            }
+          </span>
+
+          <span class="menu-profile-info">
+            <span class="menu-profile-label">MY PROFILE</span>
+            <span class="menu-profile-name">
+              {{ displayName() || 'Your profile' }}
+            </span>
+            <span class="menu-profile-text">
+              {{ activeListingsCount() }}
+              {{ activeListingsCount() === 1 ? 'ACTIVE LISTING' : 'ACTIVE LISTINGS' }}
+            </span>
+          </span>
+
+          <svg
+            class="menu-profile-arrow"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M7 17 17 7" />
+            <path d="M8 7h9v9" />
+          </svg>
+        </button>
+      }
+
+      <a routerLink="/" (click)="closeMenu()">HOME</a>
 
       <a routerLink="/marketplace" (click)="closeMenu()"> EXPLORE </a>
 
       @if (isLoggedIn()) {
         <a routerLink="/listing-management" (click)="closeMenu()"> MY LISTINGS </a>
-
-        <button type="button" (click)="goToMyProfile()">MY PROFILE</button>
 
         <button type="button" (click)="onLogout()" [disabled]="isLoggingOut()">
           {{ isLoggingOut() ? 'LOGGING OUT...' : 'LOG OUT' }}
