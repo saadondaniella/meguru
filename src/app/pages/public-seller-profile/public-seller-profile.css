@@ -25,6 +25,42 @@
   overflow-wrap: anywhere;
 }
 
+/* SELLER IDENTITY */
+
+.seller-identity {
+  display: flex;
+  align-items: center;
+  gap: clamp(24px, 4vw, 60px);
+  min-width: 0;
+}
+
+.seller-avatar {
+  width: clamp(100px, 13vw, 180px);
+  height: clamp(100px, 13vw, 180px);
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid #4d5d46;
+  background: #e9e7df;
+}
+
+.seller-avatar-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.seller-avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #4d5d46;
+  font-size: 48px;
+}
+
 /* Edit profile */
 
 .edit-profile-link {
@@ -245,6 +281,24 @@
 
   .listing-card p {
     font-size: 0.8rem;
+  }
+
+  .seller-identity {
+    gap: 18px;
+    width: 100%;
+  }
+
+  .seller-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .seller-avatar-placeholder {
+    font-size: 32px;
+  }
+
+  .seller-identity h1 {
+    font-size: clamp(2.2rem, 9vw, 4rem);
   }
 }
 

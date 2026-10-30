@@ -30,6 +30,7 @@ export class PublicSellerProfile implements OnInit {
     display_name: string;
     bio: string | null;
     city: string | null;
+    avatar_path: string | null;
   } | null>(null);
 
   async ngOnInit() {
@@ -61,6 +62,10 @@ export class PublicSellerProfile implements OnInit {
 
   getImageUrl(imagePath: string): string {
     return this.listingService.getListingImageUrl(imagePath);
+  }
+
+  getAvatarUrl(avatarPath: string | null): string | null {
+    return this.profileService.getAvatarUrl(avatarPath);
   }
 
   private async checkProfileOwnership() {

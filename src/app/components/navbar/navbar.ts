@@ -8,26 +8,47 @@ import {
   ElementRef,
   OnDestroy,
 } from '@angular/core';
-import { Router, RouterLink, NavigationStart } from '@angular/router';
-import { Auth } from '../../services/auth';
-import { SUPABASE_CLIENT } from '../../services/supabase';
+import { Router, RouterLink, NavigationEnd, NavigationStart } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { Auth } from '../../services/auth';
+import { Profile } from '../../services/profile';
+import { ListingService } from '../../services/listing';
+import { SUPABASE_CLIENT } from '../../services/supabase';
+
 @Component({
-  imports: [RouterLink],
   selector: 'app-navbar',
-  styleUrl: './navbar.css',
+  imports: [RouterLink],
   templateUrl: './navbar.html',
+  styleUrl: './navbar.css',
 })
 export class Navbar implements OnDestroy {
   private auth = inject(Auth);
   private router = inject(Router);
   private supabase = inject(SUPABASE_CLIENT);
+  private profileService = inject(Profile);
+  private listingService = inject(ListingService);
 
+  // AUTH
   readonly isLoggedIn = this.auth.isLoggedIn;
+
+  // MENU
   static readonly menuOpen = signal(false);
   readonly isMenuOpen = Navbar.menuOpen;
 
+  readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
+
+  readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
+
+  // PROFILE
+  readonly currentUserId = signal<string | null>(null);
+  readonly displayName = signal('');
+  readonly avatarUrl = signal<string | null>(null);
+  readonly activeListingsCount = signal(0);
+
+  private profileRequestId = 0;
+
+  // LOGOUT
   readonly logoutError = signal('');
   readonly logoutSuccess = signal('');
   readonly isLoggingOut = signal(false);
@@ -36,22 +57,99 @@ export class Navbar implements OnDestroy {
   private toastTimer?: ReturnType<typeof setTimeout>;
   private toastRemoveTimer?: ReturnType<typeof setTimeout>;
 
-  readonly closeButton = viewChild<ElementRef<HTMLButtonElement>>('closeButton');
-  readonly menuButton = viewChild<ElementRef<HTMLButtonElement>>('menuButton');
-
   constructor() {
+    // Update navbar when authentication changes.
     effect(() => {
       if (this.isLoggedIn()) {
         this.clearLogoutMessage();
+        void this.loadNavbarAvatar();
+      } else {
+        this.profileRequestId++;
+        this.resetProfileData();
       }
     });
 
+    // Refresh profile information when navigating.
     this.router.events.pipe(takeUntilDestroyed()).subscribe((event) => {
       if (event instanceof NavigationStart) {
         this.clearLogoutMessage();
       }
+
+      if (event instanceof NavigationEnd && this.isLoggedIn()) {
+        void this.loadNavbarAvatar();
+      }
     });
   }
+
+  // PROFILE DATA
+
+  private resetProfileData() {
+    this.currentUserId.set(null);
+    this.displayName.set('');
+    this.avatarUrl.set(null);
+    this.activeListingsCount.set(0);
+  }
+
+  async loadNavbarAvatar() {
+    const requestId = ++this.profileRequestId;
+
+    try {
+      const { data, error } = await this.supabase.auth.getUser();
+
+      if (requestId !== this.profileRequestId || !this.isLoggedIn()) {
+        return;
+      }
+
+      if (error || !data.user) {
+        this.resetProfileData();
+        return;
+      }
+
+      const userId = data.user.id;
+      this.currentUserId.set(userId);
+
+      // Fetch profile and active listing count.
+      const [profileResult, listingsResult] = await Promise.all([
+        this.profileService.getProfile(userId),
+        this.listingService.getActiveListingsCountBySeller(userId),
+      ]);
+
+      if (requestId !== this.profileRequestId || !this.isLoggedIn()) {
+        return;
+      }
+
+      // Profile
+      if (profileResult.error) {
+        console.error('Could not load navbar profile:', profileResult.error);
+
+        this.displayName.set('');
+        this.avatarUrl.set(null);
+      } else {
+        const profile = profileResult.data;
+
+        this.displayName.set(profile?.display_name ?? '');
+
+        this.avatarUrl.set(this.profileService.getAvatarUrl(profile?.avatar_path ?? null));
+      }
+
+      // Active listings
+      if (listingsResult.error) {
+        console.error('Could not load active listings count:', listingsResult.error);
+
+        this.activeListingsCount.set(0);
+      } else {
+        this.activeListingsCount.set(listingsResult.count ?? 0);
+      }
+    } catch (error) {
+      if (requestId !== this.profileRequestId) {
+        return;
+      }
+
+      console.error('Could not load navbar information:', error);
+    }
+  }
+
+  // MENU
 
   toggleMenu() {
     const willOpen = !this.isMenuOpen();
@@ -59,6 +157,10 @@ export class Navbar implements OnDestroy {
     this.isMenuOpen.set(willOpen);
 
     if (willOpen) {
+      if (this.isLoggedIn()) {
+        void this.loadNavbarAvatar();
+      }
+
       requestAnimationFrame(() => {
         this.closeButton()?.nativeElement.focus();
       });
@@ -103,6 +205,8 @@ export class Navbar implements OnDestroy {
     }
   }
 
+  // TOAST NOTIFICATIONS
+
   private clearToastTimers() {
     clearTimeout(this.toastTimer);
     clearTimeout(this.toastRemoveTimer);
@@ -133,6 +237,8 @@ export class Navbar implements OnDestroy {
     }, 3000);
   }
 
+  // LOGOUT
+
   async onLogout() {
     if (this.isLoggingOut()) return;
 
@@ -147,7 +253,11 @@ export class Navbar implements OnDestroy {
         return;
       }
 
+      this.profileRequestId++;
+      this.resetProfileData();
+
       this.closeMenu();
+
       await this.router.navigate(['/']);
 
       this.showToast('You have been logged out successfully.');
@@ -157,6 +267,8 @@ export class Navbar implements OnDestroy {
       this.isLoggingOut.set(false);
     }
   }
+
+  // NAVIGATION
 
   async goToMyProfile() {
     const { data, error } = await this.supabase.auth.getUser();
@@ -168,10 +280,14 @@ export class Navbar implements OnDestroy {
     }
 
     this.closeMenu();
+
     await this.router.navigate(['/sellers', data.user.id]);
   }
 
+  // CLEANUP
+
   ngOnDestroy() {
+    this.profileRequestId++;
     this.clearToastTimers();
   }
 }

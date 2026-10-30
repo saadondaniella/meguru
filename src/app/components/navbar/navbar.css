@@ -124,7 +124,7 @@
 }
 
 .menu-brand {
-  margin-bottom: 48px;
+  margin-bottom: 36px;
 }
 
 .menu-brand > span {
@@ -141,7 +141,7 @@
 .menu-links {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .menu-links a,
@@ -161,7 +161,9 @@
   letter-spacing: 0.08em;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .menu-links a:hover,
@@ -174,6 +176,86 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* PROFILE CARD */
+
+.menu-links .menu-profile-card {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  width: 100%;
+  min-height: 106px;
+  padding: 18px;
+  margin-bottom: 10px;
+  text-align: left;
+  border-radius: 4px;
+}
+
+.menu-profile-avatar {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--cream);
+  border-radius: 50%;
+  background: var(--cream);
+  color: var(--green);
+}
+
+.menu-profile-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-profile-avatar svg {
+  width: 32px;
+  height: 32px;
+}
+
+.menu-profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.menu-profile-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.menu-profile-name {
+  max-width: 100%;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.menu-profile-text {
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+.menu-profile-arrow {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+/* FOCUS STATES */
 
 .menu-toggle:focus-visible,
 .menu-close:focus-visible,
@@ -213,7 +295,6 @@
   letter-spacing: 0.02em;
 
   box-shadow: 0 12px 35px rgba(28, 25, 23, 0.15);
-
   animation: toast-enter 0.45s ease-out both;
 }
 
@@ -299,12 +380,10 @@
     top: 50%;
     left: 12px;
     transform: translateY(-50%);
-
     width: 30px;
     height: 30px;
     margin: 0;
     padding: 0;
-
     border: 1px solid var(--green);
     border-radius: 50%;
     gap: 3px;
@@ -375,6 +454,17 @@
     flex-shrink: 0;
   }
 
+  .mobile-nav-avatar {
+    display: block;
+    width: 26px;
+    height: 26px;
+    padding: 2px;
+    border: 1px solid var(--cream);
+    border-radius: 50%;
+    object-fit: cover;
+    box-sizing: border-box;
+  }
+
   .mobile-bottom-nav a:active,
   .mobile-bottom-nav button:active {
     background: rgba(28, 25, 23, 0.12);
@@ -396,6 +486,31 @@
   .menu-panel {
     width: min(88vw, 360px);
     padding: 24px;
+  }
+
+  .menu-brand {
+    margin-bottom: 26px;
+  }
+
+  .menu-links .menu-profile-card {
+    min-height: 88px;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .menu-profile-avatar {
+    width: 50px;
+    height: 50px;
+    flex-basis: 50px;
+  }
+
+  .menu-profile-avatar svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .menu-profile-name {
+    font-size: 12px;
   }
 
   /* TOASTS */
@@ -421,6 +536,8 @@
   }
 
   .menu-panel,
+  .menu-links a,
+  .menu-links button,
   .mobile-bottom-nav a,
   .mobile-bottom-nav button {
     transition: none;

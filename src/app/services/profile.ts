@@ -47,4 +47,60 @@ export class Profile {
   ) {
     return await this.supabase.from('profiles').update(profile).eq('id', userId).select().single();
   }
+
+  async uploadAvatar(userId: string, file: File) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxFileSize = 5 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Please select a JPEG, PNG or WebP image.');
+    }
+
+    if (file.size > maxFileSize) {
+      throw new Error('The image must be smaller than 5 MB.');
+    }
+
+    const extension =
+      file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+
+    const filePath = `${userId}/avatar-${crypto.randomUUID()}.${extension}`;
+
+    const { error } = await this.supabase.storage.from('avatars').upload(filePath, file, {
+      contentType: file.type,
+      upsert: false,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return filePath;
+  }
+
+  async updateAvatarPath(userId: string, avatarPath: string | null) {
+    return await this.supabase
+      .from('profiles')
+      .update({ avatar_path: avatarPath })
+      .eq('id', userId)
+      .select()
+      .single();
+  }
+
+  getAvatarUrl(avatarPath: string | null): string | null {
+    if (!avatarPath) {
+      return null;
+    }
+
+    const { data } = this.supabase.storage.from('avatars').getPublicUrl(avatarPath);
+
+    return data.publicUrl;
+  }
+
+  async deleteAvatar(avatarPath: string) {
+    const { error } = await this.supabase.storage.from('avatars').remove([avatarPath]);
+
+    if (error) {
+      throw error;
+    }
+  }
 }
