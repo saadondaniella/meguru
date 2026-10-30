@@ -180,13 +180,14 @@
 /* PROFILE CARD */
 
 .menu-links .menu-profile-card {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 14px;
   width: 100%;
   min-height: 106px;
-  padding: 18px;
+  padding: 18px 36px;
   margin-bottom: 10px;
   text-align: left;
   border-radius: 4px;
@@ -224,13 +225,14 @@
   align-items: flex-start;
   gap: 5px;
   min-width: 0;
-  flex: 1;
+  flex: 0 1 auto;
 }
 
 .menu-profile-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
 }
 
 .menu-profile-name {
@@ -249,10 +251,11 @@
 }
 
 .menu-profile-arrow {
+  position: absolute;
+  top: 18px;
+  right: 18px;
   width: 18px;
   height: 18px;
-  flex-shrink: 0;
-  align-self: flex-start;
 }
 
 /* FOCUS STATES */
