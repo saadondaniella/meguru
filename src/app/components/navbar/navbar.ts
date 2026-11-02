@@ -270,6 +270,17 @@ export class Navbar implements OnDestroy {
 
   // NAVIGATION
 
+  async goToDashboard() {
+    this.closeMenu();
+
+    if (!this.isLoggedIn()) {
+      await this.router.navigate(['/login']);
+      return;
+    }
+
+    await this.router.navigate(['/dashboard']);
+  }
+
   async goToMyProfile() {
     const { data, error } = await this.supabase.auth.getUser();
 

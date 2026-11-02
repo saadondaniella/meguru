@@ -1,0 +1,38 @@
+<section class="favourites">
+  <h1>MY FAVOURITES</h1>
+
+  @if (isLoading()) {
+    <p role="status">Loading your favourites...</p>
+  } @else if (hasError()) {
+    <div role="alert">
+      <p>We couldn't load your favourites.</p>
+      <button type="button" class="favourites-action" (click)="load()">Try again</button>
+    </div>
+  } @else if (visibleListings().length === 0) {
+    <p>You haven't saved any favourites yet.</p>
+    <a routerLink="/marketplace" class="favourites-action">Browse the marketplace</a>
+  } @else {
+    <section class="favourites-grid" aria-label="Saved listings">
+      @for (listing of visibleListings(); track listing.id) {
+        <app-listing-card [listing]="listing" />
+      }
+    </section>
+  }
+
+  <div class="toast-region" role="status">
+    @if (toast(); as toast) {
+      <div
+        class="toast"
+        (mouseenter)="pauseToast()"
+        (mouseleave)="resumeToast()"
+        (focusin)="pauseToast()"
+        (focusout)="resumeToast()"
+      >
+        <span>{{
+          toast.failed ? 'Could not restore. Try again.' : 'Removed from favourites'
+        }}</span>
+        <button type="button" (click)="undo()">Undo</button>
+      </div>
+    }
+  </div>
+</section>

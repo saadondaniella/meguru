@@ -12,10 +12,11 @@ import { ListingService } from '../../services/listing';
 import { ListingFilters } from '../../components/listing-filters/listing-filters';
 import { Listing, ListingFilterValues, SIZE_OPTIONS } from '../../models/listing';
 import { Profile } from '../../services/profile';
+import { ListingCard } from '../../components/listing-card/listing-card';
 
 @Component({
   selector: 'app-marketplace',
-  imports: [RouterLink, ListingFilters],
+  imports: [RouterLink, ListingFilters, ListingCard],
   templateUrl: './marketplace.html',
   styleUrl: './marketplace.css',
 })
@@ -74,10 +75,6 @@ export class Marketplace implements OnInit {
     await Promise.all([this.loadPage(page), this.loadSellers()]);
 
     this.restoreMarketplacePosition();
-  }
-
-  getImageUrl(imagePath: string): string {
-    return this.listingService.getListingImageUrl(imagePath);
   }
 
   async loadSellers() {

@@ -5,10 +5,11 @@ import { ListingService } from '../../services/listing';
 import { Listing } from '../../models/listing';
 import { RouterLink } from '@angular/router';
 import { SUPABASE_CLIENT } from '../../services/supabase';
+import { ListingCard } from '../../components/listing-card/listing-card';
 
 @Component({
   selector: 'app-public-seller-profile',
-  imports: [RouterLink],
+  imports: [RouterLink, ListingCard],
   templateUrl: './public-seller-profile.html',
   styleUrl: './public-seller-profile.css',
 })
@@ -58,10 +59,6 @@ export class PublicSellerProfile implements OnInit {
 
     this.listings.set(listings ?? []);
     console.log('Seller listings:', listings);
-  }
-
-  getImageUrl(imagePath: string): string {
-    return this.listingService.getListingImageUrl(imagePath);
   }
 
   getAvatarUrl(avatarPath: string | null): string | null {

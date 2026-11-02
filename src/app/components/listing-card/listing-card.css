@@ -1,0 +1,145 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.listing-card a {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.listing-image {
+  position: relative;
+}
+
+.listing-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 5 / 6;
+  object-fit: cover;
+  background: #e9e5dd;
+  transition: transform 0.35s ease;
+}
+
+.listing-card a:hover img {
+  transform: scale(0.98);
+}
+
+.listing-card h2,
+.listing-card h3 {
+  margin: 16px 0 6px;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.listing-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.listing-title-row a {
+  flex: 1;
+  min-width: 0;
+}
+
+.listing-title-row h2,
+.listing-title-row h3 {
+  margin: 0;
+}
+
+.listing-title-row app-favourite-button {
+  flex-shrink: 0;
+}
+
+.listing-card p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+.listing-card p:first-of-type {
+  color: #9e5a44;
+  font-weight: 600;
+}
+
+.listing-card p:last-of-type {
+  text-transform: capitalize;
+}
+
+/* Sold badge */
+
+.sold-badge {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 65px;
+  height: 105px;
+  padding-top: 10px;
+
+  background: #9e5a44;
+  color: #f5f2eb;
+
+  font-family: 'Noto Serif', serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+
+  transform: rotate(12deg);
+  box-shadow: 3px 5px 12px rgba(0, 0, 0, 0.18);
+}
+
+.sold-badge::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 8px;
+  height: 8px;
+  border: 2px solid #f5f2eb;
+  border-radius: 50%;
+  background: #4d5d46;
+}
+
+.sold-badge::after {
+  content: '';
+  position: absolute;
+  bottom: calc(100% - 14px);
+  left: 50%;
+
+  width: 1px;
+  height: 28px;
+  background: #1a1a1a;
+
+  transform: rotate(-15deg);
+  transform-origin: bottom;
+}
+
+@media (max-width: 600px) {
+  .listing-card h2,
+  .listing-card h3 {
+    font-size: 14px;
+    margin-top: 12px;
+  }
+
+  .listing-card p {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listing-card img {
+    transition: none;
+  }
+}

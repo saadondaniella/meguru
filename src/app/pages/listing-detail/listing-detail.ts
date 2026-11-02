@@ -4,9 +4,10 @@ import { Location } from '@angular/common';
 import { ListingService } from '../../services/listing';
 import { Listing } from '../../models/listing';
 import { Profile } from '../../services/profile';
+import { FavouriteButton } from '../../components/favourite-button/favourite-button';
 
 @Component({
-  imports: [RouterLink],
+  imports: [RouterLink, FavouriteButton],
   selector: 'app-listing-detail',
   styleUrl: './listing-detail.css',
   templateUrl: './listing-detail.html',

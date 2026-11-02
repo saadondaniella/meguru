@@ -1,0 +1,81 @@
+<section class="dashboard">
+  @if (isLoading()) {
+    <p>Loading your dashboard...</p>
+  } @else if (errorMessage()) {
+    <p role="alert">{{ errorMessage() }}</p>
+  } @else {
+    <header class="dashboard-header">
+      <p class="dashboard-label">MY SPACE / MEGURU</p>
+
+      <h1>
+        Welcome back
+        @if (displayName()) {
+          , {{ displayName() }}
+        }
+        !
+      </h1>
+
+      <p>Your space to manage, save and share your pieces.</p>
+    </header>
+
+    <div class="storefront-section">
+      <p class="section-label">YOUR PUBLIC STOREFRONT</p>
+
+      <div class="storefront-link">
+        <a [href]="storefrontUrl()" target="_blank" rel="noopener noreferrer">
+          {{ storefrontUrl() }}
+        </a>
+
+        <button
+          type="button"
+          class="copy-button"
+          (click)="copyStorefrontUrl()"
+          aria-label="Copy your storefront link"
+          title="Copy link"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="8" y="8" width="13" height="13" rx="2" />
+            <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <nav class="dashboard-navigation" aria-label="Dashboard navigation">
+      <a routerLink="/listing-management" class="dashboard-card">
+        <span>MY LISTINGS</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+      <a routerLink="/listing-management" class="dashboard-card">
+        <span>CREATE LISTING</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+
+      <a routerLink="/favourites" class="dashboard-card">
+        <span>MY FAVOURITES</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+
+      <a routerLink="/marketplace" class="dashboard-card">
+        <span>MARKETPLACE</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+
+      <a routerLink="/seller-profile" class="dashboard-card">
+        <span>MY PROFILE</span>
+        <span aria-hidden="true">↗</span>
+      </a>
+    </nav>
+  }
+</section>
