@@ -22,17 +22,7 @@
       <p class="section-label">YOUR PUBLIC STOREFRONT</p>
 
       <div class="storefront-link">
-        <a [href]="storefrontUrl()" target="_blank" rel="noopener noreferrer">
-          {{ storefrontUrl() }}
-        </a>
-
-        <button
-          type="button"
-          class="copy-button"
-          (click)="copyStorefrontUrl()"
-          aria-label="Copy your storefront link"
-          title="Copy link"
-        >
+        <div class="storefront-url">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
@@ -40,14 +30,62 @@
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            stroke-width="1.5"
+            stroke-width="1.8"
             stroke-linecap="round"
             stroke-linejoin="round"
             aria-hidden="true"
           >
-            <rect x="8" y="8" width="13" height="13" rx="2" />
-            <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
+
+          <a [href]="storefrontUrl()" target="_blank" rel="noopener noreferrer">
+            {{ storefrontUrl() }}
+          </a>
+        </div>
+
+        <button
+          type="button"
+          class="copy-button"
+          (click)="copyStorefrontUrl()"
+          [attr.aria-label]="isCopied() ? 'Link copied' : 'Copy your storefront link'"
+          [attr.title]="isCopied() ? 'Copied!' : 'Copy link'"
+        >
+          @if (isCopied()) {
+            <span class="copy-success">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+              <span>Copied!</span>
+            </span>
+          } @else {
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="8" y="8" width="13" height="13" rx="2" />
+              <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+            </svg>
+          }
         </button>
       </div>
     </div>

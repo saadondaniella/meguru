@@ -12,11 +12,13 @@ import { Profile } from '../../services/profile';
 export class Dashboard implements OnInit {
   private auth = inject(Auth);
   private profileService = inject(Profile);
+  private copyTimeout?: ReturnType<typeof setTimeout>;
 
   displayName = signal('');
   storefrontUrl = signal('');
   isLoading = signal(true);
   errorMessage = signal('');
+  isCopied = signal(false);
 
   async ngOnInit() {
     try {
@@ -57,6 +59,14 @@ export class Dashboard implements OnInit {
   async copyStorefrontUrl() {
     try {
       await navigator.clipboard.writeText(this.storefrontUrl());
+
+      clearTimeout(this.copyTimeout);
+
+      this.isCopied.set(true);
+
+      this.copyTimeout = setTimeout(() => {
+        this.isCopied.set(false);
+      }, 3500);
     } catch {
       this.errorMessage.set('Unable to copy the link.');
     }
