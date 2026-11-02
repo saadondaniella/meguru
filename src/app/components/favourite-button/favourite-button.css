@@ -1,0 +1,77 @@
+:host {
+  position: relative;
+  display: inline-flex;
+}
+
+.favourite-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font-family: var(--font-label);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.favourite-button svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  transition: transform 0.2s ease;
+}
+
+.favourite-button:hover {
+  color: var(--color-tertiary);
+}
+
+.favourite-button:hover svg {
+  transform: scale(1.1);
+}
+
+.favourite-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Saved by the current user: filled heart */
+.favourite-button.is-saved {
+  color: var(--color-tertiary);
+}
+
+.favourite-button.is-saved svg {
+  fill: currentColor;
+}
+
+.favourite-button[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.favourite-count {
+  min-width: 1ch;
+  font-variant-numeric: tabular-nums;
+}
+
+.favourite-error {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 2px;
+  color: var(--color-primary);
+  font-family: var(--font-label);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .favourite-button svg {
+    transition: none;
+  }
+}

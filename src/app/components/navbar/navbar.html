@@ -37,7 +37,7 @@
   </a>
 
   <!-- PROFILE -->
-  <button type="button" (click)="goToMyProfile()" aria-label="My profile">
+  <button type="button" (click)="goToDashboard()" aria-label="My dashboard">
     @if (isLoggedIn() && avatarUrl()) {
       <img [src]="avatarUrl()!" alt="" class="mobile-nav-avatar" />
     } @else {
@@ -55,7 +55,7 @@
       </svg>
     }
 
-    <span>PROFILE</span>
+    <span>DASHBOARD</span>
   </button>
 
   <!-- LOG OUT / LOG IN -->
@@ -135,8 +135,8 @@
         <button
           type="button"
           class="menu-profile-card"
-          (click)="goToMyProfile()"
-          aria-label="View my seller profile"
+          (click)="goToDashboard()"
+          aria-label="Go to my dashboard"
         >
           <span class="menu-profile-avatar">
             @if (avatarUrl(); as url) {
@@ -158,7 +158,7 @@
           </span>
 
           <span class="menu-profile-info">
-            <span class="menu-profile-label">MY PROFILE</span>
+            <span class="menu-profile-label">MY DASHBOARD</span>
             <span class="menu-profile-name">
               {{ displayName() || 'Your profile' }}
             </span>
@@ -189,7 +189,13 @@
       <a routerLink="/marketplace" (click)="closeMenu()"> EXPLORE </a>
 
       @if (isLoggedIn()) {
-        <a routerLink="/listing-management" (click)="closeMenu()"> MY LISTINGS </a>
+        <a
+          routerLink="/listing-management"
+          [queryParams]="{ create: 'true' }"
+          (click)="closeMenu()"
+        >
+          + NEW LISTING
+        </a>
 
         <button type="button" (click)="onLogout()" [disabled]="isLoggingOut()">
           {{ isLoggingOut() ? 'LOGGING OUT...' : 'LOG OUT' }}

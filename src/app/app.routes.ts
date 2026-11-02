@@ -32,10 +32,22 @@ export const routes: Routes = [
   },
 
   {
+    path: 'dashboard',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
+  },
+
+  {
     path: 'listing-management',
     loadComponent: () =>
       import('./pages/listing-management/listing-management').then((m) => m.ListingManagement),
     canActivate: [authGuard],
+  },
+
+  {
+    path: 'favourites',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/favourites/favourites').then((m) => m.Favourites),
   },
 
   {
