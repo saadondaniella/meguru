@@ -31,6 +31,26 @@
     @if (seller.bio) {
       <p>{{ seller.bio }}</p>
     }
+
+    @if (seller.contact_email || seller.instagram) {
+      <div class="seller-contact">
+        <p class="contact-heading">CONTACT</p>
+
+        @if (seller.contact_email) {
+          <a [href]="'mailto:' + seller.contact_email"> Email seller ↗ </a>
+        }
+
+        @if (seller.instagram) {
+          <a
+            [href]="'https://www.instagram.com/' + seller.instagram.replace('@', '')"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Instagram ↗
+          </a>
+        }
+      </div>
+    }
   </section>
   <section class="seller-listings">
     <h2>Items for sale</h2>

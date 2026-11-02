@@ -32,6 +32,8 @@ export class PublicSellerProfile implements OnInit {
     bio: string | null;
     city: string | null;
     avatar_path: string | null;
+    contact_email: string | null;
+    instagram: string | null;
   } | null>(null);
 
   async ngOnInit() {
