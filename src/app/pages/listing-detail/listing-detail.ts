@@ -5,6 +5,7 @@ import { ListingService } from '../../services/listing';
 import { Listing } from '../../models/listing';
 import { Profile } from '../../services/profile';
 import { FavouriteButton } from '../../components/favourite-button/favourite-button';
+import { LISTING_CONDITION_LABELS } from '../../models/listing';
 
 @Component({
   imports: [RouterLink, FavouriteButton],
@@ -25,6 +26,8 @@ export class ListingDetail implements OnInit {
   selectedImageIndex = signal(0);
   selectedImageUrl = computed(() => this.imageUrls()[this.selectedImageIndex()] ?? null);
   seller = signal<{ id: string; display_name: string } | null>(null);
+
+  readonly conditionLabels = LISTING_CONDITION_LABELS;
 
   ngOnInit() {
     console.log('ListingDetail initialized');

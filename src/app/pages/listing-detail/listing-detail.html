@@ -86,9 +86,20 @@
         }
 
         <div class="listing-details">
-          <p>Category: {{ listing.category }}</p>
+          <p>
+            Collection:
+            {{
+              listing.category === 'free'
+                ? 'Pass It On'
+                : listing.category === 'exclusive'
+                  ? 'Exclusive'
+                  : 'Budget'
+            }}
+          </p>
 
-          <p>Condition: {{ listing.condition }}</p>
+          @if (listing.condition) {
+            <p>Condition: {{ conditionLabels[listing.condition] }}</p>
+          }
 
           @if (listing.brand) {
             <p>Brand: {{ listing.brand }}</p>

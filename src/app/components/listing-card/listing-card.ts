@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { ListingService } from '../../services/listing';
 import { Listing } from '../../models/listing';
 import { FavouriteButton } from '../favourite-button/favourite-button';
+import { LISTING_CONDITION_LABELS } from '../../models/listing';
 
 @Component({
   selector: 'app-listing-card',
@@ -19,6 +20,7 @@ export class ListingCard {
   readonly listing = input.required<Listing>();
   readonly headingLevel = input<2 | 3>(2);
   readonly fromMarketplace = input(false);
+  readonly conditionLabels = LISTING_CONDITION_LABELS;
 
   // Emits the listing id when the user opens the listing.
   readonly opened = output<string>();

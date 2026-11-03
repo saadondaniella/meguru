@@ -71,7 +71,7 @@ export class Marketplace implements OnInit {
       const labels = {
         exclusive: 'Exclusive',
         budget: 'Budget',
-        free: 'Free',
+        free: 'Pass It On',
       };
 
       tags.push({

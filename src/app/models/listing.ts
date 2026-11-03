@@ -2,6 +2,14 @@ export type ListingCategory = 'exclusive' | 'budget' | 'free';
 
 export type ListingCondition = 'new_with_tags' | 'like_new' | 'very_good' | 'good' | 'well_worn';
 
+export const LISTING_CONDITION_LABELS: Record<ListingCondition, string> = {
+  new_with_tags: 'New with tags',
+  like_new: 'Like new',
+  very_good: 'Very good',
+  good: 'Good',
+  well_worn: 'Well worn',
+};
+
 export type ListingStatus = 'draft' | 'published' | 'sold';
 
 export type ListingSizeType = 'international' | 'eu_clothing' | 'eu_shoes';
