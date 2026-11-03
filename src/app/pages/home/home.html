@@ -1,40 +1,66 @@
 <section class="home">
-  <!-- Search -->
-  <form class="home-search" (ngSubmit)="onSearch()" role="search">
-    <label for="home-search-input" class="visually-hidden">
-      Search products, brands or sellers
-    </label>
+  <div class="home-inner">
+    <!-- EDITORIAL HEADER -->
 
-    <div class="home-search-field">
-      <button type="submit" class="home-search-button" aria-label="Search">
-        <span aria-hidden="true">⌕</span>
-      </button>
+    <header class="home-header">
+      <span>PRE-LOVED CLOTHING</span>
 
-      <input
-        id="home-search-input"
-        type="search"
-        name="search"
-        [ngModel]="search()"
-        (ngModelChange)="search.set($event)"
-        placeholder="SEARCH BRAND, PRODUCT, PROFILE"
-      />
+      <div class="home-header-actions">
+        <span>EST. 2026</span>
+
+        @if (isLoggedIn()) {
+          <a routerLink="/dashboard" class="home-login"> MY DASHBOARD </a>
+        } @else {
+          <a routerLink="/login" class="home-login"> LOG IN </a>
+        }
+      </div>
+    </header>
+
+    <!-- HERO -->
+    <div class="home-hero">
+      <!-- Decorative animated ring -->
+      <div class="hero-ring" aria-hidden="true">
+        <img src="/images/meguru-ring.png" alt="" />
+      </div>
+
+      <!-- Main typography -->
+      <div class="hero-title">
+        <h1>MEGURU</h1>
+        <p class="hero-tagline">ONLINE SECONDHAND MARKETPLACE</p>
+      </div>
     </div>
-  </form>
 
-  <!-- Home content -->
-  <h1>MEGURU</h1>
-  <p>Welcome to MEGURU – your secondhand fashion marketplace.</p>
+    <!-- SEARCH -->
+    <form class="home-search" (ngSubmit)="onSearch()" role="search">
+      <label for="home-search-input" class="visually-hidden">
+        Search products, brands or sellers
+      </label>
 
-  <nav class="home-links">
-    <a routerLink="/marketplace">Marketplace</a>
+      <div class="home-search-field">
+        <button type="submit" class="home-search-button" aria-label="Search">
+          <span aria-hidden="true">⌕</span>
+        </button>
 
-    @if (isLoggedIn()) {
-      <button type="button" (click)="goToMyProfile()">My profile</button>
+        <input
+          id="home-search-input"
+          type="search"
+          name="search"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+          placeholder="SEARCH BRAND, PRODUCT, PROFILE"
+        />
+      </div>
+    </form>
 
-      <a routerLink="/listing-management">My listings</a>
-    } @else {
-      <a routerLink="/login">Login</a>
-      <a routerLink="/register">Register</a>
-    }
-  </nav>
+    <!-- BOTTOM CONTENT -->
+    <div class="home-bottom">
+      <div class="home-intro">
+        <span class="home-intro-label">WEAR IT. PASS IT ON.</span>
+
+        <p>Discover something new to you. Give something old a new life.</p>
+      </div>
+
+      <a routerLink="/marketplace" class="home-explore"> EXPLORE MARKETPLACE </a>
+    </div>
+  </div>
 </section>
