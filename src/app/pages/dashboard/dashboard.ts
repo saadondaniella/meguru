@@ -2,10 +2,11 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Auth } from '../../services/auth';
 import { Profile } from '../../services/profile';
+import { EditorialFeature } from '../../components/editorial-feature/editorial-feature';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink],
+  imports: [RouterLink, EditorialFeature],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })

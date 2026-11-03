@@ -135,32 +135,35 @@
 .dashboard-navigation {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 16px 24px;
+  margin-top: 64px;
 }
 
 .dashboard-card {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  min-height: 180px;
-  padding: 24px;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  padding: 16px 20px;
+  gap: 12px;
   border: 1px solid #4d5d46;
   color: #4d5d46;
+  text-align: center;
   text-decoration: none;
   transition:
     background 0.2s ease,
     color 0.2s ease;
 }
 
-.dashboard-card span:first-child {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  letter-spacing: 0.05em;
+.dashboard-card svg {
+  flex-shrink: 0;
 }
 
-.dashboard-card span:last-child {
-  font-size: 24px;
+.dashboard-card span {
+  font-family: 'Noto Serif', serif;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
 }
 
 .dashboard-card:hover {
@@ -191,13 +194,19 @@
   }
 
   .dashboard-navigation {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 32px;
   }
 
   .dashboard-card {
-    min-height: 110px;
-    padding: 20px;
+    min-height: 52px;
+    padding: 12px 8px;
+  }
+
+  .dashboard-card span {
+    font-size: 11px;
+    letter-spacing: 0.02em;
   }
 
   .storefront-link a {
