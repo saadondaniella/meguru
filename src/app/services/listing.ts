@@ -88,6 +88,18 @@ export class ListingService {
     }
   }
 
+  async getLatestCollectionListing(category: 'exclusive' | 'budget' | 'free') {
+    return await this.supabase
+      .from('listings')
+      .select('id, image_path')
+      .eq('status', 'published')
+      .eq('category', category)
+      .not('image_path', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+  }
+
   private applyListingFilters<
     T extends {
       or: (filters: string) => T;

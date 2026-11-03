@@ -32,5 +32,7 @@
   </div>
 
   <p>{{ listing().price }} kr</p>
-  <p>{{ listing().condition }}</p>
+  @if (listing().condition; as condition) {
+    <p>{{ conditionLabels[condition] }}</p>
+  }
 </article>

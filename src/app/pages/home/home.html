@@ -63,4 +63,52 @@
       <a routerLink="/marketplace" class="home-explore"> EXPLORE MARKETPLACE </a>
     </div>
   </div>
+
+  <!-- MEGURU COLLECTIONS -->
+  <section class="home-collections" aria-labelledby="collections-title">
+    <div class="collections-inner">
+      <span class="collections-eyebrow">01 / DISCOVER</span>
+
+      <h2 id="collections-title">Explore MEGURU's collections.</h2>
+
+      <div class="collections-grid">
+        <a
+          routerLink="/marketplace"
+          [queryParams]="{ category: 'exclusive' }"
+          class="collection-card"
+        >
+          <div class="collection-image">
+            <img
+              [src]="collectionImages().exclusive || '/images/collection-exclusive.jpg'"
+              alt="Explore exclusive secondhand fashion"
+            />
+          </div>
+          <h3>EXCLUSIVE</h3>
+          <p>Pre-loved statement pieces.</p>
+        </a>
+
+        <a routerLink="/marketplace" [queryParams]="{ category: 'budget' }" class="collection-card">
+          <div class="collection-image">
+            <img
+              [src]="collectionImages().budget || '/images/collection-budget.jpg'"
+              alt="Explore affordable secondhand fashion"
+            />
+          </div>
+          <h3>BUDGET</h3>
+          <p>Great finds, smaller prices.</p>
+        </a>
+
+        <a routerLink="/marketplace" [queryParams]="{ category: 'free' }" class="collection-card">
+          <div class="collection-image">
+            <img
+              [src]="collectionImages().free || '/images/collection-pass-it-on.jpg'"
+              alt="Explore clothing being given away"
+            />
+          </div>
+          <h3>PASS IT ON</h3>
+          <p>Good clothes deserve another life.</p>
+        </a>
+      </div>
+    </div>
+  </section>
 </section>
