@@ -10,7 +10,13 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ListingService } from '../../services/listing';
 import { ListingFilters } from '../../components/listing-filters/listing-filters';
-import { Listing, ListingFilterValues, SIZE_OPTIONS } from '../../models/listing';
+import {
+  Listing,
+  ListingFilterValues,
+  ListingCategory,
+  ListingCondition,
+  SIZE_OPTIONS,
+} from '../../models/listing';
 import { Profile } from '../../services/profile';
 import { ListingCard } from '../../components/listing-card/listing-card';
 
@@ -33,12 +39,93 @@ export class Marketplace implements OnInit {
   totalListings = signal(0);
   isLoading = signal(false);
   sellers = signal<{ id: string; display_name: string }[]>([]);
+  sort = signal<'newest' | 'oldest' | 'price_asc' | 'price_desc'>('newest');
 
   // Search and filters
   filters = signal<ListingFilterValues>({
     search: '',
+    category: null,
     sizeType: null,
     size: null,
+    minPrice: null,
+    maxPrice: null,
+    condition: null,
+  });
+
+  activeFilters = computed(() => {
+    const filters = this.filters();
+
+    const tags: {
+      key: keyof ListingFilterValues;
+      label: string;
+    }[] = [];
+
+    if (filters.search.trim()) {
+      tags.push({
+        key: 'search',
+        label: `Search: ${filters.search.trim()}`,
+      });
+    }
+
+    if (filters.category) {
+      const labels = {
+        exclusive: 'Exclusive',
+        budget: 'Budget',
+        free: 'Free',
+      };
+
+      tags.push({
+        key: 'category',
+        label: labels[filters.category],
+      });
+    }
+
+    if (filters.condition) {
+      const labels = {
+        new_with_tags: 'New with tags',
+        like_new: 'Like new',
+        very_good: 'Very good',
+        good: 'Good',
+        well_worn: 'Well worn',
+      };
+
+      tags.push({
+        key: 'condition',
+        label: labels[filters.condition],
+      });
+    }
+
+    if (filters.sizeType) {
+      const labels = {
+        international: 'International',
+        eu_clothing: 'EU Clothing',
+        eu_shoes: 'EU Shoes',
+      };
+
+      tags.push({
+        key: 'sizeType',
+        label: labels[filters.sizeType],
+      });
+    }
+
+    if (filters.size) {
+      tags.push({
+        key: 'size',
+        label: `Size ${filters.size}`,
+      });
+    }
+
+    if (filters.minPrice !== null || filters.maxPrice !== null) {
+      const min = filters.minPrice ?? 0;
+      const max = filters.maxPrice === null ? '10 000+' : filters.maxPrice;
+
+      tags.push({
+        key: 'minPrice',
+        label: `${min}–${max} kr`,
+      });
+    }
+
+    return tags;
   });
 
   // Pagination
@@ -62,15 +149,52 @@ export class Marketplace implements OnInit {
     const size =
       sizeType && sizeParam && SIZE_OPTIONS[sizeType].includes(sizeParam) ? sizeParam : null;
 
+    const categoryParam = params.get('category');
+    const category: ListingCategory | null =
+      categoryParam === 'exclusive' || categoryParam === 'budget' || categoryParam === 'free'
+        ? categoryParam
+        : null;
+
+    const conditionParam = params.get('condition');
+    const condition: ListingCondition | null =
+      conditionParam === 'new_with_tags' ||
+      conditionParam === 'like_new' ||
+      conditionParam === 'very_good' ||
+      conditionParam === 'good' ||
+      conditionParam === 'well_worn'
+        ? conditionParam
+        : null;
+
+    const parsePrice = (value: string | null): number | null => {
+      if (value === null || value.trim() === '') return null;
+
+      const price = Number(value);
+      return Number.isFinite(price) && price >= 0 ? price : null;
+    };
+
+    const minPrice = parsePrice(params.get('minPrice'));
+    const maxPrice = parsePrice(params.get('maxPrice'));
+
     this.filters.set({
       search: params.get('search') ?? '',
+      category,
       sizeType,
       size,
+      minPrice,
+      maxPrice,
+      condition,
     });
 
     // Restore current page
     const pageParam = Number(params.get('page'));
     const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+
+    // Restore sorting from URL
+    const sortParam = params.get('sort');
+
+    if (sortParam === 'oldest' || sortParam === 'price_asc' || sortParam === 'price_desc') {
+      this.sort.set(sortParam);
+    }
 
     await Promise.all([this.loadPage(page), this.loadSellers()]);
 
@@ -105,6 +229,7 @@ export class Marketplace implements OnInit {
         page,
         this.pageSize,
         this.filters(),
+        this.sort(),
       );
 
       if (error) {
@@ -130,12 +255,62 @@ export class Marketplace implements OnInit {
       queryParams: {
         search: filters.search.trim() || null,
         brand: null,
+        category: filters.category,
         sizeType: filters.sizeType,
         size: filters.sizeType ? filters.size : null,
+        minPrice: filters.minPrice,
+        maxPrice: filters.maxPrice,
+        condition: filters.condition,
         page: null,
       },
       queryParamsHandling: 'merge',
       replaceUrl: true,
+    });
+  }
+
+  async changeSort(sort: 'newest' | 'oldest' | 'price_asc' | 'price_desc') {
+    this.sort.set(sort);
+
+    await this.loadPage(1);
+
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        sort: sort === 'newest' ? null : sort,
+        page: null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  async removeFilter(field: keyof ListingFilterValues) {
+    const updatedFilters = {
+      ...this.filters(),
+      [field]: field === 'search' ? '' : null,
+    };
+
+    if (field === 'sizeType') {
+      updatedFilters.size = null;
+    }
+
+    if (field === 'minPrice' || field === 'maxPrice') {
+      updatedFilters.minPrice = null;
+      updatedFilters.maxPrice = null;
+    }
+
+    await this.applyFilters(updatedFilters);
+  }
+
+  async clearAllFilters() {
+    await this.applyFilters({
+      search: '',
+      category: null,
+      sizeType: null,
+      size: null,
+      minPrice: null,
+      maxPrice: null,
+      condition: null,
     });
   }
 

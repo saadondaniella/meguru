@@ -98,3 +98,160 @@
   outline: 2px solid #9e5a44;
   outline-offset: 3px;
 }
+
+/* ACTIVE FILTERS */
+
+.active-filters {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: -38px 0 24px;
+}
+
+.active-filters-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #4d5d46;
+  opacity: 0.6;
+}
+
+.active-filters-list {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.active-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #4d5d46;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.active-filter-tag span {
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1;
+  opacity: 0.6;
+  transform: translateY(-1px);
+}
+
+.active-filter-tag:hover,
+.clear-active-filters:hover {
+  opacity: 0.6;
+}
+
+.clear-active-filters {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #4d5d46;
+  font: inherit;
+  font-size: 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.active-filter-tag:disabled,
+.clear-active-filters:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.active-filter-tag:focus-visible,
+.clear-active-filters:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 3px;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .active-filters {
+    gap: 8px;
+    margin: -12px 0 20px;
+  }
+
+  .active-filters-label {
+    font-size: 8px;
+  }
+
+  .active-filters-list {
+    gap: 12px;
+  }
+
+  .active-filter-tag {
+    font-size: 10px;
+  }
+
+  .clear-active-filters {
+    font-size: 9px;
+  }
+}
+
+/* SORTING */
+
+.marketplace-sort {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.marketplace-sort label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.marketplace-sort select {
+  min-width: 150px;
+  padding: 8px 22px 8px 0;
+  border: none;
+  border-bottom: 1px solid #4d5d46;
+  border-radius: 0;
+  background: transparent;
+  color: #4d5d46;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.marketplace-sort select:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 3px;
+}
+
+.marketplace-sort select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .marketplace-sort {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .marketplace-sort label {
+    font-size: 9px;
+  }
+
+  .marketplace-sort select {
+    min-width: 135px;
+    font-size: 11px;
+  }
+}

@@ -51,7 +51,12 @@ export class ListingService {
       .eq('status', 'published');
   }
 
-  async getAllListings(page = 1, pageSize = 9, filters?: ListingFilterValues) {
+  async getAllListings(
+    page = 1,
+    pageSize = 9,
+    filters?: ListingFilterValues,
+    sort: 'newest' | 'oldest' | 'price_asc' | 'price_desc' = 'newest',
+  ) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
@@ -60,19 +65,40 @@ export class ListingService {
       .select('*', { count: 'exact' })
       .eq('status', 'published');
 
-    return await this.applyListingFilters(query, filters)
-      .order('created_at', { ascending: false })
-      .range(from, to);
+    const filteredQuery = this.applyListingFilters(query, filters);
+
+    switch (sort) {
+      case 'price_asc':
+        return await filteredQuery
+          .order('price', { ascending: true })
+          .order('created_at', { ascending: false })
+          .range(from, to);
+
+      case 'price_desc':
+        return await filteredQuery
+          .order('price', { ascending: false })
+          .order('created_at', { ascending: false })
+          .range(from, to);
+
+      case 'oldest':
+        return await filteredQuery.order('created_at', { ascending: true }).range(from, to);
+
+      default:
+        return await filteredQuery.order('created_at', { ascending: false }).range(from, to);
+    }
   }
 
   private applyListingFilters<
     T extends {
       or: (filters: string) => T;
       eq: (column: string, value: string) => T;
+      gte: (column: string, value: number) => T;
+      lte: (column: string, value: number) => T;
     },
   >(query: T, filters?: ListingFilterValues): T {
     if (!filters) return query;
 
+    // Search by title or brand
     const search = filters.search.trim();
 
     if (search) {
@@ -87,8 +113,29 @@ export class ListingService {
       }
     }
 
+    // Filter by size
     if (filters.sizeType && filters.size) {
       query = query.eq('size_type', filters.sizeType).eq('size', filters.size);
+    }
+
+    // Filter by category
+    if (filters.category) {
+      query = query.eq('category', filters.category);
+    }
+
+    // Filter by condition
+    if (filters.condition) {
+      query = query.eq('condition', filters.condition);
+    }
+
+    // Filter by minimum price
+    if (filters.minPrice !== null) {
+      query = query.gte('price', filters.minPrice);
+    }
+
+    // Filter by maximum price
+    if (filters.maxPrice !== null) {
+      query = query.lte('price', filters.maxPrice);
     }
 
     return query;
