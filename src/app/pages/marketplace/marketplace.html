@@ -2,35 +2,117 @@
   <h1>THE MARKETPLACE</h1>
   <p>Pre-loved fashion. Ready for its next chapter.</p>
 
+  <!-- Search and filters -->
+
+  <app-listing-filters
+    [filters]="filters()"
+    [disabled]="isLoading()"
+    [totalResults]="totalListings()"
+    (filtersChange)="applyFilters($event)"
+  />
+
+  <!-- ACTIVE FILTERS -->
+  @if (activeFilters().length > 0) {
+    <div class="active-filters">
+      <span class="active-filters-label">FILTERED BY</span>
+
+      <div class="active-filters-list">
+        @for (filter of activeFilters(); track filter.key) {
+          <button
+            type="button"
+            class="active-filter-tag"
+            (click)="removeFilter(filter.key)"
+            [disabled]="isLoading()"
+            [attr.aria-label]="'Remove filter: ' + filter.label"
+          >
+            {{ filter.label }}
+            <span aria-hidden="true">×</span>
+          </button>
+        }
+
+        <button
+          type="button"
+          class="clear-active-filters"
+          (click)="clearAllFilters()"
+          [disabled]="isLoading()"
+        >
+          CLEAR ALL
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Sellers: only show when searching -->
+  @if (filters().search.trim() && sellers().length > 0) {
+    <section class="marketplace-sellers">
+      <h2>SELLERS</h2>
+
+      <div class="seller-results">
+        @for (seller of sellers(); track seller.id) {
+          <a class="seller-result" [routerLink]="['/sellers', seller.id]">
+            <span class="seller-avatar">
+              {{ seller.display_name.charAt(0).toUpperCase() }}
+            </span>
+
+            <span class="seller-name">
+              {{ seller.display_name }}
+            </span>
+
+            <span class="seller-link">VIEW PROFILE →</span>
+          </a>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Listings -->
+  @if (filters().search.trim()) {
+    <h2 class="marketplace-section-title">LISTINGS</h2>
+  }
+
+  <!-- SORT LISTINGS -->
+  <div class="marketplace-sort">
+    <label for="listing-sort">SORT BY</label>
+
+    <select
+      id="listing-sort"
+      name="sort"
+      [value]="sort()"
+      (change)="changeSort($any($event.target).value)"
+      [disabled]="isLoading()"
+    >
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="price_asc">Price: Low to high</option>
+      <option value="price_desc">Price: High to low</option>
+    </select>
+  </div>
+
   <section class="marketplace-grid">
     @for (listing of listings(); track listing.id) {
-      <article class="listing-card" [attr.data-listing-id]="listing.id">
-        <a
-          [routerLink]="['/listings', listing.id]"
-          [state]="{ fromMarketplace: true }"
-          (click)="saveScrollPosition(listing.id)"
-        >
-          @if (listing.image_path) {
-            <img [src]="getImageUrl(listing.image_path)" [alt]="listing.title" />
-          }
-
-          <h2>{{ listing.title }}</h2>
-        </a>
-
-        <p>{{ listing.price }} kr</p>
-        <p>{{ listing.condition }}</p>
-      </article>
+      <app-listing-card
+        [listing]="listing"
+        [fromMarketplace]="true"
+        (opened)="saveScrollPosition($event)"
+      />
     } @empty {
-      <p>No listings available yet.</p>
+      @if (!isLoading()) {
+        @if (sellers().length === 0) {
+          <p>No listings match your filters. Try adjusting your search or filters.</p>
+        } @else {
+          <p>No listings match your search.</p>
+        }
+      }
     }
   </section>
 
+  <!-- Pagination -->
   @if (totalPages() > 1) {
     <nav class="pagination" aria-label="Marketplace pagination">
       <button
         type="button"
         (click)="changePage(currentPage() - 1)"
-        [disabled]="currentPage() === 1"
+        [disabled]="currentPage() === 1 || isLoading()"
       >
         ← Previous
       </button>
@@ -41,6 +123,7 @@
           (click)="changePage(page)"
           [class.active]="currentPage() === page"
           [attr.aria-current]="currentPage() === page ? 'page' : null"
+          [disabled]="isLoading()"
         >
           {{ page }}
         </button>
@@ -49,7 +132,7 @@
       <button
         type="button"
         (click)="changePage(currentPage() + 1)"
-        [disabled]="currentPage() === totalPages()"
+        [disabled]="currentPage() === totalPages() || isLoading()"
       >
         Next →
       </button>

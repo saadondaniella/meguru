@@ -67,6 +67,9 @@ describe('SellerProfile', () => {
             getProfile: mockGetProfile,
             updateProfile: mockUpdateProfile,
             createProfile: mockCreateProfile,
+            getAvatarUrl: vi.fn((path: string | null) =>
+              path ? `https://example.com/avatars/${path}` : null,
+            ),
           },
         },
       ],

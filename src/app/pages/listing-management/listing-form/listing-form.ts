@@ -2,7 +2,12 @@ import { Component, inject, input, model, OnInit, output, signal } from '@angula
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ListingService } from '../../../services/listing';
 import { SUPABASE_CLIENT } from '../../../services/supabase';
-import { Listing, ListingCategory, ListingCondition } from '../../../models/listing';
+import {
+  Listing,
+  ListingCategory,
+  ListingCondition,
+  ListingSizeType,
+} from '../../../models/listing';
 import { ListingImageItem } from '../../../models/listing-image';
 import { ListingImagePicker } from './listing-image-picker/listing-image-picker';
 
@@ -14,6 +19,9 @@ type ListingFields = {
   price: number | null;
   category: ListingCategory;
   condition: ListingCondition;
+  brand: string | null;
+  size_type: ListingSizeType | null;
+  size: string | null;
 };
 
 @Component({
@@ -29,8 +37,6 @@ export class ListingForm implements OnInit {
   listingService = inject(ListingService);
 
   // Listing being edited, or null when creating a new one.
-  // The parent renders this component only while the modal is open, so each
-  // opening gets a fresh instance that is initialised in ngOnInit.
   listing = input<Listing | null>(null);
   isUploading = model(false);
 
@@ -43,14 +49,32 @@ export class ListingForm implements OnInit {
     price: [null as number | null, [Validators.required, Validators.min(0)]],
     category: ['budget', Validators.required],
     condition: ['good', Validators.required],
+    brand: ['', Validators.maxLength(100)],
+    size_type: [null as ListingSizeType | null],
+    size: [null as string | null],
   });
 
+  constructor() {
+    this.listingForm.controls.size.disable();
+
+    this.listingForm.controls.size_type.valueChanges.subscribe((type) => {
+      this.listingForm.controls.size.setValue(null);
+
+      if (type) {
+        this.listingForm.controls.size.enable();
+      } else {
+        this.listingForm.controls.size.disable();
+      }
+    });
+  }
+
   formErrorMessage = signal('');
+
   // Ordered images; the first one is the main image.
   images = signal<ListingImageItem[]>([]);
   isLoadingImages = signal(false);
-  // True when the saved images could not be loaded. Saving is blocked then,
-  // otherwise an empty list would wipe the listing's existing images.
+
+  // Block saving if existing images could not be loaded.
   imagesLoadFailed = signal(false);
 
   private initialImagePaths: string[] = [];
@@ -59,13 +83,24 @@ export class ListingForm implements OnInit {
     const listing = this.listing();
 
     if (listing) {
-      this.listingForm.patchValue({
-        title: listing.title ?? '',
-        description: listing.description ?? '',
-        price: listing.price,
-        category: listing.category ?? 'budget',
-        condition: listing.condition ?? 'good',
-      });
+      this.listingForm.patchValue(
+        {
+          title: listing.title ?? '',
+          description: listing.description ?? '',
+          price: listing.price,
+          category: listing.category ?? 'budget',
+          condition: listing.condition ?? 'good',
+          brand: listing.brand ?? '',
+          size_type: listing.size_type ?? null,
+          size: listing.size ?? null,
+        },
+        { emitEvent: false },
+      );
+
+      if (listing.size_type) {
+        this.listingForm.controls.size.enable({ emitEvent: false });
+      }
+
       void this.loadExistingImages(listing);
     }
   }
@@ -87,6 +122,7 @@ export class ListingForm implements OnInit {
     }
 
     this.initialImagePaths = paths;
+
     this.images.set(
       paths.map((imagePath) => ({
         kind: 'existing',
@@ -118,6 +154,7 @@ export class ListingForm implements OnInit {
   // SAVE LISTING AS DRAFT
   async onSaveDraft() {
     if (this.isUploading() || this.isLoadingImages()) return;
+
     this.formErrorMessage.set('');
 
     const editing = this.listing();
@@ -134,9 +171,10 @@ export class ListingForm implements OnInit {
     if (
       values.title.length > 100 ||
       values.description.length > 2000 ||
+      values.brand.length > 100 ||
       (values.price !== null && (!Number.isFinite(values.price) || values.price < 0))
     ) {
-      this.formErrorMessage.set('Please check the title, description and price.');
+      this.formErrorMessage.set('Please check the title, description, price and brand.');
       return;
     }
 
@@ -147,6 +185,9 @@ export class ListingForm implements OnInit {
         price: values.category === 'free' ? 0 : values.price,
         category: values.category as ListingCategory,
         condition: values.condition as ListingCondition,
+        brand: values.brand.trim() || null,
+        size_type: values.size_type && values.size ? values.size_type : null,
+        size: values.size_type && values.size ? values.size : null,
       },
       'draft',
     );
@@ -155,6 +196,7 @@ export class ListingForm implements OnInit {
   // CREATE OR UPDATE LISTING
   async onSubmit() {
     if (this.isUploading() || this.isLoadingImages()) return;
+
     this.formErrorMessage.set('');
 
     if (this.listingForm.invalid) {
@@ -176,6 +218,9 @@ export class ListingForm implements OnInit {
         price: values.category === 'free' ? 0 : values.price!,
         category: values.category as ListingCategory,
         condition: values.condition as ListingCondition,
+        brand: values.brand.trim() || null,
+        size_type: values.size_type && values.size ? values.size_type : null,
+        size: values.size_type && values.size ? values.size : null,
       },
       'published',
     );
@@ -215,7 +260,7 @@ export class ListingForm implements OnInit {
     }
   }
 
-  // Returns the saved type, or null after setting an error message.
+  // CREATE NEW LISTING
   private async createNew(
     userId: string,
     fields: ListingFields,
@@ -246,8 +291,6 @@ export class ListingForm implements OnInit {
       if (imageError) {
         console.error('Could not save images, rolling back listing:', imageError);
 
-        // listing_images rows are removed by ON DELETE CASCADE. The uploaded
-        // files were already cleaned up by saveListingImages.
         const { error: rollbackError } = await this.listingService.deleteListing(listing.id);
 
         this.formErrorMessage.set(
@@ -255,6 +298,7 @@ export class ListingForm implements OnInit {
             ? 'The listing was created, but its images could not be saved. Please check your listings.'
             : 'Could not save the images. Nothing was saved, please try again.',
         );
+
         return null;
       }
     }
@@ -262,14 +306,14 @@ export class ListingForm implements OnInit {
     return status;
   }
 
+  // UPDATE EXISTING LISTING
   private async updateExisting(
     editing: Listing,
     userId: string,
     fields: ListingFields,
     targetStatus: 'draft' | 'published',
   ): Promise<ListingSavedType | null> {
-    // Images first: if this fails nothing else has changed, and publishing a
-    // draft never happens with a half-saved image set.
+    // Save images first to avoid publishing with a half-saved image set.
     if (this.imagesChanged()) {
       const { error: imageError } = await this.listingService.saveListingImages(
         editing.id,
@@ -293,11 +337,13 @@ export class ListingForm implements OnInit {
 
     if (updateError) {
       console.error('Error updating listing:', updateError);
+
       this.formErrorMessage.set(
         this.imagesChanged()
           ? 'Your images were saved, but the listing details could not be updated. Please try again.'
           : 'Could not update listing.',
       );
+
       return null;
     }
 
@@ -308,7 +354,7 @@ export class ListingForm implements OnInit {
     return 'updated';
   }
 
-  // True when the ordered image set differs from what is saved.
+  // Check whether the ordered image set has changed.
   private imagesChanged(): boolean {
     const current = this.images();
 

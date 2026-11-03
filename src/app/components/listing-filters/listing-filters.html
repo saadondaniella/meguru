@@ -1,0 +1,200 @@
+<form class="listing-filters" (ngSubmit)="submit()">
+  <!-- SEARCH -->
+  <div class="brand-search">
+    <label for="listing-search">SEARCH</label>
+
+    <div class="brand-search-field">
+      <input
+        id="listing-search"
+        type="search"
+        name="search"
+        [ngModel]="draft().search"
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="Search products, brands or sellers..."
+      />
+
+      <button
+        type="submit"
+        class="search-icon-button"
+        aria-label="Search marketplace"
+        [disabled]="disabled()"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="19"
+          height="19"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m16 16 5 5" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- FILTER TOGGLE -->
+  <div class="filter-toolbar">
+    <button
+      type="button"
+      class="toggle-filters"
+      (click)="toggleFilters()"
+      [attr.aria-expanded]="filtersOpen()"
+      aria-controls="marketplace-filter-panel"
+    >
+      FILTERS
+      <span aria-hidden="true">
+        {{ filtersOpen() ? '−' : '+' }}
+      </span>
+    </button>
+
+    <span class="mobile-results-count" aria-live="polite">
+      {{ totalResults() }}
+      {{ totalResults() === 1 ? 'ITEM' : 'ITEMS' }}
+    </span>
+  </div>
+
+  <!-- COLLAPSIBLE FILTER PANEL -->
+  <div
+    id="marketplace-filter-panel"
+    class="filter-panel"
+    [class.is-open]="filtersOpen()"
+    [attr.inert]="filtersOpen() ? null : ''"
+    [attr.aria-hidden]="!filtersOpen()"
+  >
+    <div class="filter-panel-inner">
+      <!-- CATEGORY -->
+      <div class="category-filter">
+        <label for="category">CATEGORY</label>
+
+        <select
+          id="category"
+          name="category"
+          [ngModel]="draft().category"
+          (ngModelChange)="onCategoryChange($event)"
+        >
+          <option [ngValue]="null">All categories</option>
+          <option value="exclusive">Exclusive</option>
+          <option value="budget">Budget</option>
+          <option value="free">Free</option>
+        </select>
+      </div>
+
+      <!-- CONDITION -->
+      <div class="condition-filter">
+        <label for="condition">CONDITION</label>
+
+        <select
+          id="condition"
+          name="condition"
+          [ngModel]="draft().condition"
+          (ngModelChange)="onConditionChange($event)"
+        >
+          <option [ngValue]="null">All conditions</option>
+          <option value="new_with_tags">New with tags</option>
+          <option value="like_new">Like new</option>
+          <option value="very_good">Very good</option>
+          <option value="good">Good</option>
+          <option value="well_worn">Well worn</option>
+        </select>
+      </div>
+
+      <!-- SIZE TYPE -->
+      <div class="size-filter">
+        <label for="size-type">SIZE TYPE</label>
+
+        <select
+          id="size-type"
+          name="sizeType"
+          [ngModel]="draft().sizeType"
+          (ngModelChange)="onSizeTypeChange($event)"
+        >
+          <option [ngValue]="null">All size types</option>
+          <option value="international">International</option>
+          <option value="eu_clothing">EU Clothing</option>
+          <option value="eu_shoes">EU Shoes</option>
+        </select>
+      </div>
+
+      <!-- SIZE -->
+      <div class="size-filter">
+        <label for="size">SIZE</label>
+
+        <select
+          id="size"
+          name="size"
+          [ngModel]="draft().size"
+          (ngModelChange)="onSizeChange($event)"
+          [disabled]="!draft().sizeType"
+        >
+          <option [ngValue]="null">All sizes</option>
+
+          @if (draft().sizeType; as sizeType) {
+            @for (size of sizeOptions[sizeType]; track size) {
+              <option [value]="size">{{ size }}</option>
+            }
+          }
+        </select>
+      </div>
+
+      <!-- PRICE RANGE -->
+      <div class="price-range-filter">
+        <label>PRICE RANGE</label>
+
+        <div class="price-sliders">
+          <!-- ACTIVE PRICE RANGE -->
+          <div
+            class="price-range-active"
+            [style.left.%]="((draft().minPrice ?? priceMin) / priceMax) * 100"
+            [style.right.%]="100 - ((draft().maxPrice ?? priceMax) / priceMax) * 100"
+          ></div>
+
+          <!-- MIN PRICE -->
+          <input
+            type="range"
+            name="minPrice"
+            aria-label="Minimum price"
+            [min]="priceMin"
+            [max]="priceMax"
+            [step]="priceStep"
+            [ngModel]="draft().minPrice ?? priceMin"
+            (ngModelChange)="onPriceSliderChange('minPrice', +$event)"
+          />
+
+          <!-- MAX PRICE -->
+          <input
+            type="range"
+            name="maxPrice"
+            aria-label="Maximum price"
+            [min]="priceMin"
+            [max]="priceMax"
+            [step]="priceStep"
+            [ngModel]="draft().maxPrice ?? priceMax"
+            (ngModelChange)="onPriceSliderChange('maxPrice', +$event)"
+          />
+        </div>
+
+        <!-- PRICE VALUES -->
+        <div class="price-values">
+          <span>{{ draft().minPrice ?? priceMin }} kr</span>
+          <span>
+            {{ draft().maxPrice === null ? '10 000+ kr' : draft().maxPrice + ' kr' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTER ACTIONS -->
+
+  <div class="filter-actions" [class.mobile-filters-open]="filtersOpen()">
+    <button type="submit" class="submit-filters" [disabled]="disabled()">
+      <span class="desktop-submit-label">SEARCH</span>
+      <span class="mobile-submit-label">SHOW RESULTS</span>
+    </button>
+  </div>
+</form>

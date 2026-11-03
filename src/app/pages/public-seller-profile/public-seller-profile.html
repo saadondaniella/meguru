@@ -1,6 +1,28 @@
 @if (seller(); as seller) {
   <section class="public-seller-profile">
-    <h1>{{ seller.display_name }}</h1>
+    <div class="seller-profile-header">
+      <div class="seller-identity">
+        <div class="seller-avatar">
+          @if (getAvatarUrl(seller.avatar_path); as avatarUrl) {
+            <img
+              [src]="avatarUrl"
+              [alt]="seller.display_name + ' profile picture'"
+              class="seller-avatar-image"
+            />
+          } @else {
+            <div class="seller-avatar-placeholder">
+              <span aria-hidden="true">👤</span>
+            </div>
+          }
+        </div>
+
+        <h1>{{ seller.display_name }}</h1>
+      </div>
+
+      @if (isOwnProfile()) {
+        <a routerLink="/seller-profile" class="edit-profile-link"> EDIT PROFILE </a>
+      }
+    </div>
 
     @if (seller.city) {
       <p>{{ seller.city }}</p>
@@ -9,29 +31,32 @@
     @if (seller.bio) {
       <p>{{ seller.bio }}</p>
     }
+
+    @if (seller.contact_email || seller.instagram) {
+      <div class="seller-contact">
+        <p class="contact-heading">CONTACT</p>
+
+        @if (seller.contact_email) {
+          <a [href]="'mailto:' + seller.contact_email"> Email seller ↗ </a>
+        }
+
+        @if (seller.instagram) {
+          <a
+            [href]="'https://www.instagram.com/' + seller.instagram.replace('@', '')"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Instagram ↗
+          </a>
+        }
+      </div>
+    }
   </section>
   <section class="seller-listings">
     <h2>Items for sale</h2>
 
     @for (listing of listings(); track listing.id) {
-      <article class="listing-card">
-        <a [routerLink]="['/listings', listing.id]">
-          <div class="listing-image">
-            @if (listing.image_path) {
-              <img [src]="getImageUrl(listing.image_path)" [alt]="listing.title" />
-            }
-
-            @if (listing.status === 'sold') {
-              <span class="sold-badge">SOLD</span>
-            }
-          </div>
-
-          <h3>{{ listing.title }}</h3>
-        </a>
-
-        <p>{{ listing.price }} kr</p>
-        <p>{{ listing.condition }}</p>
-      </article>
+      <app-listing-card [listing]="listing" [headingLevel]="3" />
     } @empty {
       <p>This seller hasn't listed any items yet.</p>
     }

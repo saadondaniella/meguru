@@ -41,7 +41,7 @@ export class Login {
         return;
       }
 
-      await this.router.navigate(['/']);
+      await this.router.navigate(['/dashboard']);
     } catch {
       this.errorMessage.set('Something went wrong. Please try again.');
     } finally {

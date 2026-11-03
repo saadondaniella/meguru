@@ -4,10 +4,12 @@ import { Profile } from '../../services/profile';
 import { ListingService } from '../../services/listing';
 import { Listing } from '../../models/listing';
 import { RouterLink } from '@angular/router';
+import { SUPABASE_CLIENT } from '../../services/supabase';
+import { ListingCard } from '../../components/listing-card/listing-card';
 
 @Component({
   selector: 'app-public-seller-profile',
-  imports: [RouterLink],
+  imports: [RouterLink, ListingCard],
   templateUrl: './public-seller-profile.html',
   styleUrl: './public-seller-profile.css',
 })
@@ -18,6 +20,9 @@ export class PublicSellerProfile implements OnInit {
 
   private profileService = inject(Profile);
   private listingService = inject(ListingService);
+  private supabase = inject(SUPABASE_CLIENT);
+
+  isOwnProfile = signal(false);
 
   listings = signal<Listing[]>([]);
 
@@ -26,10 +31,15 @@ export class PublicSellerProfile implements OnInit {
     display_name: string;
     bio: string | null;
     city: string | null;
+    avatar_path: string | null;
+    contact_email: string | null;
+    instagram: string | null;
   } | null>(null);
 
   async ngOnInit() {
     if (!this.sellerId) return;
+
+    await this.checkProfileOwnership();
 
     const { data, error } = await this.profileService.getProfile(this.sellerId);
 
@@ -53,7 +63,18 @@ export class PublicSellerProfile implements OnInit {
     console.log('Seller listings:', listings);
   }
 
-  getImageUrl(imagePath: string): string {
-    return this.listingService.getListingImageUrl(imagePath);
+  getAvatarUrl(avatarPath: string | null): string | null {
+    return this.profileService.getAvatarUrl(avatarPath);
+  }
+
+  private async checkProfileOwnership() {
+    const { data, error } = await this.supabase.auth.getUser();
+
+    if (error || !data.user) {
+      this.isOwnProfile.set(false);
+      return;
+    }
+
+    this.isOwnProfile.set(data.user.id === this.sellerId);
   }
 }

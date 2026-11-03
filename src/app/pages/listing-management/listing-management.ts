@@ -15,7 +15,7 @@ import { ListingService } from '../../services/listing';
 import { SUPABASE_CLIENT } from '../../services/supabase';
 import { Listing } from '../../models/listing';
 import { ListingForm, ListingSavedType } from './listing-form/listing-form';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-listing-management',
@@ -59,6 +59,8 @@ export class ListingManagement implements OnInit {
   successCloseButton = viewChild<ElementRef<HTMLButtonElement>>('successCloseButton');
   private readonly injector = inject(Injector);
   private statusTriggerElement: HTMLElement | null = null;
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   constructor() {
     effect(() => {
@@ -117,6 +119,7 @@ export class ListingManagement implements OnInit {
     this.isModalOpen.set(false);
     this.editingListing.set(null);
     this.restoreFormTriggerFocus();
+    this.clearCreateQueryParam();
   }
 
   openStatusConfirmation(listing: Listing, status: 'sold' | 'published', trigger: HTMLElement) {
@@ -180,6 +183,7 @@ export class ListingManagement implements OnInit {
     this.editingListing.set(null);
     this.isModalOpen.set(false);
     this.showSuccessPopup(type);
+    this.clearCreateQueryParam();
 
     await this.loadListings();
   }
@@ -296,9 +300,26 @@ export class ListingManagement implements OnInit {
     }
   }
 
-  // INITIAL LOAD
+  // Remove the create flag so refreshing the page does not reopen the form.
+  private clearCreateQueryParam() {
+    if (!this.route.snapshot.queryParamMap.has('create')) return;
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { create: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   ngOnInit() {
     void this.loadListings();
+
+    this.route.queryParamMap.subscribe((params) => {
+      if (params.get('create') === 'true') {
+        this.onCreateListing();
+      }
+    });
   }
 
   // MARK LISTING AS SOLD

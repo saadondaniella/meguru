@@ -1,35 +1,73 @@
 .listing-detail {
-  max-width: 900px;
-  margin: 60px auto;
-  padding: 24px;
+  max-width: 1200px;
+  margin: 10px auto;
+  padding: 24px 40px;
+  color: #4d5d46;
 }
 
-.listing-detail img {
+/* BACK TO MARKETPLACE */
+
+.back-to-marketplace {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  padding: 12px 0;
+  margin-bottom: 28px;
+  border: none;
+  background: transparent;
+  color: #4d5d46;
+
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.back-to-marketplace:hover {
+  opacity: 0.6;
+}
+
+.back-to-marketplace:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 4px;
+}
+
+/* TWO-COLUMN LAYOUT */
+
+.listing-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 30px;
+  align-items: start;
+}
+
+/* IMAGE GALLERY */
+
+.listing-gallery {
+  min-width: 0;
+  width: 100%;
+}
+
+.listing-gallery .listing-image {
+  position: relative;
+  width: 100%;
+  height: min(65vh, 600px);
+  overflow: hidden;
+  background: #f5f2eb;
+}
+
+.listing-gallery .listing-image img {
   display: block;
   width: 100%;
-  max-width: 450px;
-  max-height: 500px;
+  height: 100%;
+  margin: 0;
   object-fit: contain;
   border-radius: 8px;
-  margin-bottom: 30px;
 }
 
-.listing-detail h1 {
-  font-size: 32px;
-  margin-bottom: 16px;
-}
-
-.listing-detail p {
-  font-size: 16px;
-  line-height: 1.6;
-  margin-bottom: 12px;
-}
-
-.listing-image {
-  position: relative;
-  width: fit-content;
-  max-width: 100%;
-}
+/* SOLD BADGE */
 
 .sold-badge {
   position: absolute;
@@ -85,14 +123,7 @@
   transform-origin: bottom;
 }
 
-.listing-gallery {
-  max-width: 450px;
-  margin-bottom: 30px;
-}
-
-.listing-gallery .listing-image img {
-  margin-bottom: 0;
-}
+/* GALLERY NAVIGATION */
 
 .gallery-controls {
   display: flex;
@@ -123,6 +154,8 @@
   color: #f5f2eb;
 }
 
+/* GALLERY THUMBNAILS */
+
 .gallery-thumbnails {
   display: flex;
   flex-wrap: wrap;
@@ -146,13 +179,96 @@
 }
 
 .listing-detail .gallery-thumbnail img {
+  display: block;
   width: 100%;
   height: 100%;
-  max-height: none;
   margin: 0;
   border-radius: 0;
   object-fit: cover;
 }
+
+/* PRODUCT INFORMATION */
+
+.listing-info {
+  min-width: 0;
+  padding-top: 8px;
+}
+
+.listing-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.listing-title-row h1 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+.listing-title-row app-favourite-button {
+  flex-shrink: 0;
+}
+
+.listing-detail .listing-price {
+  margin: 0 0 36px;
+  font-size: 24px;
+  font-weight: 500;
+  color: #9e5a44;
+}
+
+.listing-detail .listing-description {
+  margin: 0 0 36px;
+  font-size: 15px;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.listing-details {
+  padding: 24px 0;
+  border-top: 1px solid #4d5d46;
+  border-bottom: 1px solid #4d5d46;
+}
+
+.listing-detail .listing-details p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.listing-detail .listing-details p:last-child {
+  margin-bottom: 0;
+}
+
+/* SELLER INFORMATION */
+
+.seller-info {
+  margin-top: 28px;
+}
+
+.listing-detail .seller-info p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.seller-info a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+
+.seller-info a:hover {
+  color: #9e5a44;
+}
+
+/* ACCESSIBILITY */
 
 .gallery-step:focus-visible,
 .gallery-thumbnail:focus-visible {
@@ -169,30 +285,64 @@
   white-space: nowrap;
 }
 
-.back-to-marketplace {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  width: fit-content;
-  padding: 12px 0;
-  margin-bottom: 28px;
+/* TABLET */
 
-  border: none;
-  background: transparent;
-  color: #4d5d46;
+@media (max-width: 900px) {
+  .listing-detail {
+    padding: 24px;
+  }
 
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
+  .listing-content {
+    gap: 32px;
+  }
 }
 
-.back-to-marketplace:hover {
-  opacity: 0.6;
+/* MOBILE */
+
+@media (max-width: 768px) {
+  .listing-content {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .listing-gallery .listing-image {
+    height: min(65vh, 600px);
+  }
+
+  .listing-info {
+    padding-top: 0;
+  }
 }
 
-.back-to-marketplace:focus-visible {
-  outline: 2px solid #9e5a44;
-  outline-offset: 4px;
+@media (max-width: 600px) {
+  .listing-detail {
+    margin: 30px auto;
+    padding: 16px;
+  }
+
+  .listing-gallery .listing-image {
+    height: min(60vh, 500px);
+  }
+
+  .listing-title-row h1 {
+    font-size: 28px;
+  }
+
+  .listing-detail .listing-price {
+    font-size: 20px;
+    margin-bottom: 28px;
+  }
+
+  .gallery-thumbnail {
+    width: 52px;
+    height: 66px;
+  }
+}
+
+/* REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  .back-to-marketplace {
+    transition: none;
+  }
 }
