@@ -18,6 +18,7 @@
       <p>Your space to manage, save and share your pieces.</p>
     </header>
 
+    <!-- PUBLIC STOREFRONT -->
     <div class="storefront-section">
       <p class="section-label">YOUR PUBLIC STOREFRONT</p>
 
@@ -90,34 +91,135 @@
       </div>
     </div>
 
+    <!-- EDITORIAL FEATURE -->
+    <app-editorial-feature />
+
+    <!-- DASHBOARD NAVIGATION -->
     <nav class="dashboard-navigation" aria-label="Dashboard navigation">
+      <!-- MY LISTINGS -->
       <a routerLink="/listing-management" class="dashboard-card">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+        </svg>
         <span>MY LISTINGS</span>
-        <span aria-hidden="true">↗</span>
       </a>
+
+      <!-- CREATE LISTING -->
       <a routerLink="/listing-management" class="dashboard-card">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
         <span>CREATE LISTING</span>
-        <span aria-hidden="true">↗</span>
       </a>
 
+      <!-- MY STOREFRONT -->
       <a [href]="storefrontUrl()" class="dashboard-card">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M3 10h18" />
+          <path d="M5 10V21h14V10" />
+          <path d="M3 10l2-7h14l2 7" />
+          <path d="M9 21v-7h6v7" />
+        </svg>
         <span>MY STOREFRONT</span>
-        <span aria-hidden="true">↗</span>
       </a>
 
+      <!-- MY FAVOURITES -->
       <a routerLink="/favourites" class="dashboard-card">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path
+            d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"
+          />
+        </svg>
         <span>MY FAVOURITES</span>
-        <span aria-hidden="true">↗</span>
       </a>
 
+      <!-- MARKETPLACE -->
       <a routerLink="/marketplace" class="dashboard-card">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M5 8h14l1 13H4L5 8Z" />
+          <path d="M9 9V6a3 3 0 0 1 6 0v3" />
+        </svg>
         <span>MARKETPLACE</span>
-        <span aria-hidden="true">↗</span>
       </a>
 
+      <!-- EDIT MY PROFILE -->
       <a routerLink="/seller-profile" class="dashboard-card">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="10" cy="8" r="4" />
+          <path d="M3 21v-2a7 7 0 0 1 10-6.3" />
+          <path d="m16 19 4-4 2 2-4 4-3 1 1-3Z" />
+        </svg>
         <span>EDIT MY PROFILE</span>
-        <span aria-hidden="true">↗</span>
       </a>
     </nav>
   }
