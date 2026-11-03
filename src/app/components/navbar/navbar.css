@@ -363,7 +363,7 @@
   :host {
     --sidebar-width: 0px;
     --mobile-header-height: 58px;
-    --mobile-bottom-height: 50px;
+    --mobile-bottom-height: 58px;
   }
 
   /* MOBILE HEADER */
