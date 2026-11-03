@@ -14,8 +14,12 @@ export const SIZE_OPTIONS: Record<ListingSizeType, string[]> = {
 
 export interface ListingFilterValues {
   search: string;
+  category: ListingCategory | null;
   sizeType: ListingSizeType | null;
   size: string | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  condition: ListingCondition | null;
 }
 
 export interface Listing {
@@ -29,7 +33,6 @@ export interface Listing {
   image_path: string | null;
   created_at: string;
   status: ListingStatus;
-
   brand: string | null;
   size_type: ListingSizeType | null;
   size: string | null;
