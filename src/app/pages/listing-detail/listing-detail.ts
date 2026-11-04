@@ -1,4 +1,5 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, OnInit, signal } from '@angular/core';
+import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Location } from '@angular/common';
 import { ListingService } from '../../services/listing';
@@ -6,9 +7,23 @@ import { Listing, LISTING_CONDITION_LABELS } from '../../models/listing';
 import { Profile } from '../../services/profile';
 import { FavouriteButton } from '../../components/favourite-button/favourite-button';
 import { ListingCard } from '../../components/listing-card/listing-card';
+import { ShareButton } from '../../components/share-button/share-button';
+
+const SHARE_META_NAMES = [
+  'og:title',
+  'og:type',
+  'og:url',
+  'og:description',
+  'og:image',
+  'twitter:card',
+  'twitter:image',
+];
+
+// Open Graph tags use `property`, Twitter tags use `name`.
+const META_ATTRIBUTE = (tag: string) => (tag.startsWith('og:') ? 'property' : 'name');
 
 @Component({
-  imports: [RouterLink, FavouriteButton, ListingCard],
+  imports: [RouterLink, FavouriteButton, ListingCard, ShareButton],
   selector: 'app-listing-detail',
   styleUrl: './listing-detail.css',
   templateUrl: './listing-detail.html',
@@ -19,6 +34,8 @@ export class ListingDetail implements OnInit {
   private profileService = inject(Profile);
   private router = inject(Router);
   private location = inject(Location);
+  private meta = inject(Meta);
+  private titleService = inject(Title);
 
   listingId: string | null = null;
 
@@ -31,6 +48,52 @@ export class ListingDetail implements OnInit {
   relatedListings = signal<Listing[]>([]);
 
   readonly conditionLabels = LISTING_CONDITION_LABELS;
+
+  shareUrl = computed(() => `${window.location.origin}/listings/${this.listing()?.id ?? ''}`);
+
+  constructor() {
+    const defaultTitle = this.titleService.getTitle();
+    const defaultTags = SHARE_META_NAMES.map((name) => ({
+      name,
+      content: this.meta.getTag(`${META_ATTRIBUTE(name)}='${name}'`)?.content ?? null,
+    }));
+
+    // Describe the listing for browsers and crawlers that run JavaScript.
+    effect(() => {
+      const listing = this.listing();
+      if (!listing) return;
+
+      const title = listing.title ?? 'Listing on MEGURU';
+      this.titleService.setTitle(`${title} | Meguru`);
+      this.setTag('og:title', title);
+      this.setTag('og:type', 'product');
+      this.setTag('og:url', this.shareUrl());
+      this.setTag('og:description', listing.description ?? `${title} on MEGURU`);
+      this.setTag('og:image', this.selectedImageUrl());
+      this.setTag('twitter:card', 'summary_large_image');
+      this.setTag('twitter:image', this.selectedImageUrl());
+    });
+
+    inject(DestroyRef).onDestroy(() => {
+      this.titleService.setTitle(defaultTitle);
+      for (const { name, content } of defaultTags) {
+        if (content === null) {
+          this.meta.removeTag(`${META_ATTRIBUTE(name)}='${name}'`);
+        } else {
+          this.setTag(name, content);
+        }
+      }
+    });
+  }
+
+  private setTag(name: string, content: string | null) {
+    if (!content) return;
+
+    this.meta.updateTag(
+      { [META_ATTRIBUTE(name)]: name, content },
+      `${META_ATTRIBUTE(name)}='${name}'`,
+    );
+  }
 
   ngOnInit() {
     this.route.paramMap.subscribe((params) => {

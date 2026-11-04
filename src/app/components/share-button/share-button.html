@@ -1,0 +1,26 @@
+<button type="button" class="share-button" aria-label="Share this listing" (click)="share()">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 15V3" />
+    <path d="m7.5 7.5 4.5-4.5 4.5 4.5" />
+    <path d="M5 11v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8" />
+  </svg>
+</button>
+
+<span class="share-status" role="status">
+  @switch (status()) {
+    @case ('copied') {
+      Link copied
+    }
+    @case ('failed') {
+      Could not copy link
+    }
+  }
+</span>

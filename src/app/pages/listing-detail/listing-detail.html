@@ -74,7 +74,16 @@
         <div class="listing-title-row">
           <h1>{{ listing.title }}</h1>
 
-          <app-favourite-button [listingId]="listing.id" [status]="listing.status" />
+          <div class="listing-title-actions">
+            @if (listing.status !== 'draft') {
+              <app-share-button
+                [title]="listing.title ?? 'Listing on MEGURU'"
+                [url]="shareUrl()"
+                text="Found this on MEGURU"
+              />
+            }
+            <app-favourite-button [listingId]="listing.id" [status]="listing.status" />
+          </div>
         </div>
 
         <p class="listing-price">{{ listing.price }} kr</p>

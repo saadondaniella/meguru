@@ -1,0 +1,54 @@
+:host {
+  position: relative;
+  display: inline-flex;
+}
+
+.share-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 4px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.share-button svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  transition: transform 0.2s ease;
+}
+
+.share-button:hover {
+  color: var(--color-tertiary);
+}
+
+.share-button:hover svg {
+  transform: scale(1.1);
+}
+
+.share-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.share-status {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 2px;
+  color: var(--color-primary);
+  font-family: var(--font-label);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-button svg {
+    transition: none;
+  }
+}
