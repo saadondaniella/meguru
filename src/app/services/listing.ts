@@ -13,6 +13,101 @@ type CreateListing = Pick<
   size?: Listing['size'];
 };
 
+const RELATED_LIMIT = 10;
+const RELATED_CANDIDATE_LIMIT = 50;
+
+// Generic words (English + Swedish) that should not make two listings "related".
+const STOP_WORDS = new Set([
+  // colors
+  'black',
+  'white',
+  'grey',
+  'gray',
+  'red',
+  'blue',
+  'green',
+  'yellow',
+  'pink',
+  'purple',
+  'orange',
+  'brown',
+  'beige',
+  'cream',
+  'navy',
+  'gold',
+  'silver',
+  'khaki',
+  'multi',
+  'svart',
+  'svarta',
+  'vit',
+  'vita',
+  'grå',
+  'grått',
+  'röd',
+  'rött',
+  'blå',
+  'grön',
+  'grönt',
+  'gul',
+  'gult',
+  'rosa',
+  'lila',
+  'orange',
+  'brun',
+  'brunt',
+  'beige',
+  'kräm',
+  'marin',
+  'guld',
+  'silver',
+  // filler
+  'the',
+  'and',
+  'with',
+  'for',
+  'from',
+  'her',
+  'his',
+  'new',
+  'used',
+  'size',
+  'nice',
+  'very',
+  'och',
+  'med',
+  'för',
+  'från',
+  'en',
+  'ett',
+  'den',
+  'det',
+  'nya',
+  'ny',
+  'använd',
+  'storlek',
+  'fin',
+  'fina',
+  'mycket',
+  'i',
+  'av',
+  'på',
+  'till',
+]);
+
+function extractKeywords(title: string | null): Set<string> {
+  const words = (title ?? '').toLowerCase().split(/[^\p{L}]+/u);
+  return new Set(words.filter((word) => word.length >= 3 && !STOP_WORDS.has(word)));
+}
+
+function countShared(keywords: Set<string>, title: string | null): number {
+  let shared = 0;
+  for (const word of extractKeywords(title)) {
+    if (keywords.has(word)) shared++;
+  }
+  return shared;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -41,6 +136,37 @@ export class ListingService {
     return await this.applyListingFilters(query, filters).order('created_at', {
       ascending: false,
     });
+  }
+
+  async getRelatedListings(listing: Pick<Listing, 'id' | 'title'>) {
+    const { data, error } = await this.supabase
+      .from('listings')
+      .select('*')
+      .eq('status', 'published')
+      .neq('id', listing.id)
+      .order('created_at', { ascending: false })
+      .limit(RELATED_CANDIDATE_LIMIT);
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    const keywords = extractKeywords(listing.title);
+    const seen = new Set<string>();
+    const candidates = (data as Listing[]).filter((candidate) => {
+      if (candidate.id === listing.id || seen.has(candidate.id)) return false;
+      seen.add(candidate.id);
+      return true;
+    });
+
+    // Rank by shared keywords. Array.sort is stable, so ties (and the
+    // zero-score fallback listings) keep their newest-first order.
+    const ranked = candidates
+      .map((candidate) => ({ candidate, score: countShared(keywords, candidate.title) }))
+      .sort((a, b) => b.score - a.score)
+      .map(({ candidate }) => candidate);
+
+    return { data: ranked.slice(0, RELATED_LIMIT), error: null };
   }
 
   async getActiveListingsCountBySeller(sellerId: string) {
