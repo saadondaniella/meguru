@@ -12,6 +12,13 @@
   }
 
   @if (!isLoading() && !loadError()) {
+    @if (hasProfile() && userId(); as id) {
+      <a class="back-to-profile" [routerLink]="['/sellers', id]">
+        <span aria-hidden="true">←</span>
+        BACK TO MY PROFILE
+      </a>
+    }
+
     <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" novalidate>
       <!-- LEFT COLUMN -->
       <div class="profile-left">
@@ -249,6 +256,11 @@
         @if (successMessage()) {
           <p class="success-message form-feedback" role="status">
             {{ successMessage() }}
+            @if (userId(); as id) {
+              <a class="view-profile-link" [routerLink]="['/sellers', id]">
+                View my public profile →
+              </a>
+            }
           </p>
         }
 

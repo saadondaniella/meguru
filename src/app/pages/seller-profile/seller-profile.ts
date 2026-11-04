@@ -1,10 +1,11 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Profile } from '../../services/profile';
 import { SUPABASE_CLIENT } from '../../services/supabase';
 
 @Component({
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   selector: 'app-seller-profile',
   styleUrl: './seller-profile.css',
   templateUrl: './seller-profile.html',
@@ -15,6 +16,7 @@ export class SellerProfile implements OnInit {
   private supabase = inject(SUPABASE_CLIENT);
 
   hasProfile = signal(false);
+  userId = signal<string | null>(null);
   successMessage = signal('');
   errorMessage = signal('');
   isSaving = signal(false);
@@ -71,6 +73,8 @@ export class SellerProfile implements OnInit {
         this.errorMessage.set('You must be logged in to view your profile.');
         return;
       }
+
+      this.userId.set(userId);
 
       const { data, error } = await this.profileService.getProfile(userId);
 
