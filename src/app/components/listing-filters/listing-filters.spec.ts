@@ -42,10 +42,27 @@ describe('ListingFilters', () => {
     ]);
   });
 
-  it('resets size and emits when the size type changes', () => {
+  it('offers all colors and emits the chosen one on submit', () => {
+    const options = Array.from(
+      (fixture.nativeElement.querySelector('#color') as HTMLSelectElement).options,
+    ).map((option) => option.textContent?.trim());
+
+    expect(options[0]).toBe('All colors');
+    expect(options).toHaveLength(14);
+
+    component.onColorChange('blue');
+    component.submit();
+
+    expect(emitted.at(-1)).toEqual(expect.objectContaining({ color: 'blue' }));
+  });
+
+  it('resets the size when the size type changes, and emits on submit', () => {
     component.onSizeTypeChange('eu_shoes');
     component.onSizeChange('40');
     component.onSizeTypeChange('international');
+    expect(emitted).toEqual([]);
+
+    component.submit();
 
     expect(emitted.at(-1)).toEqual({
       search: '',
@@ -54,15 +71,23 @@ describe('ListingFilters', () => {
     });
   });
 
-  it('emits empty values on clear', () => {
+  it('emits empty values when cleared and submitted', () => {
     component.onSearchChange('Acne');
     component.onSizeTypeChange('eu_clothing');
     component.reset();
+    expect(emitted).toEqual([]);
+
+    component.submit();
 
     expect(emitted.at(-1)).toEqual({
       search: '',
+      category: null,
       sizeType: null,
       size: null,
+      minPrice: null,
+      maxPrice: null,
+      condition: null,
+      color: null,
     });
   });
 

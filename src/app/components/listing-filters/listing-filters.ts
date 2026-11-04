@@ -5,6 +5,9 @@ import {
   ListingSizeType,
   ListingCategory,
   ListingCondition,
+  ListingColor,
+  LISTING_COLOR_LABELS,
+  LISTING_COLORS,
   SIZE_OPTIONS,
 } from '../../models/listing';
 
@@ -16,6 +19,7 @@ const EMPTY_FILTERS: ListingFilterValues = {
   minPrice: null,
   maxPrice: null,
   condition: null,
+  color: null,
 };
 
 @Component({
@@ -33,6 +37,8 @@ export class ListingFilters {
   draft = linkedSignal(() => this.filters());
 
   readonly sizeOptions = SIZE_OPTIONS;
+  readonly colors = LISTING_COLORS;
+  readonly colorLabels = LISTING_COLOR_LABELS;
   readonly priceMin = 0;
   readonly priceMax = 10000;
   readonly priceStep = 100;
@@ -63,6 +69,10 @@ export class ListingFilters {
 
   onConditionChange(condition: ListingCondition | null) {
     this.draft.update((d) => ({ ...d, condition }));
+  }
+
+  onColorChange(color: ListingColor | null) {
+    this.draft.update((d) => ({ ...d, color }));
   }
 
   onSizeChange(size: string | null) {

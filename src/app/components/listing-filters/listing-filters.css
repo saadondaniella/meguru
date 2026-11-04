@@ -18,6 +18,7 @@
 .brand-search,
 .category-filter,
 .condition-filter,
+.color-filter,
 .size-filter {
   display: flex;
   flex-direction: column;
@@ -157,9 +158,11 @@
   overflow: hidden;
   display: grid;
 
+  /* Category, condition, color, size type | size (narrow) | price range */
   grid-template-columns:
     repeat(4, minmax(0, 1fr))
-    minmax(0, 2fr);
+    minmax(0, 0.6fr)
+    minmax(0, 1.4fr);
 
   column-gap: 16px;
   align-items: start;
@@ -170,6 +173,7 @@
 
 .category-filter select,
 .condition-filter select,
+.color-filter select,
 .size-filter select {
   width: 100%;
   min-width: 0;
@@ -310,7 +314,8 @@
 
 .brand-search-field:focus-within,
 .category-filter select:focus-visible,
-.condition-filter select:focus-visible,
+.condition-filter select,
+.color-filter select:focus-visible,
 .size-filter select:focus-visible {
   outline: 1px solid #4d5d46;
   outline-offset: 2px;
@@ -465,12 +470,14 @@
 
   .category-filter,
   .condition-filter,
+  .color-filter,
   .size-filter {
     gap: 6px;
   }
 
   .category-filter select,
   .condition-filter select,
+  .color-filter select,
   .size-filter select {
     min-height: 36px;
     padding: 7px 20px 7px 0;
