@@ -13,6 +13,33 @@
   color: var(--profile-ink);
 }
 
+/* BACK TO MY PROFILE */
+
+.seller-profile .back-to-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  min-height: 44px;
+  margin-bottom: 20px;
+  color: var(--profile-green);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.seller-profile .back-to-profile:hover {
+  opacity: 0.6;
+}
+
+.seller-profile .back-to-profile:focus-visible,
+.seller-profile .view-profile-link:focus-visible {
+  outline: 2px solid var(--profile-rust);
+  outline-offset: 4px;
+}
+
 /* TWO-COLUMN LAYOUT */
 
 .seller-profile form {
@@ -256,6 +283,21 @@
 
 /* FEEDBACK */
 
+.seller-profile .view-profile-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--profile-green);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.seller-profile .view-profile-link:hover {
+  opacity: 0.6;
+}
+
 .seller-profile .error-message {
   margin: 0;
   color: var(--profile-rust);
@@ -341,6 +383,10 @@
     font-size: clamp(42px, 7vw, 64px);
   }
 
+  .seller-profile .back-to-profile {
+    margin-bottom: 8px;
+  }
+
   .seller-profile .avatar-preview {
     width: 140px;
     height: 140px;
@@ -364,6 +410,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .seller-profile button,
+  .seller-profile .back-to-profile,
   .seller-profile .tooltip-text {
     transition: none;
   }

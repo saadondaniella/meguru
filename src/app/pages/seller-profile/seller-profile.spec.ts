@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SellerProfile } from './seller-profile';
 import { Profile } from '../../services/profile';
@@ -53,6 +54,7 @@ describe('SellerProfile', () => {
     await TestBed.configureTestingModule({
       imports: [SellerProfile],
       providers: [
+        provideRouter([]),
         {
           provide: SUPABASE_CLIENT,
           useValue: {
@@ -96,6 +98,36 @@ describe('SellerProfile', () => {
       contact_email: 'test@example.com',
       instagram: '@meguru',
     });
+  });
+
+  it('links back to the public profile of the logged-in seller', () => {
+    fixture.detectChanges();
+
+    const link = fixture.nativeElement.querySelector('.back-to-profile') as HTMLAnchorElement;
+
+    expect(link.textContent).toContain('BACK TO MY PROFILE');
+    expect(link.getAttribute('href')).toBe('/sellers/test-user-123');
+  });
+
+  it('hides the back link until the seller has a profile', async () => {
+    mockGetProfile.mockResolvedValue({ data: null, error: null });
+
+    await component.loadProfile();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.back-to-profile')).toBeNull();
+  });
+
+  it('offers a link to the public profile after a successful save', async () => {
+    await component.onSubmit();
+    fixture.detectChanges();
+
+    const link = fixture.nativeElement.querySelector('.view-profile-link') as HTMLAnchorElement;
+
+    expect(link.getAttribute('href')).toBe('/sellers/test-user-123');
+    expect(fixture.nativeElement.querySelector('.success-message')?.textContent).toContain(
+      'Your profile has been saved!',
+    );
   });
 
   it('should show an error when loading the profile fails', async () => {
