@@ -3,7 +3,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Location } from '@angular/common';
 import { ListingService } from '../../services/listing';
-import { Listing, LISTING_CONDITION_LABELS } from '../../models/listing';
+import { Listing, LISTING_COLOR_LABELS, LISTING_CONDITION_LABELS } from '../../models/listing';
 import { Profile } from '../../services/profile';
 import { FavouriteButton } from '../../components/favourite-button/favourite-button';
 import { ListingCard } from '../../components/listing-card/listing-card';
@@ -48,6 +48,7 @@ export class ListingDetail implements OnInit {
   relatedListings = signal<Listing[]>([]);
 
   readonly conditionLabels = LISTING_CONDITION_LABELS;
+  readonly colorLabels = LISTING_COLOR_LABELS;
 
   shareUrl = computed(() => `${window.location.origin}/listings/${this.listing()?.id ?? ''}`);
 

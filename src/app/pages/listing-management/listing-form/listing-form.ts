@@ -6,6 +6,9 @@ import {
   Listing,
   ListingCategory,
   ListingCondition,
+  ListingColor,
+  LISTING_COLOR_LABELS,
+  LISTING_COLORS,
   ListingSizeType,
 } from '../../../models/listing';
 import { ListingImageItem } from '../../../models/listing-image';
@@ -22,6 +25,7 @@ type ListingFields = {
   brand: string | null;
   size_type: ListingSizeType | null;
   size: string | null;
+  color: ListingColor | null;
 };
 
 @Component({
@@ -52,7 +56,12 @@ export class ListingForm implements OnInit {
     brand: ['', Validators.maxLength(100)],
     size_type: [null as ListingSizeType | null],
     size: [null as string | null],
+    // Optional for drafts; onSubmit (publish or update) requires it.
+    color: ['', Validators.required],
   });
+
+  readonly colors = LISTING_COLORS;
+  readonly colorLabels = LISTING_COLOR_LABELS;
 
   constructor() {
     this.listingForm.controls.size.disable();
@@ -93,6 +102,7 @@ export class ListingForm implements OnInit {
           brand: listing.brand ?? '',
           size_type: listing.size_type ?? null,
           size: listing.size ?? null,
+          color: listing.color ?? '',
         },
         { emitEvent: false },
       );
@@ -188,6 +198,7 @@ export class ListingForm implements OnInit {
         brand: values.brand.trim() || null,
         size_type: values.size_type && values.size ? values.size_type : null,
         size: values.size_type && values.size ? values.size : null,
+        color: (values.color as ListingColor) || null,
       },
       'draft',
     );
@@ -221,6 +232,7 @@ export class ListingForm implements OnInit {
         brand: values.brand.trim() || null,
         size_type: values.size_type && values.size ? values.size_type : null,
         size: values.size_type && values.size ? values.size : null,
+        color: (values.color as ListingColor) || null,
       },
       'published',
     );

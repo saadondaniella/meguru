@@ -103,6 +103,23 @@
         </select>
       </div>
 
+      <!-- COLOR -->
+      <div class="color-filter">
+        <label for="color">COLOR</label>
+
+        <select
+          id="color"
+          name="color"
+          [ngModel]="draft().color"
+          (ngModelChange)="onColorChange($event)"
+        >
+          <option [ngValue]="null">All colors</option>
+          @for (color of colors; track color) {
+            <option [value]="color">{{ colorLabels[color] }}</option>
+          }
+        </select>
+      </div>
+
       <!-- SIZE TYPE -->
       <div class="size-filter">
         <label for="size-type">SIZE TYPE</label>

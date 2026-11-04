@@ -15,6 +15,9 @@ import {
   ListingFilterValues,
   ListingCategory,
   ListingCondition,
+  ListingColor,
+  LISTING_COLOR_LABELS,
+  LISTING_COLORS,
   SIZE_OPTIONS,
 } from '../../models/listing';
 import { Profile } from '../../services/profile';
@@ -50,6 +53,7 @@ export class Marketplace implements OnInit {
     minPrice: null,
     maxPrice: null,
     condition: null,
+    color: null,
   });
 
   activeFilters = computed(() => {
@@ -92,6 +96,13 @@ export class Marketplace implements OnInit {
       tags.push({
         key: 'condition',
         label: labels[filters.condition],
+      });
+    }
+
+    if (filters.color) {
+      tags.push({
+        key: 'color',
+        label: LISTING_COLOR_LABELS[filters.color],
       });
     }
 
@@ -165,6 +176,9 @@ export class Marketplace implements OnInit {
         ? conditionParam
         : null;
 
+    const colorParam = params.get('color');
+    const color = LISTING_COLORS.find((value) => value === colorParam) ?? null;
+
     const parsePrice = (value: string | null): number | null => {
       if (value === null || value.trim() === '') return null;
 
@@ -183,6 +197,7 @@ export class Marketplace implements OnInit {
       minPrice,
       maxPrice,
       condition,
+      color,
     });
 
     // Restore current page
@@ -261,6 +276,7 @@ export class Marketplace implements OnInit {
         minPrice: filters.minPrice,
         maxPrice: filters.maxPrice,
         condition: filters.condition,
+        color: filters.color,
         page: null,
       },
       queryParamsHandling: 'merge',
@@ -311,6 +327,7 @@ export class Marketplace implements OnInit {
       minPrice: null,
       maxPrice: null,
       condition: null,
+      color: null,
     });
   }
 

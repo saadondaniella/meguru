@@ -110,6 +110,10 @@
             <p>Condition: {{ conditionLabels[listing.condition] }}</p>
           }
 
+          @if (listing.color) {
+            <p>Color: {{ colorLabels[listing.color] }}</p>
+          }
+
           @if (listing.brand) {
             <p>Brand: {{ listing.brand }}</p>
           }

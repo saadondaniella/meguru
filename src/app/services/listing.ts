@@ -11,6 +11,7 @@ type CreateListing = Pick<
   brand?: Listing['brand'];
   size_type?: Listing['size_type'];
   size?: Listing['size'];
+  color?: Listing['color'];
 };
 
 const RELATED_LIMIT = 10;
@@ -264,6 +265,11 @@ export class ListingService {
     // Filter by condition
     if (filters.condition) {
       query = query.eq('condition', filters.condition);
+    }
+
+    // Filter by color
+    if (filters.color) {
+      query = query.eq('color', filters.color);
     }
 
     // Filter by minimum price

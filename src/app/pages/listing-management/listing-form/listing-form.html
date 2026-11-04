@@ -240,34 +240,68 @@
             </div>
           </div>
 
-          <!-- CONDITION -->
-          <div class="listing-field">
-            <label for="condition">CONDITION *</label>
+          <!-- CONDITION / COLOR -->
+          <div class="listing-field-row">
+            <!-- CONDITION -->
+            <div class="listing-field">
+              <label for="condition">CONDITION *</label>
 
-            <select
-              id="condition"
-              formControlName="condition"
-              [attr.aria-invalid]="
-                listingForm.controls.condition.touched && listingForm.controls.condition.invalid
-              "
-              [attr.aria-describedby]="
-                listingForm.controls.condition.touched && listingForm.controls.condition.invalid
-                  ? 'condition-error'
-                  : null
-              "
-            >
-              <option value="new_with_tags">New with tags</option>
-              <option value="like_new">Like new</option>
-              <option value="very_good">Very good</option>
-              <option value="good">Good</option>
-              <option value="well_worn">Well worn</option>
-            </select>
+              <select
+                id="condition"
+                formControlName="condition"
+                [attr.aria-invalid]="
+                  listingForm.controls.condition.touched && listingForm.controls.condition.invalid
+                "
+                [attr.aria-describedby]="
+                  listingForm.controls.condition.touched && listingForm.controls.condition.invalid
+                    ? 'condition-error'
+                    : null
+                "
+              >
+                <option value="new_with_tags">New with tags</option>
+                <option value="like_new">Like new</option>
+                <option value="very_good">Very good</option>
+                <option value="good">Good</option>
+                <option value="well_worn">Well worn</option>
+              </select>
 
-            @if (listingForm.controls.condition.touched && listingForm.controls.condition.invalid) {
-              <p id="condition-error" class="listing-field-error">
-                Please select the item's condition.
-              </p>
-            }
+              @if (
+                listingForm.controls.condition.touched && listingForm.controls.condition.invalid
+              ) {
+                <p id="condition-error" class="listing-field-error">
+                  Please select the item's condition.
+                </p>
+              }
+            </div>
+
+            <!-- COLOR -->
+            <div class="listing-field">
+              <label for="color">COLOR * <span>(REQUIRED TO PUBLISH)</span></label>
+
+              <select
+                id="color"
+                formControlName="color"
+                [attr.aria-invalid]="
+                  listingForm.controls.color.touched && listingForm.controls.color.invalid
+                "
+                [attr.aria-describedby]="
+                  listingForm.controls.color.touched && listingForm.controls.color.invalid
+                    ? 'color-error'
+                    : null
+                "
+              >
+                <option value="" disabled>Select a color</option>
+                @for (color of colors; track color) {
+                  <option [value]="color">{{ colorLabels[color] }}</option>
+                }
+              </select>
+
+              @if (listingForm.controls.color.touched && listingForm.controls.color.invalid) {
+                <p id="color-error" class="listing-field-error">
+                  Please select the item's main color.
+                </p>
+              }
+            </div>
           </div>
         </div>
 

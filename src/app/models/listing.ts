@@ -10,6 +10,40 @@ export const LISTING_CONDITION_LABELS: Record<ListingCondition, string> = {
   well_worn: 'Well worn',
 };
 
+export type ListingColor =
+  | 'black'
+  | 'white'
+  | 'grey'
+  | 'brown'
+  | 'beige'
+  | 'blue'
+  | 'green'
+  | 'red'
+  | 'pink'
+  | 'yellow'
+  | 'purple'
+  | 'orange'
+  | 'multicolour';
+
+// Key order is the order shown in dropdowns.
+export const LISTING_COLOR_LABELS: Record<ListingColor, string> = {
+  black: 'Black',
+  white: 'White',
+  grey: 'Grey',
+  brown: 'Brown',
+  beige: 'Beige',
+  blue: 'Blue',
+  green: 'Green',
+  red: 'Red',
+  pink: 'Pink',
+  yellow: 'Yellow',
+  purple: 'Purple',
+  orange: 'Orange',
+  multicolour: 'Multicolour',
+};
+
+export const LISTING_COLORS = Object.keys(LISTING_COLOR_LABELS) as ListingColor[];
+
 export type ListingStatus = 'draft' | 'published' | 'sold';
 
 export type ListingSizeType = 'international' | 'eu_clothing' | 'eu_shoes';
@@ -28,6 +62,7 @@ export interface ListingFilterValues {
   minPrice: number | null;
   maxPrice: number | null;
   condition: ListingCondition | null;
+  color: ListingColor | null;
 }
 
 export interface Listing {
@@ -44,4 +79,5 @@ export interface Listing {
   brand: string | null;
   size_type: ListingSizeType | null;
   size: string | null;
+  color: ListingColor | null;
 }
