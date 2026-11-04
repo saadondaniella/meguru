@@ -213,7 +213,9 @@
   overflow-wrap: anywhere;
 }
 
-.listing-title-row app-favourite-button {
+.listing-title-actions {
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
 }
 

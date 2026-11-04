@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, ActivatedRoute } from '@angular/router';
+import { provideRouter, ActivatedRoute, convertToParamMap } from '@angular/router';
+import { of } from 'rxjs';
 import { ListingDetail } from './listing-detail';
 import { ListingService } from '../../services/listing';
 import { Profile } from '../../services/profile';
@@ -12,6 +13,7 @@ describe('ListingDetail', () => {
     getListingById: vi.fn(),
     getListingImageUrl: vi.fn(),
     getListingImagePaths: vi.fn(),
+    getRelatedListings: vi.fn(),
   };
 
   const profileServiceMock = {
@@ -28,11 +30,7 @@ describe('ListingDetail', () => {
         {
           provide: ActivatedRoute,
           useValue: {
-            snapshot: {
-              paramMap: {
-                get: () => 'test-listing-id',
-              },
-            },
+            paramMap: of(convertToParamMap({ id: 'test-listing-id' })),
           },
         },
         {
@@ -51,6 +49,8 @@ describe('ListingDetail', () => {
       error: { message: 'Listing not found' },
     });
 
+    listingServiceMock.getRelatedListings.mockResolvedValue({ data: [], error: null });
+
     fixture = TestBed.createComponent(ListingDetail);
     component = fixture.componentInstance;
     await fixture.whenStable();
@@ -62,7 +62,13 @@ describe('ListingDetail', () => {
 
   it('shows all images in a gallery and lets the user switch between them', async () => {
     listingServiceMock.getListingById.mockResolvedValue({
-      data: { id: 'l1', seller_id: 's1', title: 'Jacket', image_path: 'a', status: 'published' },
+      data: {
+        id: 'test-listing-id',
+        seller_id: 's1',
+        title: 'Jacket',
+        image_path: 'a',
+        status: 'published',
+      },
       error: null,
     });
     listingServiceMock.getListingImagePaths.mockResolvedValue({
