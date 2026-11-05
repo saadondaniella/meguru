@@ -54,6 +54,32 @@ describe('Profile', () => {
     expect(result.data).toEqual(mockProfile);
   });
 
+  it('should list one page of sellers using only public card fields', async () => {
+    const rows = [{ id: 's1', display_name: 'Anna', city: null, tagline: null, avatar_path: null }];
+
+    const range = vi.fn().mockResolvedValue({ data: rows, error: null, count: 13 });
+    const order = vi.fn();
+    order.mockReturnValue({ order, range });
+    const neq = vi.fn().mockReturnValue({ order });
+    const not = vi.fn().mockReturnValue({ neq });
+    const select = vi.fn().mockReturnValue({ not });
+
+    mockFrom.mockReturnValue({ select });
+
+    const result = await service.listSellers(2, 12);
+
+    expect(mockFrom).toHaveBeenCalledWith('profiles');
+    expect(select).toHaveBeenCalledWith('id, display_name, city, tagline, avatar_path', {
+      count: 'exact',
+    });
+    expect(not).toHaveBeenCalledWith('display_name', 'is', null);
+    expect(neq).toHaveBeenCalledWith('display_name', '');
+    expect(order).toHaveBeenCalledWith('display_name', { ascending: true });
+    expect(range).toHaveBeenCalledWith(12, 23);
+    expect(result.data).toEqual(rows);
+    expect(result.count).toBe(13);
+  });
+
   it('should update the correct user profile', async () => {
     const userId = 'test-user-123';
 

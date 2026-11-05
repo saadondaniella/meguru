@@ -1,0 +1,56 @@
+<section class="sellers">
+  <h1>EXPLORE SELLERS</h1>
+  <p class="sellers-intro">Meet the people behind the pre-loved pieces.</p>
+
+  @if (isLoading() && sellers().length === 0) {
+    <p role="status">Loading sellers...</p>
+  } @else if (hasError()) {
+    <div role="alert">
+      <p>We couldn't load the sellers.</p>
+      <button type="button" class="sellers-action" (click)="load()">Try again</button>
+    </div>
+  } @else if (sellers().length === 0) {
+    <p>No sellers yet. Check back soon.</p>
+    <a routerLink="/marketplace" class="sellers-action">Browse the marketplace</a>
+  } @else {
+    <ul class="sellers-grid" aria-label="Sellers" [attr.aria-busy]="isLoading()">
+      @for (seller of sellers(); track seller.id) {
+        <li>
+          <app-seller-card [seller]="seller" />
+        </li>
+      }
+    </ul>
+
+    @if (totalPages() > 1) {
+      <nav class="pagination" aria-label="Sellers pagination">
+        <button
+          type="button"
+          (click)="changePage(currentPage() - 1)"
+          [disabled]="currentPage() === 1 || isLoading()"
+        >
+          ← Previous
+        </button>
+
+        @for (page of pageNumbers(); track page) {
+          <button
+            type="button"
+            (click)="changePage(page)"
+            [class.active]="currentPage() === page"
+            [attr.aria-current]="currentPage() === page ? 'page' : null"
+            [disabled]="isLoading()"
+          >
+            {{ page }}
+          </button>
+        }
+
+        <button
+          type="button"
+          (click)="changePage(currentPage() + 1)"
+          [disabled]="currentPage() === totalPages() || isLoading()"
+        >
+          Next →
+        </button>
+      </nav>
+    }
+  }
+</section>

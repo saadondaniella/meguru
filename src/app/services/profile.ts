@@ -36,6 +36,22 @@ export class Profile {
       .limit(10);
   }
 
+  // One page of the public seller directory. Only public card fields are
+  // selected, and profiles without a display name are skipped.
+  async listSellers(page: number, pageSize: number) {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    return await this.supabase
+      .from('profiles')
+      .select('id, display_name, city, tagline, avatar_path', { count: 'exact' })
+      .not('display_name', 'is', null)
+      .neq('display_name', '')
+      .order('display_name', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, to);
+  }
+
   async createProfile(profile: ProfileInput) {
     return await this.supabase.from('profiles').insert(profile);
   }
