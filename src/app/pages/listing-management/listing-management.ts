@@ -454,7 +454,5 @@ export class ListingManagement implements OnInit {
     }
 
     this.listings.set(data as Listing[]);
-
-    console.log('My listings:', this.listings());
   }
 }

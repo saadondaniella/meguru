@@ -20,6 +20,10 @@ export class ListingCard {
   readonly listing = input.required<Listing>();
   readonly headingLevel = input<2 | 3>(2);
   readonly fromMarketplace = input(false);
+
+  // Static, non-interactive rendering used by the storefront preview:
+  // no favourite button (so no RPC calls) and a decorative heart instead.
+  readonly preview = input(false);
   readonly conditionLabels = LISTING_CONDITION_LABELS;
 
   // Emits the listing id when the user opens the listing.

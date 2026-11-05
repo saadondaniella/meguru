@@ -47,21 +47,35 @@
     <section class="marketplace-sellers">
       <h2>SELLERS</h2>
 
-      <div class="seller-results">
+      <ul class="seller-results">
         @for (seller of sellers(); track seller.id) {
-          <a class="seller-result" [routerLink]="['/sellers', seller.id]">
-            <span class="seller-avatar">
-              {{ seller.display_name.charAt(0).toUpperCase() }}
-            </span>
+          <li>
+            <a class="seller-card" [routerLink]="['/sellers', seller.id]">
+              <span class="seller-card-avatar">
+                @if (seller.avatarUrl) {
+                  <img [src]="seller.avatarUrl" alt="" loading="lazy" />
+                } @else {
+                  <span aria-hidden="true">{{ seller.display_name.charAt(0).toUpperCase() }}</span>
+                }
+              </span>
 
-            <span class="seller-name">
-              {{ seller.display_name }}
-            </span>
+              <span class="seller-card-body">
+                <span class="seller-card-name">{{ seller.display_name }}</span>
 
-            <span class="seller-link">VIEW PROFILE →</span>
-          </a>
+                @if (seller.city) {
+                  <span class="seller-card-city">{{ seller.city }}</span>
+                }
+
+                @if (seller.tagline) {
+                  <span class="seller-card-tagline">{{ seller.tagline }}</span>
+                }
+              </span>
+
+              <span class="seller-card-arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
         }
-      </div>
+      </ul>
     </section>
   }
 

@@ -16,7 +16,9 @@
 .listing-card img {
   display: block;
   width: 100%;
-  aspect-ratio: 5 / 6;
+  /* The storefront overrides these through scoped custom properties. */
+  aspect-ratio: var(--sf-image-ratio, 5 / 6);
+  border-radius: var(--sf-image-radius, 0);
   object-fit: cover;
   background: #e9e5dd;
   transition: transform 0.35s ease;
@@ -62,12 +64,36 @@
 }
 
 .listing-card p:first-of-type {
-  color: #9e5a44;
+  color: var(--sf-accent, #9e5a44);
   font-weight: 600;
 }
 
 .listing-card p:last-of-type {
   text-transform: capitalize;
+}
+
+/* Storefront preview (static, non-interactive) */
+
+.preview-image {
+  width: 100%;
+  aspect-ratio: var(--sf-image-ratio, 5 / 6);
+  border-radius: var(--sf-image-radius, 0);
+  background: #e9e5dd;
+}
+
+.preview-heart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 32px;
+  min-height: 32px;
+  color: var(--color-primary);
+}
+
+.preview-heart svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* Sold badge */

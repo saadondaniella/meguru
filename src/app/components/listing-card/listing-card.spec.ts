@@ -81,4 +81,44 @@ describe('ListingCard', () => {
 
     expect(opened).toHaveBeenCalledWith('l1');
   });
+  describe('preview mode', () => {
+    let loadCount: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      loadCount = vi.fn(async () => ({ error: null }));
+      TestBed.overrideProvider(FavouriteService, {
+        useValue: {
+          favouriteIds: signal(new Set<string>()),
+          counts: signal(new Map<string, number>()),
+          loadCount,
+        },
+      });
+    });
+
+    it('shows a decorative heart and makes no favourite calls', async () => {
+      fixture = TestBed.createComponent(ListingCard);
+      fixture.componentRef.setInput('listing', {
+        id: 'p1',
+        title: 'Sample',
+        price: 100,
+        image_path: null,
+        status: 'published',
+      } as Listing);
+      fixture.componentRef.setInput('preview', true);
+      await fixture.whenStable();
+
+      expect(el().querySelector('app-favourite-button')).toBeNull();
+      expect(el().querySelector('.preview-heart')?.getAttribute('aria-hidden')).toBe('true');
+      expect(el().querySelector('.preview-image')).not.toBeNull();
+      expect(loadCount).not.toHaveBeenCalled();
+    });
+
+    it('keeps the normal favourite button outside preview mode', async () => {
+      await render();
+
+      expect(el().querySelector('app-favourite-button')).not.toBeNull();
+      expect(el().querySelector('.preview-heart')).toBeNull();
+      expect(el().querySelector('.preview-image')).toBeNull();
+    });
+  });
 });

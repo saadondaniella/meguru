@@ -1,15 +1,18 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Profile } from '../../services/profile';
 import { ListingService } from '../../services/listing';
 import { Listing } from '../../models/listing';
-import { RouterLink } from '@angular/router';
 import { SUPABASE_CLIENT } from '../../services/supabase';
-import { ListingCard } from '../../components/listing-card/listing-card';
+import {
+  SellerStorefront,
+  StorefrontSeller,
+} from '../../components/seller-storefront/seller-storefront';
+import { StorefrontStyleColumns, resolveStorefrontStyle } from '../../models/storefront-theme';
 
 @Component({
   selector: 'app-public-seller-profile',
-  imports: [RouterLink, ListingCard],
+  imports: [SellerStorefront],
   templateUrl: './public-seller-profile.html',
   styleUrl: './public-seller-profile.css',
 })
@@ -26,15 +29,38 @@ export class PublicSellerProfile implements OnInit {
 
   listings = signal<Listing[]>([]);
 
-  seller = signal<{
-    id: string;
-    display_name: string;
-    bio: string | null;
-    city: string | null;
-    avatar_path: string | null;
-    contact_email: string | null;
-    instagram: string | null;
-  } | null>(null);
+  seller = signal<
+    | ({
+        id: string;
+        display_name: string;
+        tagline?: string | null;
+        bio: string | null;
+        city: string | null;
+        avatar_path: string | null;
+        contact_email: string | null;
+        instagram: string | null;
+      } & StorefrontStyleColumns)
+    | null
+  >(null);
+
+  // Legacy profiles have no style columns and resolve to the defaults.
+  style = computed(() => resolveStorefrontStyle(this.seller()));
+
+  storefrontSeller = computed<StorefrontSeller | null>(() => {
+    const seller = this.seller();
+
+    if (!seller) return null;
+
+    return {
+      display_name: seller.display_name,
+      tagline: seller.tagline ?? null,
+      bio: seller.bio,
+      city: seller.city,
+      contact_email: seller.contact_email,
+      instagram: seller.instagram,
+      avatarUrl: this.getAvatarUrl(seller.avatar_path),
+    };
+  });
 
   async ngOnInit() {
     if (!this.sellerId) return;
@@ -49,7 +75,6 @@ export class PublicSellerProfile implements OnInit {
     }
 
     this.seller.set(data);
-    console.log('Public seller profile:', data);
 
     const { data: listings, error: listingsError } =
       await this.listingService.getPublishedListingsBySeller(this.sellerId);
@@ -60,7 +85,6 @@ export class PublicSellerProfile implements OnInit {
     }
 
     this.listings.set(listings ?? []);
-    console.log('Seller listings:', listings);
   }
 
   getAvatarUrl(avatarPath: string | null): string | null {

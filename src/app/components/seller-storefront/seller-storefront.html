@@ -1,0 +1,64 @@
+<div class="storefront" [class.is-preview]="preview()" [style]="cssVars()">
+  <section class="storefront-profile">
+    <!-- Portrait comes first in the DOM so mobile reads portrait, then name. -->
+    <figure class="seller-portrait">
+      @if (seller().avatarUrl; as avatarUrl) {
+        <img
+          [src]="avatarUrl"
+          [alt]="seller().display_name + ' profile picture'"
+          class="seller-portrait-image"
+        />
+      } @else {
+        <div class="seller-portrait-fallback" aria-hidden="true">
+          <span>{{ initial() }}</span>
+        </div>
+      }
+    </figure>
+
+    <div class="seller-info">
+      <p class="seller-label">SELLER</p>
+
+      <h1>{{ seller().display_name }}</h1>
+
+      @if (seller().tagline) {
+        <p class="seller-tagline">{{ seller().tagline }}</p>
+      }
+
+      @if (seller().city) {
+        <p class="seller-city">{{ seller().city }}</p>
+      }
+
+      @if (seller().bio) {
+        <p class="seller-bio">{{ seller().bio }}</p>
+      }
+
+      @if (seller().contact_email || instagramUrl()) {
+        <div class="seller-contact">
+          <p class="contact-heading">CONTACT</p>
+
+          @if (seller().contact_email) {
+            <a [href]="'mailto:' + seller().contact_email"> Email seller ↗ </a>
+          }
+
+          @if (instagramUrl(); as url) {
+            <a [href]="url" target="_blank" rel="noopener noreferrer"> Instagram ↗ </a>
+          }
+        </div>
+      }
+
+      @if (isOwner()) {
+        <a routerLink="/seller-profile" class="edit-profile-link"> EDIT PROFILE </a>
+      }
+    </div>
+  </section>
+
+  <section class="seller-listings">
+    <h2>THE WARDROBE</h2>
+
+    @for (listing of listings(); track listing.id) {
+      <app-listing-card [listing]="listing" [headingLevel]="3" [preview]="preview()" />
+    } @empty {
+      <p>This seller hasn't listed any items yet.</p>
+    }
+  </section>
+</div>
