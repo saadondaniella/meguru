@@ -18,15 +18,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--rust);
-  border-right: 1px solid #d6d0c6;
+  background: var(--cream);
+  border-right: 2px solid var(--rust);
 }
 
 .menu-toggle {
   width: 38px;
   height: 38px;
   margin-top: 24px;
-  border: 1px solid #1c1917;
+  border: 1px solid var(--green);
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
@@ -40,7 +40,7 @@
 .menu-toggle span {
   width: 17px;
   height: 1px;
-  background: #1c1917;
+  background: var(--green);
 }
 
 .sidebar-logo {
@@ -48,7 +48,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) rotate(-90deg);
-  color: #1c1917;
+  color: var(--green);
   font-family: 'Noto Serif', serif;
   font-size: 24px;
   text-decoration: none;
@@ -420,8 +420,8 @@
     min-height: var(--mobile-bottom-height);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     box-sizing: border-box;
-    background: var(--rust);
-    border-top: 1px solid rgba(245, 242, 235, 0.2);
+    background: var(--cream);
+    border-top: 2px solid var(--rust);
   }
 
   .mobile-bottom-nav a,
@@ -438,7 +438,7 @@
     border: none;
     border-radius: 0;
     background: transparent;
-    color: var(--cream);
+    color: var(--green);
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
     font-weight: 400;
@@ -462,7 +462,7 @@
     width: 26px;
     height: 26px;
     padding: 2px;
-    border: 1px solid var(--cream);
+    border: 1px solid var(--green);
     border-radius: 50%;
     object-fit: cover;
     box-sizing: border-box;
@@ -470,7 +470,7 @@
 
   .mobile-bottom-nav a:active,
   .mobile-bottom-nav button:active {
-    background: rgba(28, 25, 23, 0.12);
+    background: rgba(77, 93, 70, 0.1);
   }
 
   .mobile-bottom-nav button:disabled {
@@ -480,7 +480,7 @@
 
   .mobile-bottom-nav a:focus-visible,
   .mobile-bottom-nav button:focus-visible {
-    outline: 2px solid var(--cream);
+    outline: 2px solid var(--green);
     outline-offset: -5px;
   }
 
