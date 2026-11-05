@@ -25,6 +25,7 @@ describe('SellerProfile', () => {
     storefront_name_size: null,
     storefront_tagline_style: 'regular',
     storefront_image_shape: 'classic',
+    storefront_listing_order: 'newest',
   };
 
   beforeEach(async () => {
@@ -328,6 +329,7 @@ describe('SellerProfile', () => {
         nameSize: 72,
         taglineStyle: 'italic',
         imageShape: 'soft',
+        listingOrder: 'brand_asc',
       });
 
       await component.onSubmit();
@@ -343,6 +345,7 @@ describe('SellerProfile', () => {
           storefront_name_size: 72,
           storefront_tagline_style: 'italic',
           storefront_image_shape: 'soft',
+          storefront_listing_order: 'brand_asc',
         }),
       );
     });

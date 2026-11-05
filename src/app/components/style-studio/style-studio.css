@@ -429,3 +429,30 @@
     transform: none;
   }
 }
+
+/* Listing order */
+
+.order-label {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+
+.order-select {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px 28px 10px 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.order-select:focus-visible {
+  outline: 2px solid var(--profile-rust, #9e5a44);
+  outline-offset: 3px;
+}
