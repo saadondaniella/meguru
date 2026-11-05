@@ -7,7 +7,7 @@ import {
   afterNextRender,
   Injector,
 } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ListingService } from '../../services/listing';
 import { ListingFilters } from '../../components/listing-filters/listing-filters';
 import {
@@ -22,19 +22,11 @@ import {
 } from '../../models/listing';
 import { Profile } from '../../services/profile';
 import { ListingCard } from '../../components/listing-card/listing-card';
-
-// A seller shown in the search results.
-export type SellerResult = {
-  id: string;
-  display_name: string;
-  city: string | null;
-  tagline: string | null;
-  avatarUrl: string | null;
-};
+import { SellerCard, SellerResult } from '../../components/seller-card/seller-card';
 
 @Component({
   selector: 'app-marketplace',
-  imports: [RouterLink, ListingFilters, ListingCard],
+  imports: [ListingFilters, ListingCard, SellerCard],
   templateUrl: './marketplace.html',
   styleUrl: './marketplace.css',
 })

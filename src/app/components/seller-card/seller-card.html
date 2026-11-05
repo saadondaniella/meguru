@@ -1,0 +1,23 @@
+<a class="seller-card" [routerLink]="['/sellers', seller().id]">
+  <span class="seller-card-avatar">
+    @if (seller().avatarUrl; as avatarUrl) {
+      <img [src]="avatarUrl" alt="" loading="lazy" />
+    } @else {
+      <span aria-hidden="true">{{ seller().display_name.charAt(0).toUpperCase() }}</span>
+    }
+  </span>
+
+  <span class="seller-card-body">
+    <span class="seller-card-name">{{ seller().display_name }}</span>
+
+    @if (seller().city) {
+      <span class="seller-card-city">{{ seller().city }}</span>
+    }
+
+    @if (seller().tagline) {
+      <span class="seller-card-tagline">{{ seller().tagline }}</span>
+    }
+  </span>
+
+  <span class="seller-card-arrow" aria-hidden="true">→</span>
+</a>
