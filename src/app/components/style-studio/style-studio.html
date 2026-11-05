@@ -238,6 +238,33 @@
     </div>
   </fieldset>
 
+  <!-- LISTING ORDER -->
+  <fieldset class="studio-group studio-group--wide">
+    <legend>LISTING ORDER</legend>
+
+    <label class="order-label" for="storefront-listing-order">
+      Order of the items in THE WARDROBE
+    </label>
+
+    <select
+      id="storefront-listing-order"
+      class="order-select"
+      aria-describedby="listing-order-hint"
+      [value]="value().listingOrder"
+      (change)="setListingOrder($any($event.target).value)"
+    >
+      @for (option of listingOrders; track option.key) {
+        <option [value]="option.key" [selected]="value().listingOrder === option.key">
+          {{ option.label }}
+        </option>
+      }
+    </select>
+
+    <p id="listing-order-hint" class="studio-hint">
+      Visitors see your items in this order. The Marketplace has its own sorting.
+    </p>
+  </fieldset>
+
   <p class="visually-hidden" role="status">{{ announcement() }}</p>
   @if (announcement()) {
     <p class="studio-announcement" aria-hidden="true">{{ announcement() }}</p>

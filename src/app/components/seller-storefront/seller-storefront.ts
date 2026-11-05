@@ -2,6 +2,7 @@ import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Listing } from '../../models/listing';
 import { StorefrontStyle, storefrontCssVars } from '../../models/storefront-theme';
+import { sortStorefrontListings } from '../../models/storefront-listing-order';
 import { ListingCard } from '../listing-card/listing-card';
 
 export interface StorefrontSeller {
@@ -35,6 +36,11 @@ export class SellerStorefront {
 
   // Only constants from the theme model ever reach the stylesheet.
   readonly cssVars = computed(() => storefrontCssVars(this.style()));
+
+  // The seller's chosen order, applied the same way for visitors and the preview.
+  readonly sortedListings = computed(() =>
+    sortStorefrontListings(this.listings(), this.style().listingOrder),
+  );
 
   readonly initial = computed(() => this.seller().display_name.trim().charAt(0));
 

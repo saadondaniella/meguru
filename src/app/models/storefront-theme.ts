@@ -4,6 +4,12 @@
 // reaches the stylesheet comes from the constants in this file, so unknown or
 // tampered values can only ever fall back to the defaults.
 
+import {
+  DEFAULT_LISTING_ORDER,
+  StorefrontListingOrder,
+  resolveListingOrder,
+} from './storefront-listing-order';
+
 // ---------------------------------------------------------------------------
 // Palettes
 // ---------------------------------------------------------------------------
@@ -163,6 +169,7 @@ export interface StorefrontStyle {
   nameSize: number | null;
   taglineStyle: TaglineStyle;
   imageShape: ImageShape;
+  listingOrder: StorefrontListingOrder;
 }
 
 export const DEFAULT_STOREFRONT_STYLE: StorefrontStyle = {
@@ -173,6 +180,7 @@ export const DEFAULT_STOREFRONT_STYLE: StorefrontStyle = {
   nameSize: null,
   taglineStyle: 'regular',
   imageShape: 'classic',
+  listingOrder: DEFAULT_LISTING_ORDER,
 };
 
 /** The profile columns that hold the style (all optional on legacy rows). */
@@ -184,6 +192,7 @@ export interface StorefrontStyleColumns {
   storefront_name_size?: number | null;
   storefront_tagline_style?: string | null;
   storefront_image_shape?: string | null;
+  storefront_listing_order?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -358,6 +367,7 @@ export function resolveStorefrontStyle(
       IMAGE_SHAPES.map((s) => s.key),
       defaults.imageShape,
     ),
+    listingOrder: resolveListingOrder(row?.storefront_listing_order),
   };
 }
 
@@ -371,6 +381,7 @@ export function styleToColumns(style: StorefrontStyle) {
     storefront_name_size: style.nameSize,
     storefront_tagline_style: style.taglineStyle,
     storefront_image_shape: style.imageShape,
+    storefront_listing_order: style.listingOrder,
   };
 }
 
@@ -382,7 +393,8 @@ export function stylesEqual(a: StorefrontStyle, b: StorefrontStyle): boolean {
     a.nameWeight === b.nameWeight &&
     a.nameSize === b.nameSize &&
     a.taglineStyle === b.taglineStyle &&
-    a.imageShape === b.imageShape
+    a.imageShape === b.imageShape &&
+    a.listingOrder === b.listingOrder
   );
 }
 

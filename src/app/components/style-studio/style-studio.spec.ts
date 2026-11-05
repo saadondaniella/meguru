@@ -66,6 +66,7 @@ describe('StyleStudio', () => {
       'NAME SIZE',
       'TAGLINE STYLE',
       'LISTING IMAGES',
+      'LISTING ORDER',
     ]);
   });
 
@@ -202,6 +203,39 @@ describe('StyleStudio', () => {
     ]);
   });
 
+  describe('listing order', () => {
+    it('offers the eight options and selects the current one', async () => {
+      await render({ listingOrder: 'price_asc' });
+
+      const select = el().querySelector('#storefront-listing-order') as HTMLSelectElement;
+      const labels = Array.from(select.options).map((option) => option.textContent?.trim());
+
+      expect(labels).toEqual([
+        'Newest first',
+        'Oldest first',
+        'Price: Low to high',
+        'Price: High to low',
+        'Brand: A–Z',
+        'Brand: Z–A',
+        'Category: A–Z',
+        'Category: Z–A',
+      ]);
+      expect(select.value).toBe('price_asc');
+      expect(el().querySelector('label[for="storefront-listing-order"]')).not.toBeNull();
+    });
+
+    it('updates the style when another order is chosen', async () => {
+      await render();
+
+      const select = el().querySelector('#storefront-listing-order') as HTMLSelectElement;
+      select.value = 'brand_desc';
+      select.dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+
+      expect(component.value().listingOrder).toBe('brand_desc');
+    });
+  });
+
   describe('reset', () => {
     const resetButton = () => el().querySelector('.reset-style') as HTMLButtonElement;
 
@@ -220,6 +254,7 @@ describe('StyleStudio', () => {
         nameSize: 100,
         taglineStyle: 'italic',
         imageShape: 'circle',
+        listingOrder: 'brand_desc',
       });
 
       expect(resetButton().disabled).toBe(false);

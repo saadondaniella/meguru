@@ -55,7 +55,7 @@
   <section class="seller-listings">
     <h2>THE WARDROBE</h2>
 
-    @for (listing of listings(); track listing.id) {
+    @for (listing of sortedListings(); track listing.id) {
       <app-listing-card [listing]="listing" [headingLevel]="3" [preview]="preview()" />
     } @empty {
       <p>This seller hasn't listed any items yet.</p>

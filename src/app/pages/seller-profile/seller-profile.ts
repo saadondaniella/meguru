@@ -27,6 +27,7 @@ import {
   SellerStorefront,
   StorefrontSeller,
 } from '../../components/seller-storefront/seller-storefront';
+import { sortStorefrontListings } from '../../models/storefront-listing-order';
 import { StyleStudio } from '../../components/style-studio/style-studio';
 import { SUPABASE_CLIENT } from '../../services/supabase';
 
@@ -128,7 +129,11 @@ export class SellerProfile implements OnInit {
 
   // The seller's own listings, or samples so the image shape is always visible.
   previewListings = computed<Listing[]>(() => {
-    const own = this.sellerListings().slice(0, 3);
+    // Sort first so the three shown reflect the chosen listing order.
+    const own = sortStorefrontListings(this.sellerListings(), this.style().listingOrder).slice(
+      0,
+      3,
+    );
 
     return own.length > 0 ? own : PLACEHOLDER_LISTINGS;
   });

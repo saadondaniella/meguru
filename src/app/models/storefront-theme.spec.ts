@@ -139,6 +139,7 @@ describe('storefront theme', () => {
           storefront_name_size: 96,
           storefront_tagline_style: 'italic',
           storefront_image_shape: 'circle',
+          storefront_listing_order: 'brand_desc',
         }),
       ).toEqual({
         background: 'black',
@@ -148,6 +149,7 @@ describe('storefront theme', () => {
         nameSize: 96,
         taglineStyle: 'italic',
         imageShape: 'circle',
+        listingOrder: 'brand_desc',
       });
     });
 
@@ -160,6 +162,7 @@ describe('storefront theme', () => {
         storefront_name_size: Number.NaN,
         storefront_tagline_style: 'oblique',
         storefront_image_shape: 'hexagon',
+        storefront_listing_order: 'random',
       });
 
       expect(style).toEqual(DEFAULT_STOREFRONT_STYLE);
@@ -191,11 +194,17 @@ describe('storefront theme', () => {
         storefront_name_size: null,
         storefront_tagline_style: 'regular',
         storefront_image_shape: 'classic',
+        storefront_listing_order: 'newest',
       });
     });
 
     it('round trips through resolve', () => {
-      const style = { ...DEFAULT_STOREFRONT_STYLE, nameSize: 72, imageShape: 'soft' as const };
+      const style = {
+        ...DEFAULT_STOREFRONT_STYLE,
+        nameSize: 72,
+        imageShape: 'soft' as const,
+        listingOrder: 'price_desc' as const,
+      };
 
       expect(resolveStorefrontStyle(styleToColumns(style))).toEqual(style);
     });

@@ -27,6 +27,11 @@ import {
   stylesEqual,
   supportedWeights,
 } from '../../models/storefront-theme';
+import {
+  STOREFRONT_LISTING_ORDERS,
+  StorefrontListingOrder,
+  resolveListingOrder,
+} from '../../models/storefront-listing-order';
 
 // The controls of the storefront "style studio". It edits a StorefrontStyle
 // value and never touches the saved profile: saving stays with the page.
@@ -46,6 +51,7 @@ export class StyleStudio {
   readonly fonts = NAME_FONTS;
   readonly taglineStyles = TAGLINE_STYLES;
   readonly imageShapes = IMAGE_SHAPES;
+  readonly listingOrders = STOREFRONT_LISTING_ORDERS;
 
   readonly sizeMin = NAME_SIZE_MIN;
   readonly sizeMax = NAME_SIZE_MAX;
@@ -137,6 +143,10 @@ export class StyleStudio {
 
   setImageShape(imageShape: ImageShape) {
     this.value.update((v) => ({ ...v, imageShape }));
+  }
+
+  setListingOrder(listingOrder: StorefrontListingOrder) {
+    this.value.update((v) => ({ ...v, listingOrder: resolveListingOrder(listingOrder) }));
   }
 
   // Only the style: name, tagline, bio, avatar and contacts are not touched.

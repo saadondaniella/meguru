@@ -52,6 +52,23 @@ describe('SellerStorefront', () => {
     await fixture.whenStable();
   }
 
+  it("shows the listings in the seller's chosen order", async () => {
+    const priced = (id: string, price: number) => ({ ...listing(id), price });
+
+    await render({
+      listings: [priced('a', 300), priced('b', 100), priced('c', 200)],
+      style: { listingOrder: 'price_asc' },
+    });
+
+    const titles = Array.from(el().querySelectorAll('.seller-listings app-listing-card')).map(
+      (card) => card.textContent,
+    );
+
+    expect(titles[0]).toContain('Item b');
+    expect(titles[1]).toContain('Item c');
+    expect(titles[2]).toContain('Item a');
+  });
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [SellerStorefront],
