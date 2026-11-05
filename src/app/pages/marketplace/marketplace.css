@@ -28,6 +28,132 @@
   row-gap: 64px;
 }
 
+/* SELLER RESULTS */
+
+.marketplace-sellers {
+  margin-bottom: 56px;
+}
+
+.marketplace-sellers h2 {
+  margin: 0 0 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+
+.seller-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.seller-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+  padding: 16px 20px;
+  border: 1px solid #b8b7ad;
+  color: #1c1917;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.seller-card:hover {
+  border-color: #4d5d46;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.seller-card:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 3px;
+}
+
+.seller-card-avatar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border: 1px solid #4d5d46;
+  border-radius: 50%;
+  background: #e9e7df;
+  color: #4d5d46;
+  font-family: 'Noto Serif', serif;
+  font-size: 26px;
+}
+
+.seller-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.seller-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.seller-card-name {
+  font-family: 'Noto Serif', serif;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.seller-card-city {
+  color: #4d5d46;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.seller-card-tagline {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #57534e;
+  font-size: 12px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.seller-card-arrow {
+  flex-shrink: 0;
+  color: #4d5d46;
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.seller-card:hover .seller-card-arrow {
+  transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seller-card,
+  .seller-card-arrow {
+    transition: none;
+  }
+
+  .seller-card:hover .seller-card-arrow {
+    transform: none;
+  }
+}
+
 /* TABLET */
 
 @media (max-width: 900px) {

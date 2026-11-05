@@ -23,6 +23,15 @@ import {
 import { Profile } from '../../services/profile';
 import { ListingCard } from '../../components/listing-card/listing-card';
 
+// A seller shown in the search results.
+export type SellerResult = {
+  id: string;
+  display_name: string;
+  city: string | null;
+  tagline: string | null;
+  avatarUrl: string | null;
+};
+
 @Component({
   selector: 'app-marketplace',
   imports: [RouterLink, ListingFilters, ListingCard],
@@ -41,7 +50,7 @@ export class Marketplace implements OnInit {
   pageSize = 9;
   totalListings = signal(0);
   isLoading = signal(false);
-  sellers = signal<{ id: string; display_name: string }[]>([]);
+  sellers = signal<SellerResult[]>([]);
   sort = signal<'newest' | 'oldest' | 'price_asc' | 'price_desc'>('newest');
 
   // Search and filters
@@ -232,7 +241,15 @@ export class Marketplace implements OnInit {
       return;
     }
 
-    this.sellers.set(data ?? []);
+    this.sellers.set(
+      (data ?? []).map((seller) => ({
+        id: seller.id,
+        display_name: seller.display_name,
+        city: seller.city?.trim() || null,
+        tagline: seller.tagline?.trim() || null,
+        avatarUrl: this.profileService.getAvatarUrl(seller.avatar_path ?? null),
+      })),
+    );
   }
 
   // Fetch listings with current filters

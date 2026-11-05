@@ -1,5 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { SUPABASE_CLIENT } from './supabase';
+import { styleToColumns } from '../models/storefront-theme';
+
+// Profile details plus the optional storefront style columns.
+export type ProfileInput = {
+  display_name: string;
+  bio: string | null;
+  city: string | null;
+  contact_email: string | null;
+  instagram: string | null;
+  tagline?: string | null;
+} & Partial<ReturnType<typeof styleToColumns>>;
 
 @Injectable({
   providedIn: 'root',
@@ -19,32 +30,17 @@ export class Profile {
 
     return await this.supabase
       .from('profiles')
-      .select('id, display_name')
+      .select('id, display_name, city, tagline, avatar_path')
       .ilike('display_name', `%${term.replace(/[%_\\]/g, '\\$&')}%`)
       .order('display_name', { ascending: true })
       .limit(10);
   }
 
-  async createProfile(profile: {
-    display_name: string;
-    bio: string | null;
-    city: string | null;
-    contact_email: string | null;
-    instagram: string | null;
-  }) {
+  async createProfile(profile: ProfileInput) {
     return await this.supabase.from('profiles').insert(profile);
   }
 
-  async updateProfile(
-    userId: string,
-    profile: {
-      display_name: string;
-      bio: string | null;
-      city: string | null;
-      contact_email: string | null;
-      instagram: string | null;
-    },
-  ) {
+  async updateProfile(userId: string, profile: ProfileInput) {
     return await this.supabase.from('profiles').update(profile).eq('id', userId).select().single();
   }
 

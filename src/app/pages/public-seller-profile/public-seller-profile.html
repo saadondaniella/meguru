@@ -1,67 +1,10 @@
-@if (seller(); as seller) {
-  <section class="public-seller-profile">
-    <!-- Portrait comes first in the DOM so mobile reads portrait, then name. -->
-    <figure class="seller-portrait">
-      @if (getAvatarUrl(seller.avatar_path); as avatarUrl) {
-        <img
-          [src]="avatarUrl"
-          [alt]="seller.display_name + ' profile picture'"
-          class="seller-portrait-image"
-        />
-      } @else {
-        <div class="seller-portrait-fallback" aria-hidden="true">
-          <span>{{ seller.display_name.trim().charAt(0) }}</span>
-        </div>
-      }
-    </figure>
-
-    <div class="seller-info">
-      <p class="seller-label">SELLER</p>
-
-      <h1>{{ seller.display_name }}</h1>
-
-      @if (seller.city) {
-        <p class="seller-city">{{ seller.city }}</p>
-      }
-
-      @if (seller.bio) {
-        <p class="seller-bio">{{ seller.bio }}</p>
-      }
-
-      @if (seller.contact_email || seller.instagram) {
-        <div class="seller-contact">
-          <p class="contact-heading">CONTACT</p>
-
-          @if (seller.contact_email) {
-            <a [href]="'mailto:' + seller.contact_email"> Email seller ↗ </a>
-          }
-
-          @if (seller.instagram) {
-            <a
-              [href]="'https://www.instagram.com/' + seller.instagram.replace('@', '')"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Instagram ↗
-            </a>
-          }
-        </div>
-      }
-
-      @if (isOwnProfile()) {
-        <a routerLink="/seller-profile" class="edit-profile-link"> EDIT PROFILE </a>
-      }
-    </div>
-  </section>
-  <section class="seller-listings">
-    <h2>THE WARDROBE</h2>
-
-    @for (listing of listings(); track listing.id) {
-      <app-listing-card [listing]="listing" [headingLevel]="3" />
-    } @empty {
-      <p>This seller hasn't listed any items yet.</p>
-    }
-  </section>
+@if (storefrontSeller(); as seller) {
+  <app-seller-storefront
+    [seller]="seller"
+    [listings]="listings()"
+    [style]="style()"
+    [isOwner]="isOwnProfile()"
+  />
 } @else {
   <p>Loading seller profile...</p>
 }

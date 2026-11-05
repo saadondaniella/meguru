@@ -1,0 +1,245 @@
+<div class="studio-controls">
+  <header class="studio-header">
+    <div>
+      <p class="studio-intro">
+        Choose how your public storefront looks. The preview updates as you go, and nothing is
+        public until you save.
+      </p>
+    </div>
+
+    <button type="button" class="reset-style" [disabled]="isDefault()" (click)="resetToDefault()">
+      RESET STYLE
+    </button>
+  </header>
+
+  <!-- BACKGROUND -->
+  <fieldset class="studio-group studio-group--wide">
+    <legend>BACKGROUND</legend>
+
+    <div class="swatches">
+      @for (color of backgrounds; track color.key) {
+        <label class="swatch">
+          <input
+            type="radio"
+            name="storefront-background"
+            [value]="color.key"
+            [checked]="value().background === color.key"
+            (change)="setBackground(color.key)"
+          />
+          <span class="swatch-chip" [style.background-color]="color.hex">
+            <svg
+              class="swatch-tick"
+              viewBox="0 0 24 24"
+              fill="none"
+              [attr.stroke]="tickColor(color.hex)"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m5 12.5 4.5 4.5L19 7.5" />
+            </svg>
+          </span>
+          <span class="swatch-name">{{ color.label }}</span>
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  <!-- TEXT COLOR -->
+  <fieldset class="studio-group studio-group--wide">
+    <legend>TEXT COLOR</legend>
+
+    <div class="swatches">
+      @for (color of textColors; track color.key) {
+        <label class="swatch" [class.is-unavailable]="!isTextAvailable(color.key)">
+          <input
+            type="radio"
+            name="storefront-text-color"
+            [value]="color.key"
+            [checked]="value().textColor === color.key"
+            [disabled]="!isTextAvailable(color.key)"
+            aria-describedby="text-color-hint"
+            (change)="setTextColor(color.key)"
+          />
+          <span class="swatch-chip" [style.background-color]="color.hex">
+            <svg
+              class="swatch-tick"
+              viewBox="0 0 24 24"
+              fill="none"
+              [attr.stroke]="tickColor(color.hex)"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m5 12.5 4.5 4.5L19 7.5" />
+            </svg>
+          </span>
+          <span class="swatch-name">
+            {{ color.label }}
+            @if (!isTextAvailable(color.key)) {
+              <span class="visually-hidden">
+                (not available: not enough contrast on {{ backgroundLabel() }})
+              </span>
+            }
+          </span>
+        </label>
+      }
+    </div>
+
+    <p id="text-color-hint" class="studio-hint">
+      Contrast {{ contrast() }}:1 · meets WCAG AA. Crossed-out colors don't have enough contrast on
+      {{ backgroundLabel() }} (at least 4.5:1 is needed).
+    </p>
+  </fieldset>
+
+  <!-- NAME STYLE -->
+  <fieldset class="studio-group">
+    <legend>NAME FONT</legend>
+
+    <div class="tiles tiles-two">
+      @for (font of fonts; track font.key) {
+        <label class="tile">
+          <input
+            type="radio"
+            name="storefront-name-font"
+            [value]="font.key"
+            [checked]="value().nameFont === font.key"
+            (change)="setFont(font.key)"
+          />
+          <span class="tile-body">
+            <span class="tile-sample" [style.font-family]="font.cssFamily">Aa</span>
+            <span class="tile-label">{{ font.label }}</span>
+          </span>
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  <fieldset class="studio-group">
+    <legend>NAME WEIGHT</legend>
+
+    <div class="chips">
+      @for (weight of weights(); track weight.value) {
+        <label class="chip">
+          <input
+            type="radio"
+            name="storefront-name-weight"
+            [value]="weight.value"
+            [checked]="value().nameWeight === weight.value"
+            (change)="setWeight(weight.value)"
+          />
+          <span
+            class="chip-body"
+            [style.font-family]="fontFamily()"
+            [style.font-weight]="weight.value"
+          >
+            {{ weight.label }}
+          </span>
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  <fieldset class="studio-group">
+    <legend>NAME SIZE</legend>
+
+    <div class="size-row">
+      <input
+        id="name-size"
+        class="size-slider"
+        type="range"
+        [min]="sizeMin"
+        [max]="sizeMax"
+        [step]="sizeStep"
+        [value]="value().nameSize ?? sizeMin"
+        [disabled]="usesDefaultSize()"
+        aria-label="Name size in pixels"
+        [attr.aria-valuetext]="usesDefaultSize() ? 'Default size' : value().nameSize + ' pixels'"
+        (input)="setSize(+$any($event.target).value)"
+      />
+      <output class="size-output" for="name-size">
+        {{ usesDefaultSize() ? 'Default' : value().nameSize + ' px' }}
+      </output>
+    </div>
+
+    <label class="check">
+      <input
+        type="checkbox"
+        [checked]="usesDefaultSize()"
+        (change)="setUseDefaultSize($any($event.target).checked)"
+      />
+      <span>Use the default responsive size</span>
+    </label>
+
+    <p class="studio-hint">
+      Your chosen size is the largest it gets. It scales down on smaller screens so long names never
+      overflow.
+    </p>
+  </fieldset>
+
+  <!-- TAGLINE STYLE -->
+  <fieldset class="studio-group">
+    <legend>TAGLINE STYLE</legend>
+
+    <div class="chips">
+      @for (option of taglineStyles; track option.key) {
+        <label class="chip">
+          <input
+            type="radio"
+            name="storefront-tagline-style"
+            [value]="option.key"
+            [checked]="value().taglineStyle === option.key"
+            (change)="setTaglineStyle(option.key)"
+          />
+          <span class="chip-body" [class.is-italic]="option.key === 'italic'">
+            {{ option.label }}
+          </span>
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  <!-- IMAGE SHAPE -->
+  <fieldset class="studio-group">
+    <legend>LISTING IMAGES</legend>
+
+    <div class="tiles tiles-three">
+      @for (shape of imageShapes; track shape.key) {
+        <label class="tile">
+          <input
+            type="radio"
+            name="storefront-image-shape"
+            [value]="shape.key"
+            [checked]="value().imageShape === shape.key"
+            (change)="setImageShape(shape.key)"
+          />
+          <span class="tile-body">
+            <svg class="shape-icon" viewBox="0 0 48 48" aria-hidden="true">
+              @switch (shape.key) {
+                @case ('classic') {
+                  <rect x="9" y="6" width="30" height="36" />
+                }
+                @case ('soft') {
+                  <rect x="9" y="6" width="30" height="36" rx="9" />
+                }
+                @case ('circle') {
+                  <circle cx="24" cy="24" r="17" />
+                }
+              }
+            </svg>
+            <span class="tile-label">{{ shape.label }}</span
+            >{{ ' ' }}
+            <span class="tile-note">{{ shape.description }}</span>
+          </span>
+        </label>
+      }
+    </div>
+  </fieldset>
+
+  <p class="visually-hidden" role="status">{{ announcement() }}</p>
+  @if (announcement()) {
+    <p class="studio-announcement" aria-hidden="true">{{ announcement() }}</p>
+  }
+</div>
