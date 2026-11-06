@@ -222,5 +222,70 @@
         <span>EDIT MY PROFILE</span>
       </a>
     </nav>
+
+    <!-- SELLER GUIDE -->
+    <section class="seller-guide" aria-labelledby="seller-guide-title">
+      <p class="section-label">THE SELLER'S EDIT</p>
+
+      <h2 id="seller-guide-title">Give your pieces a second life.</h2>
+
+      <p class="seller-guide-intro">
+        A few simple habits help every piece look its best and find the right home. Open a section
+        for practical advice.
+      </p>
+
+      <div class="guide-list">
+        @for (item of guideItems; track item.id) {
+          <div class="guide-item" [class.is-open]="openGuideIds().has(item.id)">
+            <h3 class="guide-heading">
+              <button
+                type="button"
+                class="guide-toggle"
+                [id]="'guide-toggle-' + item.id"
+                [attr.aria-expanded]="openGuideIds().has(item.id)"
+                [attr.aria-controls]="'guide-panel-' + item.id"
+                (click)="toggleGuideItem(item.id)"
+              >
+                <span class="guide-index" aria-hidden="true">0{{ $index + 1 }}</span>
+
+                <span class="guide-summary">
+                  <span class="guide-title">{{ item.title }}</span>
+                  <span class="guide-item-intro">{{ item.intro }}</span>
+                </span>
+
+                <span class="guide-action">
+                  {{ openGuideIds().has(item.id) ? 'Show less' : 'Read more' }}
+                  <span class="guide-icon" aria-hidden="true"></span>
+                </span>
+              </button>
+            </h3>
+
+            @if (openGuideIds().has(item.id)) {
+              <div
+                class="guide-panel"
+                role="region"
+                [id]="'guide-panel-' + item.id"
+                [attr.aria-labelledby]="'guide-toggle-' + item.id"
+              >
+                <ul>
+                  @for (tip of item.tips; track tip.text) {
+                    <li>
+                      @if (tip.term) {
+                        <strong>{{ tip.term }}</strong>
+                      }
+                      {{ tip.text }}
+                    </li>
+                  }
+                </ul>
+
+                @if (item.note) {
+                  <p class="guide-note">{{ item.note }}</p>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </section>
   }
 </section>

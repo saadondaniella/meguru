@@ -4,6 +4,14 @@ import { Auth } from '../../services/auth';
 import { Profile } from '../../services/profile';
 import { EditorialFeature } from '../../components/editorial-feature/editorial-feature';
 
+interface GuideItem {
+  id: string;
+  title: string;
+  intro: string;
+  tips: { term?: string; text: string }[];
+  note?: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   imports: [RouterLink, EditorialFeature],
@@ -20,6 +28,74 @@ export class Dashboard implements OnInit {
   isLoading = signal(true);
   errorMessage = signal('');
   isCopied = signal(false);
+
+  readonly guideItems: GuideItem[] = [
+    {
+      id: 'photos',
+      title: 'Good Photos',
+      intro: 'Clear, honest images are the first thing a buyer notices.',
+      tips: [
+        { text: 'Use natural daylight and a clean background.' },
+        { text: 'Show the entire garment and photograph it from different angles.' },
+        { text: 'Include close-ups of labels, details and imperfections.' },
+        { text: 'Present the item cleanly and honestly.' },
+      ],
+    },
+    {
+      id: 'details',
+      title: 'Details Matter',
+      intro: 'The more a buyer knows, the more confident they feel.',
+      tips: [
+        { text: 'Include material and fabric composition.' },
+        { text: 'Add measurements, fit and care instructions.' },
+        { text: 'Mention the original retail price when known.' },
+        { text: 'Describe imperfections and signs of wear honestly.' },
+      ],
+    },
+    {
+      id: 'price',
+      title: 'Price With Purpose',
+      intro: 'A fair price helps your piece find its next owner faster.',
+      tips: [
+        { text: "Consider the item's condition, brand and original value." },
+        { text: 'Compare similar secondhand pieces.' },
+        { text: 'Set a fair, realistic price.' },
+      ],
+    },
+    {
+      id: 'collection',
+      title: 'Choose Your Collection',
+      intro: 'Place your piece where the right buyers will look for it.',
+      tips: [
+        {
+          term: 'Budget',
+          text: 'Affordable secondhand finds, recommended at 500 SEK or below.',
+        },
+        {
+          term: 'Exclusive',
+          text: 'Unique, designer, vintage or special pieces, regardless of price.',
+        },
+        { term: 'Pass It On', text: 'Give your item a new home for free.' },
+      ],
+      note: 'These are recommendations, not strict price restrictions.',
+    },
+  ];
+
+  readonly openGuideIds = signal<ReadonlySet<string>>(new Set());
+
+  toggleGuideItem(id: string) {
+    this.openGuideIds.update((open) => {
+      const next = new Set(open);
+
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+
+      return next;
+    });
+  }
 
   async ngOnInit() {
     try {
