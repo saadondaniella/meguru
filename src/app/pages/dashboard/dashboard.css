@@ -366,8 +366,59 @@
     padding-top: 0;
   }
 
+  /* no sticky hover underline on touch */
+  .guide-toggle:hover .guide-title {
+    text-decoration: none;
+  }
+
+  /* chevron instead of plus / minus */
+  .guide-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .guide-icon::before {
+    top: 2px;
+    left: 3px;
+    width: 7px;
+    height: 7px;
+    border-right: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+    background: none;
+    transform: rotate(45deg);
+  }
+
+  .guide-icon::after {
+    display: none;
+  }
+
+  .guide-item.is-open .guide-icon::before {
+    top: 5px;
+    transform: rotate(-135deg);
+  }
+
+  /* cleaner tips: no dashes, more air */
   .guide-panel {
-    padding: 0 0 26px 48px;
+    padding: 0 0 28px 48px;
+  }
+
+  .guide-panel ul {
+    gap: 16px;
+    padding-top: 20px;
+  }
+
+  .guide-panel li {
+    padding-left: 0;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .guide-panel li::before {
+    display: none;
+  }
+
+  .guide-note {
+    margin-top: 24px;
   }
 }
 
