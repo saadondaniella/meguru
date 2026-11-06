@@ -426,17 +426,26 @@
   }
 
   .home-search {
+    margin-top: 28px;
     margin-bottom: 48px;
   }
 
   .home-search-field {
     height: 48px;
+    border-color: transparent;
+    border-bottom-color: var(--green);
+    background: transparent;
   }
 
   /* Prevents iOS Safari from zooming into the search input */
   .home-search-field input {
     font-size: 16px;
     letter-spacing: 0.03em;
+  }
+
+  /* Only the placeholder is smaller; the input keeps 16px to avoid iOS zoom */
+  .home-search-field input::placeholder {
+    font-size: 13px;
   }
 
   .home-bottom {
