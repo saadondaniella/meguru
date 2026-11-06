@@ -25,7 +25,7 @@ describe('ListingForm color', () => {
   }
 
   function fillRequiredFields() {
-    component.listingForm.patchValue({ title: 'Linen shirt', price: 200 });
+    component.listingForm.patchValue({ title: 'Linen shirt', price: 200, category: 'budget' });
   }
 
   const existing = (overrides: Partial<Listing>): Listing => ({
@@ -150,5 +150,93 @@ describe('ListingForm color', () => {
       'l1',
       expect.objectContaining({ color: 'blue' }),
     );
+  });
+
+  describe('category', () => {
+    const categorySelect = () =>
+      fixture.nativeElement.querySelector('#category') as HTMLSelectElement;
+
+    it('starts with no collection selected and a disabled placeholder', async () => {
+      await render();
+
+      expect(component.listingForm.controls.category.value).toBe('');
+      expect(categorySelect().value).toBe('');
+      expect(categorySelect().options[0].textContent?.trim()).toBe('Select collection');
+      expect(categorySelect().options[0].disabled).toBe(true);
+    });
+
+    it('keeps the internal category values', async () => {
+      await render();
+
+      const values = Array.from(categorySelect().options).map((option) => option.value);
+
+      expect(values).toEqual(['', 'exclusive', 'budget', 'free']);
+    });
+
+    it('does not publish without a collection and shows an accessible error', async () => {
+      await render();
+      component.listingForm.patchValue({ title: 'Linen shirt', price: 200, color: 'blue' });
+
+      await component.onSubmit();
+      await fixture.whenStable();
+
+      expect(service.createListing).not.toHaveBeenCalled();
+      expect(categorySelect().getAttribute('aria-invalid')).toBe('true');
+      expect(fixture.nativeElement.querySelector('#category-error')).not.toBeNull();
+    });
+
+    it('publishes with the selected collection', async () => {
+      await render();
+      fillRequiredFields();
+      component.listingForm.patchValue({ category: 'exclusive', color: 'blue' });
+
+      await component.onSubmit();
+
+      expect(service.createListing).toHaveBeenCalledWith(
+        expect.objectContaining({ category: 'exclusive', status: 'published' }),
+      );
+    });
+
+    it('saves a draft without a collection as null, not an empty string', async () => {
+      await render();
+      component.listingForm.patchValue({ title: 'Draft shirt' });
+
+      await component.onSaveDraft();
+
+      expect(service.createListing).toHaveBeenCalledWith(
+        expect.objectContaining({ category: null, status: 'draft' }),
+      );
+    });
+
+    it('saves a draft with the selected collection', async () => {
+      await render();
+      component.listingForm.patchValue({ title: 'Draft shirt', category: 'free' });
+
+      await component.onSaveDraft();
+
+      expect(service.createListing).toHaveBeenCalledWith(
+        expect.objectContaining({ category: 'free', status: 'draft' }),
+      );
+    });
+
+    it('preserves the saved collection when editing a listing', async () => {
+      await render(existing({ category: 'exclusive', color: 'blue' }));
+
+      expect(categorySelect().value).toBe('exclusive');
+
+      await component.onSubmit();
+
+      expect(service.updateListing).toHaveBeenCalledWith(
+        'l1',
+        expect.objectContaining({ category: 'exclusive' }),
+      );
+    });
+
+    it('reopens a draft without a collection on the placeholder', async () => {
+      await render(existing({ status: 'draft', category: null }));
+
+      expect(categorySelect().value).toBe('');
+      expect(component.listingForm.controls.category.value).toBe('');
+    });
   });
 });

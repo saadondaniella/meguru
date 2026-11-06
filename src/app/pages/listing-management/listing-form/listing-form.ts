@@ -20,7 +20,7 @@ type ListingFields = {
   title: string | null;
   description: string | null;
   price: number | null;
-  category: ListingCategory;
+  category: ListingCategory | null;
   condition: ListingCondition;
   brand: string | null;
   size_type: ListingSizeType | null;
@@ -51,7 +51,7 @@ export class ListingForm implements OnInit {
     title: ['', [Validators.required, Validators.maxLength(100)]],
     description: ['', Validators.maxLength(2000)],
     price: [null as number | null, [Validators.required, Validators.min(0)]],
-    category: ['budget', Validators.required],
+    category: ['', Validators.required],
     condition: ['good', Validators.required],
     brand: ['', Validators.maxLength(100)],
     size_type: [null as ListingSizeType | null],
@@ -97,7 +97,7 @@ export class ListingForm implements OnInit {
           title: listing.title ?? '',
           description: listing.description ?? '',
           price: listing.price,
-          category: listing.category ?? 'budget',
+          category: listing.category ?? '',
           condition: listing.condition ?? 'good',
           brand: listing.brand ?? '',
           size_type: listing.size_type ?? null,
@@ -193,7 +193,7 @@ export class ListingForm implements OnInit {
         title: values.title.trim() || null,
         description: values.description.trim() || null,
         price: values.category === 'free' ? 0 : values.price,
-        category: values.category as ListingCategory,
+        category: (values.category as ListingCategory) || null,
         condition: values.condition as ListingCondition,
         brand: values.brand.trim() || null,
         size_type: values.size_type && values.size ? values.size_type : null,

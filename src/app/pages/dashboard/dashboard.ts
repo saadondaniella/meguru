@@ -72,7 +72,7 @@ export class Dashboard implements OnInit {
       intro: 'Place your piece where the right buyers will look for it.',
       tips: [
         {
-          term: 'Budget',
+          term: 'Affordable',
           text: 'Affordable secondhand finds, recommended at 500 SEK or below.',
         },
         {

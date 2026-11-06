@@ -75,7 +75,7 @@ export class Marketplace implements OnInit {
     if (filters.category) {
       const labels = {
         exclusive: 'Exclusive',
-        budget: 'Budget',
+        budget: 'Affordable',
         free: 'Pass It On',
       };
 

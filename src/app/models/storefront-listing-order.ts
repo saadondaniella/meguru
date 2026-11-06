@@ -39,7 +39,7 @@ export function resolveListingOrder(value: unknown): StorefrontListingOrder {
 // Category is sorted by the label visitors read, not the stored key.
 const CATEGORY_LABELS: Record<ListingCategory, string> = {
   exclusive: 'Exclusive',
-  budget: 'Budget',
+  budget: 'Affordable',
   free: 'Pass It On',
 };
 
