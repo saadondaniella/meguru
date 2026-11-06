@@ -39,6 +39,10 @@ export class Dashboard implements OnInit {
         { text: 'Show the entire garment and photograph it from different angles.' },
         { text: 'Include close-ups of labels, details and imperfections.' },
         { text: 'Present the item cleanly and honestly.' },
+        {
+          term: 'Image too large?',
+          text: 'If your photo exceeds the upload limit, try exporting it at a smaller file size or taking a screenshot and uploading that instead. Keep in mind that screenshots may reduce image quality.',
+        },
       ],
     },
     {
