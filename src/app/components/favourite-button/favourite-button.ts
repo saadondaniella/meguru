@@ -1,10 +1,21 @@
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
-import { Router } from '@angular/router';
+import {
+  Component,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Auth } from '../../services/auth';
 import { FavouriteService } from '../../services/favourite';
 import { ListingStatus } from '../../models/listing';
 
 @Component({
+  imports: [RouterLink],
   selector: 'app-favourite-button',
   templateUrl: './favourite-button.html',
   styleUrl: './favourite-button.css',
@@ -12,13 +23,16 @@ import { ListingStatus } from '../../models/listing';
 export class FavouriteButton {
   private favouriteService = inject(FavouriteService);
   private auth = inject(Auth);
-  private router = inject(Router);
 
   readonly listingId = input.required<string>();
   readonly status = input<ListingStatus>('published');
 
   readonly isBusy = signal(false);
   readonly errorMessage = signal('');
+  readonly showLoginPrompt = signal(false);
+
+  private readonly heart = viewChild<ElementRef<HTMLButtonElement>>('heart');
+  private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
 
   readonly isSaved = computed(() => this.favouriteService.favouriteIds().has(this.listingId()));
 
@@ -40,6 +54,11 @@ export class FavouriteButton {
   });
 
   constructor() {
+    // Move focus into the login prompt as soon as it is rendered.
+    effect(() => {
+      this.dialog()?.nativeElement.querySelector<HTMLElement>('a, button')?.focus();
+    });
+
     effect(() => {
       const listingId = this.listingId();
       const isSold = this.status() === 'sold';
@@ -58,7 +77,7 @@ export class FavouriteButton {
     if (this.isBusy()) return;
 
     if (!this.auth.isLoggedIn()) {
-      await this.router.navigate(['/login']);
+      this.showLoginPrompt.set(true);
       return;
     }
 
@@ -74,6 +93,39 @@ export class FavouriteButton {
       }
     } finally {
       this.isBusy.set(false);
+    }
+  }
+
+  closeLoginPrompt() {
+    this.showLoginPrompt.set(false);
+    this.heart()?.nativeElement.focus();
+  }
+
+  onPromptKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeLoginPrompt();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const dialog = this.dialog()?.nativeElement;
+    if (!dialog) return;
+
+    const focusable = Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button'));
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
     }
   }
 
