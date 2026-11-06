@@ -112,143 +112,197 @@
     </div>
   }
 
-  <!-- PUBLISHED LISTINGS -->
-  <div class="my-listings">
-    <h2>Published listings</h2>
-    <p>
-      Number of listings:
-      {{ publishedListings().length }}
-    </p>
+  <!-- MY WARDROBE -->
+  <div class="wardrobe">
+    <h2 class="wardrobe-title">My Wardrobe</h2>
 
-    @if (publishedListings().length === 0) {
-      <p>You haven't published any listings yet.</p>
-    } @else {
-      <div class="listings-grid">
-        @for (listing of publishedListings(); track listing.id) {
-          <article class="listing-card">
-            @if (listing.image_path) {
-              <img
-                [src]="listingService.getListingImageUrl(listing.image_path)"
-                [alt]="listing.title || 'Listing image'"
-              />
-            }
+    <!-- PUBLISHED LISTINGS -->
+    <div class="my-listings">
+      <h2>Published listings</h2>
+      <p>
+        Number of listings:
+        {{ publishedListings().length }}
+      </p>
 
-            <h3>{{ listing.title }}</h3>
+      @if (publishedListings().length === 0) {
+        <p>You haven't published any listings yet.</p>
+      } @else {
+        <div class="listings-grid">
+          @for (listing of publishedListings(); track listing.id) {
+            <article class="listing-card">
+              @if (listing.image_path) {
+                <img
+                  [src]="listingService.getListingImageUrl(listing.image_path)"
+                  [alt]="listing.title || 'Listing image'"
+                />
+              }
 
-            @if (listing.price !== null) {
-              <p>{{ listing.price }} SEK</p>
-            }
+              <div class="listing-card-body">
+                <div class="listing-card-meta">
+                  @if (listing.condition) {
+                    <span class="listing-condition">{{ listing.condition }}</span>
+                  }
+                </div>
 
-            @if (listing.condition) {
-              <p>{{ listing.condition }}</p>
-            }
+                <div class="listing-card-heading">
+                  <h3>{{ listing.title }}</h3>
 
-            <button type="button" (click)="onEditListing(listing, $event)">Edit listing</button>
+                  @if (listing.price !== null) {
+                    <p class="listing-price">{{ listing.price }} SEK</p>
+                  }
+                </div>
+              </div>
 
-            <button
-              #statusTrigger
-              type="button"
-              (click)="openStatusConfirmation(listing, 'sold', statusTrigger)"
-              [disabled]="isMarkingSold()"
-            >
-              {{ isMarkingSold() ? 'UPDATING...' : 'Mark as sold' }}
-            </button>
+              <div class="listing-card-actions">
+                <button
+                  type="button"
+                  class="listing-action-primary"
+                  (click)="onEditListing(listing, $event)"
+                >
+                  Edit listing
+                </button>
 
-            <button type="button" (click)="onDeleteListing(listing.id, $event)">
-              Delete listing
-            </button>
-          </article>
-        }
-      </div>
-    }
-  </div>
+                <button
+                  class="listing-action-secondary"
+                  #statusTrigger
+                  type="button"
+                  (click)="openStatusConfirmation(listing, 'sold', statusTrigger)"
+                  [disabled]="isMarkingSold()"
+                >
+                  {{ isMarkingSold() ? 'UPDATING...' : 'Mark as sold' }}
+                </button>
 
-  <!-- DRAFT LISTINGS -->
-  <div class="my-listings drafts-section">
-    <h2>Drafts</h2>
-    <p>
-      Number of drafts:
-      {{ draftListings().length }}
-    </p>
+                <button
+                  type="button"
+                  class="listing-action-secondary"
+                  (click)="onDeleteListing(listing.id, $event)"
+                >
+                  Delete listing
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
 
-    @if (draftListings().length === 0) {
-      <p>You don't have any drafts yet.</p>
-    } @else {
-      <div class="listings-grid">
-        @for (listing of draftListings(); track listing.id) {
-          <article class="listing-card">
-            @if (listing.image_path) {
-              <img
-                [src]="listingService.getListingImageUrl(listing.image_path)"
-                [alt]="listing.title || 'Draft listing image'"
-              />
-            }
+    <!-- DRAFT LISTINGS -->
+    <div class="my-listings drafts-section">
+      <h2>Drafts</h2>
+      <p>
+        Number of drafts:
+        {{ draftListings().length }}
+      </p>
 
-            <h3>{{ listing.title || 'Untitled draft' }}</h3>
+      @if (draftListings().length === 0) {
+        <p>You don't have any drafts yet.</p>
+      } @else {
+        <div class="listings-grid">
+          @for (listing of draftListings(); track listing.id) {
+            <article class="listing-card">
+              @if (listing.image_path) {
+                <img
+                  [src]="listingService.getListingImageUrl(listing.image_path)"
+                  [alt]="listing.title || 'Draft listing image'"
+                />
+              }
 
-            <span class="listing-status">Draft</span>
+              <div class="listing-card-body">
+                <div class="listing-card-meta">
+                  <span class="listing-status">Draft</span>
+                  @if (listing.condition) {
+                    <span class="listing-condition">{{ listing.condition }}</span>
+                  }
+                </div>
 
-            @if (listing.price !== null) {
-              <p>{{ listing.price }} SEK</p>
-            }
+                <div class="listing-card-heading">
+                  <h3>{{ listing.title || 'Untitled draft' }}</h3>
 
-            @if (listing.condition) {
-              <p>{{ listing.condition }}</p>
-            }
+                  @if (listing.price !== null) {
+                    <p class="listing-price">{{ listing.price }} SEK</p>
+                  }
+                </div>
+              </div>
 
-            <button type="button" (click)="onEditListing(listing, $event)">Continue editing</button>
+              <div class="listing-card-actions">
+                <button
+                  type="button"
+                  class="listing-action-primary"
+                  (click)="onEditListing(listing, $event)"
+                >
+                  Continue editing
+                </button>
 
-            <button type="button" (click)="onDeleteListing(listing.id, $event)">
-              Delete draft
-            </button>
-          </article>
-        }
-      </div>
-    }
-  </div>
+                <button
+                  type="button"
+                  class="listing-action-secondary"
+                  (click)="onDeleteListing(listing.id, $event)"
+                >
+                  Delete draft
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
 
-  <!-- SOLD LISTINGS -->
-  <div class="my-listings sold-section">
-    <h2>Sold listings</h2>
-    <p>Number of sold listings: {{ soldListings().length }}</p>
+    <!-- SOLD LISTINGS -->
+    <div class="my-listings sold-section">
+      <h2>Sold listings</h2>
+      <p>Number of sold listings: {{ soldListings().length }}</p>
 
-    @if (soldListings().length === 0) {
-      <p>You haven't sold any pieces yet.</p>
-    } @else {
-      <div class="listings-grid">
-        @for (listing of soldListings(); track listing.id) {
-          <article class="listing-card">
-            @if (listing.image_path) {
-              <img
-                [src]="listingService.getListingImageUrl(listing.image_path)"
-                [alt]="listing.title || 'Sold listing image'"
-              />
-            }
+      @if (soldListings().length === 0) {
+        <p>You haven't sold any pieces yet.</p>
+      } @else {
+        <div class="listings-grid">
+          @for (listing of soldListings(); track listing.id) {
+            <article class="listing-card">
+              @if (listing.image_path) {
+                <img
+                  [src]="listingService.getListingImageUrl(listing.image_path)"
+                  [alt]="listing.title || 'Sold listing image'"
+                />
+              }
 
-            <h3>{{ listing.title }}</h3>
+              <div class="listing-card-body">
+                <div class="listing-card-meta">
+                  <span class="listing-status">Sold</span>
+                </div>
 
-            <span class="listing-status">Sold</span>
+                <div class="listing-card-heading">
+                  <h3>{{ listing.title }}</h3>
 
-            @if (listing.price !== null) {
-              <p>{{ listing.price }} SEK</p>
-            }
+                  @if (listing.price !== null) {
+                    <p class="listing-price">{{ listing.price }} SEK</p>
+                  }
+                </div>
+              </div>
 
-            <button
-              #statusTrigger
-              type="button"
-              (click)="openStatusConfirmation(listing, 'published', statusTrigger)"
-              [disabled]="isMarkingSold()"
-            >
-              {{ isMarkingSold() ? 'UPDATING...' : 'Mark as available' }}
-            </button>
+              <div class="listing-card-actions">
+                <button
+                  class="listing-action-primary"
+                  #statusTrigger
+                  type="button"
+                  (click)="openStatusConfirmation(listing, 'published', statusTrigger)"
+                  [disabled]="isMarkingSold()"
+                >
+                  {{ isMarkingSold() ? 'UPDATING...' : 'Mark as available' }}
+                </button>
 
-            <button type="button" (click)="onDeleteListing(listing.id, $event)">
-              Delete listing
-            </button>
-          </article>
-        }
-      </div>
-    }
+                <button
+                  type="button"
+                  class="listing-action-secondary"
+                  (click)="onDeleteListing(listing.id, $event)"
+                >
+                  Delete listing
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
   </div>
 
   <!-- STATUS CHANGE CONFIRMATION MODAL -->
