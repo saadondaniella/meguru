@@ -1,4 +1,5 @@
 <button
+  #heart
   type="button"
   class="favourite-button"
   [class.is-saved]="isSaved()"
@@ -27,4 +28,39 @@
 
 @if (errorMessage()) {
   <span class="favourite-error" role="alert">{{ errorMessage() }}</span>
+}
+
+@if (showLoginPrompt()) {
+  <div class="login-prompt-overlay" (click)="closeLoginPrompt()">
+    <div
+      #dialog
+      class="login-prompt"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="login-prompt-title"
+      aria-describedby="login-prompt-description"
+      (click)="$event.stopPropagation()"
+      (keydown)="onPromptKeydown($event)"
+    >
+      <svg class="login-prompt-heart" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M12 21s-7-4.35-9.33-8.6C.9 9.2 2.6 5 6.3 5c2 0 3.7 1.2 5.7 3.4C14 6.2 15.7 5 17.7 5c3.7 0 5.4 4.2 3.63 7.4C19 16.65 12 21 12 21Z"
+        />
+      </svg>
+
+      <h2 id="login-prompt-title">Save your favourites</h2>
+
+      <p id="login-prompt-description">
+        Create an account or log in to save pieces you love and find them again later.
+      </p>
+
+      <div class="login-prompt-actions">
+        <a routerLink="/login" class="login-prompt-primary">Log in</a>
+        <a routerLink="/register" class="login-prompt-secondary">Create account</a>
+        <button type="button" class="login-prompt-dismiss" (click)="closeLoginPrompt()">
+          Continue browsing
+        </button>
+      </div>
+    </div>
+  </div>
 }

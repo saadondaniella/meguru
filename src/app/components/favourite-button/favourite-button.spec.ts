@@ -193,17 +193,6 @@ describe('FavouriteButton', () => {
       expect(navigate).not.toHaveBeenCalled();
     });
 
-    it('goes to the login page when logged out', async () => {
-      isLoggedIn.set(false);
-      await render('a');
-
-      button().click();
-      await fixture.whenStable();
-
-      expect(navigate).toHaveBeenCalledWith(['/login']);
-      expect(service.toggle).not.toHaveBeenCalled();
-    });
-
     it('ignores repeated clicks while a toggle is in progress', async () => {
       let finish!: (result: ToggleResult) => void;
       service.toggle.mockReturnValue(new Promise<ToggleResult>((resolve) => (finish = resolve)));
@@ -231,6 +220,120 @@ describe('FavouriteButton', () => {
       await fixture.whenStable();
 
       expect(service.toggle).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('logged out', () => {
+    const dialog = () =>
+      (fixture.nativeElement as HTMLElement).querySelector('[role="dialog"]') as HTMLElement | null;
+    const dialogItems = () =>
+      Array.from(dialog()?.querySelectorAll<HTMLElement>('a[href], button') ?? []);
+    const press = (key: string, init: KeyboardEventInit = {}) =>
+      dialog()?.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...init }));
+
+    async function openPrompt() {
+      isLoggedIn.set(false);
+      await render('a');
+      button().focus();
+      button().click();
+      await fixture.whenStable();
+    }
+
+    it('opens the prompt instead of redirecting or saving', async () => {
+      await openPrompt();
+
+      expect(dialog()).not.toBeNull();
+      expect(navigate).not.toHaveBeenCalled();
+      expect(service.toggle).not.toHaveBeenCalled();
+      expect(button().getAttribute('aria-pressed')).toBe('false');
+      expect(button().classList.contains('is-saved')).toBe(false);
+    });
+
+    it('has dialog semantics and explains why an account is needed', async () => {
+      await openPrompt();
+
+      expect(dialog()?.getAttribute('aria-modal')).toBe('true');
+      expect(dialog()?.querySelector('#login-prompt-title')?.textContent).toBe(
+        'Save your favourites',
+      );
+      expect(dialog()?.getAttribute('aria-labelledby')).toBe('login-prompt-title');
+      expect(dialog()?.getAttribute('aria-describedby')).toBe('login-prompt-description');
+      expect(dialog()?.textContent).toContain('Create an account or log in to save pieces');
+    });
+
+    it('links to login and registration', async () => {
+      await openPrompt();
+
+      const links = dialogItems().filter((el) => el.tagName === 'A');
+
+      expect(links.map((a) => a.textContent?.trim())).toEqual(['Log in', 'Create account']);
+      expect(links.map((a) => a.getAttribute('href'))).toEqual(['/login', '/register']);
+    });
+
+    it('moves focus into the dialog when it opens', async () => {
+      await openPrompt();
+
+      expect(dialog()?.contains(document.activeElement)).toBe(true);
+    });
+
+    it('closes with Continue browsing and returns focus to the heart', async () => {
+      await openPrompt();
+
+      dialogItems()
+        .find((el) => el.textContent?.trim() === 'Continue browsing')
+        ?.click();
+      await fixture.whenStable();
+
+      expect(dialog()).toBeNull();
+      expect(document.activeElement).toBe(button());
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('closes with Escape and returns focus to the heart', async () => {
+      await openPrompt();
+
+      press('Escape');
+      await fixture.whenStable();
+
+      expect(dialog()).toBeNull();
+      expect(document.activeElement).toBe(button());
+    });
+
+    it('closes when the overlay is clicked, but not when the dialog is', async () => {
+      await openPrompt();
+
+      dialog()?.click();
+      await fixture.whenStable();
+      expect(dialog()).not.toBeNull();
+
+      (fixture.nativeElement.querySelector('.login-prompt-overlay') as HTMLElement).click();
+      await fixture.whenStable();
+      expect(dialog()).toBeNull();
+    });
+
+    it('keeps Tab and Shift+Tab inside the dialog', async () => {
+      await openPrompt();
+      const items = dialogItems();
+      const first = items[0];
+      const last = items[items.length - 1];
+
+      last.focus();
+      press('Tab');
+      expect(document.activeElement).toBe(first);
+
+      first.focus();
+      press('Tab', { shiftKey: true });
+      expect(document.activeElement).toBe(last);
+    });
+
+    it('does not open the prompt when logged in', async () => {
+      await render('a');
+
+      button().click();
+      await fixture.whenStable();
+
+      expect(dialog()).toBeNull();
+      expect(service.toggle).toHaveBeenCalledWith('a');
     });
   });
 
