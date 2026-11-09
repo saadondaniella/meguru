@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Auth } from '../../services/auth';
 import { Profile } from '../../services/profile';
 import { EditorialFeature } from '../../components/editorial-feature/editorial-feature';
+import { ListingQuestionsService } from '../../services/listing-questions';
 
 interface GuideItem {
   id: string;
@@ -21,6 +22,7 @@ interface GuideItem {
 export class Dashboard implements OnInit {
   private auth = inject(Auth);
   private profileService = inject(Profile);
+  private listingQuestionsService = inject(ListingQuestionsService);
   private copyTimeout?: ReturnType<typeof setTimeout>;
 
   displayName = signal('');
@@ -28,6 +30,8 @@ export class Dashboard implements OnInit {
   isLoading = signal(true);
   errorMessage = signal('');
   isCopied = signal(false);
+  unansweredQuestionsCount = signal(0);
+  questionsError = signal(false);
 
   readonly guideItems: GuideItem[] = [
     {
@@ -130,6 +134,20 @@ export class Dashboard implements OnInit {
       }
 
       this.displayName.set(profile?.display_name ?? '');
+      // Get unanswered questions for the seller's published listings.
+      const { data: unansweredCounts, error: questionsError } =
+        await this.listingQuestionsService.getUnansweredCounts();
+
+      if (questionsError) {
+        this.questionsError.set(true);
+      } else {
+        const total = (unansweredCounts ?? []).reduce(
+          (sum, listing) => sum + listing.unanswered_count,
+          0,
+        );
+
+        this.unansweredQuestionsCount.set(total);
+      }
     } catch {
       this.errorMessage.set('Something went wrong while loading your dashboard.');
     } finally {

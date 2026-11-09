@@ -33,6 +33,82 @@
   line-height: 1.7;
 }
 
+/* SELLER QUESTION NOTIFICATION */
+
+.seller-questions-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 64px;
+  padding: 24px 28px;
+  background: #4d5d46;
+  color: #f5f2eb;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.seller-questions-notice:hover {
+  background: #394634;
+}
+
+.seller-questions-notice-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.seller-questions-notice-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+
+.seller-questions-notice-title {
+  margin: 0;
+  font-family: 'Noto Serif', serif;
+  font-size: clamp(20px, 2.5vw, 28px);
+  line-height: 1.3;
+}
+
+.seller-questions-notice-description {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.seller-questions-notice-action {
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.seller-questions-notice:focus-visible {
+  outline: 3px solid #9e5a44;
+  outline-offset: 4px;
+}
+
+@media (max-width: 768px) {
+  .seller-questions-notice {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 40px;
+    padding: 24px 20px;
+  }
+
+  .seller-questions-notice-action {
+    align-self: flex-end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seller-questions-notice {
+    transition: none;
+  }
+}
+
 /* PUBLIC STOREFRONT */
 
 .storefront-section {
