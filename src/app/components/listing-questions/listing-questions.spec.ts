@@ -1,6 +1,9 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { ListingStatus } from '../../models/listing';
 import { ListingQuestion } from '../../models/listing-question';
+import { Auth } from '../../services/auth';
 import { ListingQuestionsService } from '../../services/listing-questions';
 import { ListingQuestions } from './listing-questions';
 
@@ -33,7 +36,21 @@ describe('ListingQuestions', () => {
   let fixture: ComponentFixture<ListingQuestions>;
   let el: HTMLElement;
 
-  const service = { getQuestions: vi.fn() };
+  const service = { getQuestions: vi.fn(), askQuestion: vi.fn() };
+
+  // The signed-in state. Visitors are signed out unless a test signs in.
+  const isLoggedIn = signal(false);
+  const auth = { isLoggedIn, getSession: vi.fn() };
+
+  const signOut = () => {
+    isLoggedIn.set(false);
+    auth.getSession.mockResolvedValue({ data: { session: null } });
+  };
+
+  const signIn = (userId: string) => {
+    isLoggedIn.set(true);
+    auth.getSession.mockResolvedValue({ data: { session: { user: { id: userId } } } });
+  };
 
   // Lets the component's promise chains finish and renders the result.
   const settle = async () => {
@@ -42,10 +59,15 @@ describe('ListingQuestions', () => {
     await fixture.whenStable();
   };
 
-  const create = async (listingId = 'listing-1', status: ListingStatus = 'published') => {
+  const create = async (
+    listingId = 'listing-1',
+    status: ListingStatus = 'published',
+    sellerId: string | null = 'seller-1',
+  ) => {
     fixture = TestBed.createComponent(ListingQuestions);
     fixture.componentRef.setInput('listingId', listingId);
     fixture.componentRef.setInput('status', status);
+    fixture.componentRef.setInput('sellerId', sellerId);
     el = fixture.nativeElement;
     fixture.detectChanges();
     await settle();
@@ -56,11 +78,18 @@ describe('ListingQuestions', () => {
 
   beforeEach(() => {
     service.getQuestions.mockReset();
+    service.askQuestion.mockReset();
+    auth.getSession.mockReset();
+    signOut();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
     TestBed.configureTestingModule({
       imports: [ListingQuestions],
-      providers: [{ provide: ListingQuestionsService, useValue: service }],
+      providers: [
+        provideRouter([]),
+        { provide: ListingQuestionsService, useValue: service },
+        { provide: Auth, useValue: auth },
+      ],
     });
   });
 
@@ -300,7 +329,7 @@ describe('ListingQuestions', () => {
     expect(el.querySelector('[role="alert"]')?.textContent).toContain('Could not load');
 
     service.getQuestions.mockResolvedValueOnce(page([question(1)], 1));
-    el.querySelector<HTMLButtonElement>('.questions-button')!.click();
+    el.querySelector<HTMLButtonElement>('.questions-message .questions-button')!.click();
     await settle();
 
     expect(el.querySelector('[role="alert"]')).toBeNull();
@@ -668,6 +697,632 @@ describe('ListingQuestions', () => {
       expect(ids()).toEqual(['q30', 'q29', 'q28']);
       expect(showLessButton()).toBeNull();
       expect(showMoreButton()).not.toBeNull();
+    });
+  });
+
+  describe('asking a question', () => {
+    const toggle = () => el.querySelector<HTMLButtonElement>('.ask-toggle');
+    const form = () => el.querySelector<HTMLFormElement>('form.ask-form');
+    const textarea = () => el.querySelector<HTMLTextAreaElement>('textarea.ask-input');
+    const submitButton = () => el.querySelector<HTMLButtonElement>('.ask-submit');
+    const loginPrompt = () => el.querySelector<HTMLElement>('.login-prompt');
+    const successDialog = () => el.querySelector<HTMLElement>('.success-dialog');
+
+    const posted = { id: 'new', question: 'x', created_at: '2026-11-10T10:00:00Z' };
+
+    const openForm = async () => {
+      toggle()!.click();
+      await settle();
+    };
+
+    const type = async (text: string) => {
+      const field = textarea()!;
+
+      field.value = text;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    const submitForm = () => form()!.dispatchEvent(new Event('submit', { cancelable: true }));
+
+    // A signed-in buyer who is not the seller, on a listing without questions.
+    const createAsBuyer = async () => {
+      signIn('buyer-1');
+      await create('listing-1', 'published', 'seller-1');
+    };
+
+    beforeEach(() => {
+      service.getQuestions.mockResolvedValue(page([], 0));
+      service.askQuestion.mockResolvedValue({ data: posted, error: null });
+    });
+
+    describe('who sees the button', () => {
+      it('shows "Ask a question", and no form, to a visitor who is not signed in', async () => {
+        await create();
+
+        expect(toggle()).not.toBeNull();
+        expect(toggle()!.textContent).toContain('ASK A QUESTION');
+        expect(toggle()!.classList.contains('questions-button')).toBe(true);
+        expect(form()).toBeNull();
+      });
+
+      it('shows it to a signed-in buyer, with the form collapsed by default', async () => {
+        await createAsBuyer();
+
+        expect(toggle()).not.toBeNull();
+        expect(form()).toBeNull();
+        expect(textarea()).toBeNull();
+        expect(toggle()!.getAttribute('aria-expanded')).toBe('false');
+      });
+
+      it('shows neither the button nor the form to the owner of the listing', async () => {
+        signIn('seller-1');
+
+        await create('listing-1', 'published', 'seller-1');
+
+        expect(toggle()).toBeNull();
+        expect(form()).toBeNull();
+        // The questions themselves stay visible.
+        expect(el.querySelector('h2')?.textContent).toContain('ASK THE SELLER');
+      });
+
+      it('does not flash the button up before it is known who is signed in', async () => {
+        const session = deferred<{ data: { session: { user: { id: string } } } }>();
+        isLoggedIn.set(true);
+        auth.getSession.mockReturnValue(session.promise);
+
+        await create('listing-1', 'published', 'seller-1');
+        expect(toggle()).toBeNull();
+
+        // It turns out the signed-in user is a different person.
+        session.resolve({ data: { session: { user: { id: 'buyer-1' } } } });
+        await settle();
+
+        expect(toggle()).not.toBeNull();
+      });
+
+      it('stays hidden from the owner even when the session is read before the sign-in state', async () => {
+        // The Auth signal still says "signed out", but a session already exists.
+        isLoggedIn.set(false);
+        auth.getSession.mockResolvedValue({ data: { session: { user: { id: 'seller-1' } } } });
+
+        await create('listing-1', 'published', 'seller-1');
+
+        expect(toggle()).toBeNull();
+      });
+
+      it('shows nothing to ask on a sold listing', async () => {
+        signIn('buyer-1');
+
+        await create('listing-1', 'sold', 'seller-1');
+
+        expect(toggle()).toBeNull();
+        expect(el.querySelector('.questions-note')?.textContent).toContain('sold');
+      });
+
+      it('shows nothing at all on a draft listing', async () => {
+        signIn('buyer-1');
+
+        await create('listing-1', 'draft', 'seller-1');
+
+        expect(toggle()).toBeNull();
+        expect(el.textContent?.trim()).toBe('');
+      });
+    });
+
+    describe('visitors who are not signed in', () => {
+      it('are asked to log in, instead of seeing a form', async () => {
+        await create();
+
+        toggle()!.click();
+        await settle();
+
+        expect(form()).toBeNull();
+        expect(loginPrompt()).not.toBeNull();
+        expect(loginPrompt()!.getAttribute('role')).toBe('dialog');
+        expect(loginPrompt()!.getAttribute('aria-modal')).toBe('true');
+        expect(loginPrompt()!.querySelector('a[href="/login"]')).not.toBeNull();
+        expect(loginPrompt()!.querySelector('a[href="/register"]')).not.toBeNull();
+        expect(service.askQuestion).not.toHaveBeenCalled();
+      });
+
+      it('move focus into the prompt', async () => {
+        await create();
+
+        toggle()!.click();
+        await settle();
+
+        expect(document.activeElement).toBe(loginPrompt()!.querySelector('a[href="/login"]'));
+      });
+
+      it('can close the prompt with Escape, and focus returns to the button', async () => {
+        await create();
+        toggle()!.click();
+        await settle();
+
+        loginPrompt()!.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+        );
+        await settle();
+
+        expect(loginPrompt()).toBeNull();
+        expect(document.activeElement).toBe(toggle());
+      });
+
+      it('can keep browsing, and focus returns to the button', async () => {
+        await create();
+        toggle()!.click();
+        await settle();
+
+        loginPrompt()!.querySelector<HTMLButtonElement>('.login-prompt-dismiss')!.click();
+        await settle();
+
+        expect(loginPrompt()).toBeNull();
+        expect(document.activeElement).toBe(toggle());
+      });
+
+      it('keep Tab inside the prompt', async () => {
+        await create();
+        toggle()!.click();
+        await settle();
+
+        const last = loginPrompt()!.querySelector<HTMLElement>('.login-prompt-dismiss')!;
+        last.focus();
+        loginPrompt()!.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
+        );
+
+        expect(document.activeElement).toBe(loginPrompt()!.querySelector('a[href="/login"]'));
+      });
+    });
+
+    describe('the form', () => {
+      it('opens and closes with the "Ask a question" button', async () => {
+        await createAsBuyer();
+
+        await openForm();
+
+        expect(form()).not.toBeNull();
+        expect(toggle()!.getAttribute('aria-expanded')).toBe('true');
+        expect(toggle()!.getAttribute('aria-controls')).toBe(form()!.id);
+
+        await openForm();
+
+        expect(form()).toBeNull();
+        expect(toggle()!.getAttribute('aria-expanded')).toBe('false');
+      });
+
+      it('moves focus to the question field when it opens', async () => {
+        await createAsBuyer();
+
+        await openForm();
+
+        expect(document.activeElement).toBe(textarea());
+      });
+
+      it('has a labelled field, a counter, and SUBMIT QUESTION and CANCEL buttons', async () => {
+        await createAsBuyer();
+
+        await openForm();
+
+        const label = form()!.querySelector<HTMLLabelElement>('label')!;
+
+        expect(label.getAttribute('for')).toBe(textarea()!.id);
+        expect(form()!.querySelector('.ask-counter')!.textContent).toContain('0 / 300');
+        expect(submitButton()!.textContent).toContain('SUBMIT QUESTION');
+        expect(submitButton()!.getAttribute('type')).toBe('submit');
+        expect(form()!.querySelector('.ask-cancel')!.textContent).toContain('CANCEL');
+        // Same MEGURU buttons as "Show more".
+        expect(submitButton()!.classList.contains('questions-button')).toBe(true);
+        expect(form()!.querySelector('.ask-cancel')!.classList.contains('questions-button')).toBe(
+          true,
+        );
+        expect(textarea()!.getAttribute('aria-describedby')).toContain('ask-question-counter');
+      });
+
+      it('counts the characters as the buyer types', async () => {
+        await createAsBuyer();
+        await openForm();
+
+        await type('Hello');
+
+        expect(form()!.querySelector('.ask-counter')!.textContent).toContain('5 / 300');
+      });
+
+      it('keeps the draft when the form is collapsed and opened again', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('Is it true to size?');
+
+        await openForm();
+        await openForm();
+
+        expect(textarea()!.value).toBe('Is it true to size?');
+      });
+
+      it('CANCEL closes the form, throws the draft away, and returns focus to the button', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('Never mind');
+
+        form()!.querySelector<HTMLButtonElement>('.ask-cancel')!.click();
+        await settle();
+
+        expect(form()).toBeNull();
+        expect(document.activeElement).toBe(toggle());
+
+        await openForm();
+
+        expect(textarea()!.value).toBe('');
+        expect(form()!.querySelector('.ask-counter')!.textContent).toContain('0 / 300');
+        expect(service.askQuestion).not.toHaveBeenCalled();
+      });
+
+      it('closes when the buyer signs out', async () => {
+        await createAsBuyer();
+        await openForm();
+        expect(form()).not.toBeNull();
+
+        signOut();
+        await settle();
+
+        expect(form()).toBeNull();
+      });
+
+      it('starts closed and empty again when the listing changes', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('Draft for listing 1');
+
+        fixture.componentRef.setInput('listingId', 'listing-2');
+        fixture.detectChanges();
+        await settle();
+
+        expect(form()).toBeNull();
+
+        await openForm();
+
+        expect(textarea()!.value).toBe('');
+      });
+    });
+
+    describe('validation', () => {
+      it('does not send an empty question, and explains why', async () => {
+        await createAsBuyer();
+        await openForm();
+
+        submitForm();
+        await settle();
+
+        expect(service.askQuestion).not.toHaveBeenCalled();
+        expect(el.querySelector('#ask-question-error')?.textContent).toContain(
+          'Write your question',
+        );
+        expect(el.querySelector('#ask-question-error')?.getAttribute('role')).toBe('alert');
+        expect(textarea()!.getAttribute('aria-invalid')).toBe('true');
+        expect(document.activeElement).toBe(textarea());
+      });
+
+      it('does not send a question made of spaces and line breaks', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('   \n  ');
+
+        submitForm();
+        await settle();
+
+        expect(service.askQuestion).not.toHaveBeenCalled();
+        expect(el.querySelector('#ask-question-error')).not.toBeNull();
+      });
+
+      it('does not show an error on a fresh form', async () => {
+        await createAsBuyer();
+
+        await openForm();
+
+        expect(el.querySelector('#ask-question-error')).toBeNull();
+        expect(textarea()!.getAttribute('aria-invalid')).toBeNull();
+      });
+
+      it('does not send more than 300 characters, and says so', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('x'.repeat(301));
+
+        expect(form()!.querySelector('.ask-counter')!.classList.contains('is-over')).toBe(true);
+
+        submitForm();
+        await settle();
+
+        expect(service.askQuestion).not.toHaveBeenCalled();
+        expect(el.querySelector('#ask-question-error')?.textContent).toContain('at most 300');
+      });
+
+      it('accepts exactly 300 characters', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('x'.repeat(300));
+
+        submitForm();
+        await settle();
+
+        expect(service.askQuestion).toHaveBeenCalledWith('listing-1', 'x'.repeat(300));
+      });
+    });
+
+    describe('posting', () => {
+      it('sends the trimmed question for this listing through the service', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('  Is it true to size?  ');
+
+        submitForm();
+        await settle();
+
+        expect(service.askQuestion).toHaveBeenCalledTimes(1);
+        expect(service.askQuestion).toHaveBeenCalledWith('listing-1', 'Is it true to size?');
+      });
+
+      it('disables submitting while the question is being posted', async () => {
+        const pending = deferred<{ data: typeof posted; error: null }>();
+        service.askQuestion.mockReturnValue(pending.promise);
+
+        await createAsBuyer();
+        await openForm();
+        await type('Is it available?');
+
+        submitForm();
+        fixture.detectChanges();
+
+        expect(submitButton()!.getAttribute('aria-disabled')).toBe('true');
+        expect(submitButton()!.textContent).toContain('POSTING');
+
+        pending.resolve({ data: posted, error: null });
+        await settle();
+      });
+
+      it('prevents duplicate submissions', async () => {
+        const pending = deferred<{ data: typeof posted; error: null }>();
+        service.askQuestion.mockReturnValue(pending.promise);
+
+        await createAsBuyer();
+        await openForm();
+        await type('Is it available?');
+
+        submitForm();
+        submitForm();
+        submitButton()!.click();
+        fixture.detectChanges();
+        submitForm();
+
+        expect(service.askQuestion).toHaveBeenCalledTimes(1);
+
+        pending.resolve({ data: posted, error: null });
+        await settle();
+
+        expect(service.askQuestion).toHaveBeenCalledTimes(1);
+      });
+
+      it('closes the form, refreshes the list and shows the confirmation popup', async () => {
+        service.getQuestions.mockResolvedValueOnce(page([question(1)], 1));
+        await createAsBuyer();
+        expect(items().length).toBe(1);
+
+        await openForm();
+        await type('Is it available?');
+
+        // After posting, the list is reloaded and the new question comes first.
+        service.getQuestions.mockResolvedValueOnce(
+          page([question(2, { question: 'Is it available?' }), question(1)], 2),
+        );
+        submitForm();
+        await settle();
+
+        expect(form()).toBeNull();
+        expect(service.getQuestions).toHaveBeenCalledTimes(2);
+        expect(service.getQuestions).toHaveBeenLastCalledWith('listing-1', 3, 0);
+        expect(items().length).toBe(2);
+        expect(items()[0].textContent).toContain('Is it available?');
+
+        expect(successDialog()).not.toBeNull();
+        expect(successDialog()!.getAttribute('role')).toBe('dialog');
+        expect(successDialog()!.getAttribute('aria-modal')).toBe('true');
+        expect(successDialog()!.textContent).toContain('Your question has been posted.');
+      });
+
+      it('uses the same success popup as the rest of MEGURU and focuses its button', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('Is it available?');
+
+        submitForm();
+        await settle();
+
+        expect(successDialog()!.querySelector('.success-eyebrow')?.textContent).toContain(
+          'MEGURU® / SUCCESS',
+        );
+        expect(successDialog()!.querySelector('.success-check')).not.toBeNull();
+        expect(el.querySelector('.success-overlay')).not.toBeNull();
+        expect(document.activeElement).toBe(successDialog()!.querySelector('.success-close-btn'));
+        expect(document.activeElement?.textContent).toContain('GOT IT');
+      });
+
+      it('closes the popup with GOT IT and returns focus to the button', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('Is it available?');
+        submitForm();
+        await settle();
+
+        successDialog()!.querySelector<HTMLButtonElement>('.success-close-btn')!.click();
+        await settle();
+
+        expect(successDialog()).toBeNull();
+        expect(document.activeElement).toBe(toggle());
+      });
+
+      it('closes the popup with Escape', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('Is it available?');
+        submitForm();
+        await settle();
+
+        successDialog()!
+          .querySelector<HTMLButtonElement>('.success-close-btn')!
+          .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        await settle();
+
+        expect(successDialog()).toBeNull();
+      });
+
+      it('keeps focus inside the popup when Tab is pressed', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('Is it available?');
+        submitForm();
+        await settle();
+
+        const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+        successDialog()!.querySelector('.success-close-btn')!.dispatchEvent(tab);
+
+        expect(tab.defaultPrevented).toBe(true);
+      });
+
+      it('starts with an empty form the next time', async () => {
+        await createAsBuyer();
+        await openForm();
+        await type('Is it available?');
+        submitForm();
+        await settle();
+        successDialog()!.querySelector<HTMLButtonElement>('.success-close-btn')!.click();
+        await settle();
+
+        await openForm();
+
+        expect(textarea()!.value).toBe('');
+      });
+
+      it('still confirms the post if refreshing the list fails', async () => {
+        service.getQuestions.mockResolvedValueOnce(page([question(1)], 1));
+        await createAsBuyer();
+        await openForm();
+        await type('Is it available?');
+
+        service.getQuestions.mockResolvedValueOnce({ data: null, error: { message: 'offline' } });
+        submitForm();
+        await settle();
+
+        expect(successDialog()).not.toBeNull();
+        // The list that was already on screen stays.
+        expect(items().length).toBe(1);
+      });
+
+      it('ignores a result that arrives after the visitor moved to another listing', async () => {
+        const pending = deferred<{ data: typeof posted; error: null }>();
+        service.askQuestion.mockReturnValue(pending.promise);
+
+        await createAsBuyer();
+        await openForm();
+        await type('Is it available?');
+        submitForm();
+
+        fixture.componentRef.setInput('listingId', 'listing-2');
+        fixture.detectChanges();
+        await settle();
+
+        pending.resolve({ data: posted, error: null });
+        await settle();
+
+        expect(successDialog()).toBeNull();
+      });
+    });
+
+    describe('when the database refuses the question', () => {
+      const refuse = async (error: { message: string; code?: string }) => {
+        service.askQuestion.mockResolvedValue({ data: null, error });
+
+        await createAsBuyer();
+        await openForm();
+        await type('Is it available?');
+        submitForm();
+        await settle();
+      };
+
+      it.each([
+        ['too_many_unanswered', '3 unanswered questions'],
+        ['rate_limited_hour', 'last hour'],
+        ['rate_limited_day', 'daily question limit'],
+        ['own_listing', 'your own listing'],
+        ['listing_not_open', 'no longer accepting questions'],
+        ['not_authenticated', 'log in'],
+        ['invalid_length', 'between 1 and 300'],
+        ['invalid_text', 'not allowed'],
+      ])('explains %s in plain words', async (key, text) => {
+        await refuse({ message: key });
+
+        const alert = form()!.querySelector('.ask-form > .questions-error[role="alert"]');
+
+        expect(alert?.textContent).toContain(text);
+        // No raw error key is shown to the buyer.
+        expect(el.textContent).not.toContain(key);
+      });
+
+      it('asks the buyer to log in when the request was not signed in', async () => {
+        await refuse({
+          message: 'permission denied for function ask_listing_question',
+          code: '42501',
+        });
+
+        expect(form()!.textContent).toContain('log in');
+      });
+
+      it('shows a general message for anything unexpected', async () => {
+        await refuse({ message: 'something odd happened' });
+
+        expect(form()!.textContent).toContain('Could not post your question. Please try again.');
+        expect(form()!.textContent).not.toContain('something odd happened');
+      });
+
+      it('keeps the form open with the question, and lets the buyer try again', async () => {
+        await refuse({ message: 'rate_limited_hour' });
+
+        expect(form()).not.toBeNull();
+        expect(textarea()!.value).toBe('Is it available?');
+        expect(submitButton()!.getAttribute('aria-disabled')).toBeNull();
+        expect(submitButton()!.textContent).toContain('SUBMIT QUESTION');
+        expect(successDialog()).toBeNull();
+        // The list is not reloaded for a question that was not posted.
+        expect(service.getQuestions).toHaveBeenCalledTimes(1);
+
+        service.askQuestion.mockResolvedValue({ data: posted, error: null });
+        submitForm();
+        await settle();
+
+        expect(service.askQuestion).toHaveBeenCalledTimes(2);
+        expect(successDialog()).not.toBeNull();
+      });
+
+      it('clears the message when the form is closed and opened again', async () => {
+        await refuse({ message: 'rate_limited_hour' });
+
+        await openForm();
+        await openForm();
+
+        expect(form()!.textContent).not.toContain('last hour');
+      });
+    });
+
+    it('never shows an asker id next to the new question', async () => {
+      service.getQuestions.mockResolvedValue(
+        page([{ ...question(1), asker_id: 'secret-user-id' } as ListingQuestion], 1),
+      );
+
+      await createAsBuyer();
+
+      expect(el.innerHTML).not.toContain('secret-user-id');
+      expect(items()[0].querySelector('.question-meta')?.textContent).toContain('MEGURU MEMBER');
     });
   });
 

@@ -6,6 +6,82 @@
       <p class="questions-note">This listing is sold, so new questions are closed.</p>
     }
 
+    <!-- ASK A QUESTION -->
+    @if (canAsk()) {
+      <div class="ask-question">
+        <button
+          #askToggle
+          type="button"
+          class="questions-button ask-toggle"
+          [attr.aria-expanded]="isLoggedIn() ? isFormOpen() : null"
+          [attr.aria-haspopup]="isLoggedIn() ? null : 'dialog'"
+          [attr.aria-controls]="isLoggedIn() && isFormOpen() ? 'ask-question-form' : null"
+          (click)="toggleForm()"
+        >
+          ASK A QUESTION
+        </button>
+
+        @if (isFormOpen()) {
+          <form id="ask-question-form" class="ask-form" novalidate (submit)="submit($event)">
+            <label class="ask-label" for="ask-question-input">YOUR QUESTION</label>
+
+            <textarea
+              #questionInput
+              id="ask-question-input"
+              class="ask-input"
+              rows="4"
+              [formField]="questionForm.question"
+              [attr.aria-invalid]="fieldError() ? 'true' : null"
+              [attr.aria-describedby]="
+                fieldError()
+                  ? 'ask-question-hint ask-question-counter ask-question-error'
+                  : 'ask-question-hint ask-question-counter'
+              "
+            ></textarea>
+
+            <div class="ask-meta">
+              <p id="ask-question-hint" class="ask-hint">
+                Questions and answers are public. Please do not share personal details.
+              </p>
+              <p
+                id="ask-question-counter"
+                class="ask-counter"
+                [class.is-over]="questionLength() > maxLength"
+              >
+                {{ questionLength() }} / {{ maxLength }}
+                <span class="visually-hidden"> characters</span>
+              </p>
+            </div>
+
+            @if (fieldError()) {
+              <p id="ask-question-error" class="questions-error" role="alert">
+                {{ fieldError() }}
+              </p>
+            }
+
+            @if (submitError()) {
+              <p class="questions-error" role="alert">{{ submitError() }}</p>
+            }
+
+            <div class="ask-actions">
+              <button
+                type="submit"
+                class="questions-button ask-submit"
+                [attr.aria-disabled]="isSubmitting() ? 'true' : null"
+                [attr.aria-busy]="isSubmitting() ? 'true' : null"
+              >
+                {{ isSubmitting() ? 'POSTING…' : 'SUBMIT QUESTION' }}
+              </button>
+
+              <button type="button" class="questions-button ask-cancel" (click)="cancel()">
+                CANCEL
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    }
+
     @if (isLoading()) {
       <p class="questions-message" role="status">Loading questions…</p>
     } @else if (loadError()) {
@@ -87,6 +163,67 @@
       }
 
       <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+    }
+
+    <!-- LOG IN PROMPT (visitors who are not signed in) -->
+    @if (showLoginPrompt()) {
+      <div class="login-prompt-overlay" (click)="closeLoginPrompt()">
+        <div
+          #loginDialog
+          class="login-prompt"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ask-login-title"
+          aria-describedby="ask-login-description"
+          (click)="$event.stopPropagation()"
+          (keydown)="onLoginPromptKeydown($event)"
+        >
+          <h2 id="ask-login-title">Ask the seller</h2>
+
+          <p id="ask-login-description">
+            Log in or create an account to ask this seller a question.
+          </p>
+
+          <div class="login-prompt-actions">
+            <a routerLink="/login" class="login-prompt-primary">Log in</a>
+            <a routerLink="/register" class="login-prompt-secondary">Create account</a>
+            <button type="button" class="login-prompt-dismiss" (click)="closeLoginPrompt()">
+              Continue browsing
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- SUCCESS POPUP -->
+    @if (showSuccess()) {
+      <div class="success-overlay" (keydown.escape)="closeSuccess()">
+        <div
+          class="success-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ask-success-title"
+          aria-describedby="ask-success-description"
+        >
+          <span class="success-eyebrow"> MEGURU® / SUCCESS </span>
+
+          <span class="success-check" aria-hidden="true">✓</span>
+
+          <h2 id="ask-success-title">Thank you.</h2>
+
+          <p id="ask-success-description">Your question has been posted.</p>
+
+          <button
+            #successClose
+            type="button"
+            class="success-close-btn"
+            (click)="closeSuccess()"
+            (keydown.tab)="$event.preventDefault()"
+          >
+            GOT IT
+          </button>
+        </div>
+      </div>
     }
   </section>
 }

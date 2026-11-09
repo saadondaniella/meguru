@@ -21,3 +21,45 @@ export interface ListingQuestionsPage {
 
 export const QUESTIONS_INITIAL_PAGE_SIZE = 3;
 export const QUESTIONS_PAGE_SIZE = 5;
+
+// The database enforces the same limit (1 to 300 characters, trimmed).
+export const QUESTION_MAX_LENGTH = 300;
+
+// What ask_listing_question returns for the new question.
+export interface PostedQuestion {
+  id: string;
+  question: string;
+  created_at: string;
+}
+
+export const ASK_QUESTION_FALLBACK_ERROR = 'Could not post your question. Please try again.';
+
+// The database refuses a question with a stable message key. These are the
+// texts shown to the visitor for each key.
+const ASK_QUESTION_ERRORS: Record<string, string> = {
+  not_authenticated: 'Please log in to ask a question.',
+  listing_not_open: 'This listing is no longer accepting questions.',
+  own_listing: 'You cannot ask a question on your own listing.',
+  invalid_length: `Your question must be between 1 and ${QUESTION_MAX_LENGTH} characters.`,
+  invalid_text: 'Your question contains characters that are not allowed.',
+  too_many_unanswered:
+    'You already have 3 unanswered questions on this listing. Please wait for the seller to answer.',
+  rate_limited_hour: 'You have asked a lot of questions in the last hour. Please try again later.',
+  rate_limited_day: 'You have reached the daily question limit. Please try again tomorrow.',
+};
+
+export function askQuestionErrorMessage(
+  error: { message?: string; code?: string } | null | undefined,
+): string {
+  const message = error?.message ?? '';
+
+  if (message in ASK_QUESTION_ERRORS) return ASK_QUESTION_ERRORS[message];
+
+  // A request that is not signed in (or whose session ran out) is refused by
+  // the API before it reaches the function.
+  if (error?.code === '42501' || error?.code === 'PGRST301' || /jwt/i.test(message)) {
+    return 'Please log in to ask a question.';
+  }
+
+  return ASK_QUESTION_FALLBACK_ERROR;
+}

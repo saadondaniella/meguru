@@ -125,4 +125,84 @@ describe('ListingQuestionsService', () => {
     expect(result.data).toBeNull();
     expect(result.error).toEqual({ message: 'network down' });
   });
+
+  describe('askQuestion', () => {
+    const newRow = { id: 'q1', question: 'Is it available?', created_at: '2026-11-10T10:00:00Z' };
+
+    it('calls the ask_listing_question function with the listing and the question', async () => {
+      rpc.mockResolvedValue({ data: [newRow], error: null });
+
+      await service.askQuestion('listing-1', 'Is it available?');
+
+      expect(rpc).toHaveBeenCalledTimes(1);
+      expect(rpc).toHaveBeenCalledWith('ask_listing_question', {
+        p_listing_id: 'listing-1',
+        p_question: 'Is it available?',
+      });
+    });
+
+    it('returns the new question', async () => {
+      rpc.mockResolvedValue({ data: [newRow], error: null });
+
+      const { data, error } = await service.askQuestion('listing-1', 'Is it available?');
+
+      expect(error).toBeNull();
+      expect(data).toEqual(newRow);
+    });
+
+    it('also accepts a single row instead of a list', async () => {
+      rpc.mockResolvedValue({ data: newRow, error: null });
+
+      const { data } = await service.askQuestion('listing-1', 'Is it available?');
+
+      expect(data).toEqual(newRow);
+    });
+
+    it('passes on only the id, text and date of the new question', async () => {
+      rpc.mockResolvedValue({ data: [{ ...newRow, asker_id: 'user-1' }], error: null });
+
+      const { data } = await service.askQuestion('listing-1', 'Is it available?');
+
+      expect(data).not.toHaveProperty('asker_id');
+    });
+
+    it('returns the error when the database refuses the question', async () => {
+      const refusal = { message: 'too_many_unanswered', code: 'P0001' };
+      rpc.mockResolvedValue({ data: null, error: refusal });
+
+      const result = await service.askQuestion('listing-1', 'Is it available?');
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe(refusal);
+    });
+
+    it('reports an error when nothing comes back', async () => {
+      rpc.mockResolvedValue({ data: [], error: null });
+
+      const result = await service.askQuestion('listing-1', 'Is it available?');
+
+      expect(result.data).toBeNull();
+      expect(result.error).not.toBeNull();
+    });
+
+    it('turns a thrown error into an error result', async () => {
+      rpc.mockRejectedValue(new Error('network down'));
+
+      const result = await service.askQuestion('listing-1', 'Is it available?');
+
+      expect(result.data).toBeNull();
+      expect(result.error).toEqual({ message: 'network down' });
+    });
+
+    it('goes through the RPC only: the fake client has no table access', async () => {
+      rpc.mockResolvedValue({ data: [newRow], error: null });
+
+      // The fake client only has rpc(). A direct insert (supabase.from(...))
+      // would throw and surface as an error.
+      const { error } = await service.askQuestion('listing-1', 'Is it available?');
+
+      expect(error).toBeNull();
+      expect(Object.keys(supabase)).toEqual(['rpc']);
+    });
+  });
 });

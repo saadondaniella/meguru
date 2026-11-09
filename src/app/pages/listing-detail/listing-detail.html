@@ -152,7 +152,11 @@
 
     <!-- ASK THE SELLER -->
     @if (listing.status !== 'draft') {
-      <app-listing-questions [listingId]="listing.id" [status]="listing.status" />
+      <app-listing-questions
+        [listingId]="listing.id"
+        [status]="listing.status"
+        [sellerId]="listing.seller_id"
+      />
     }
 
     <!-- RELATED PRODUCTS -->
