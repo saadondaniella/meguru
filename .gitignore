@@ -50,3 +50,6 @@ Thumbs.db
 *.local
 
 supabase/.temp/
+
+# Local database backups
+/backups/
