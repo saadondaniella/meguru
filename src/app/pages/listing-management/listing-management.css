@@ -91,6 +91,55 @@
   display: none;
 }
 
+/* UNANSWERED QUESTIONS BADGE */
+
+.listing-card-meta {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.listing-questions-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -12px -8px;
+  padding: 8px;
+  color: #9e5a44;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.listing-questions-badge svg {
+  flex-shrink: 0;
+}
+
+.listing-questions-badge:hover {
+  color: #7d4636;
+}
+
+.listing-questions-badge:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .listing-questions-badge {
+    gap: 3px;
+    font-size: 11px;
+  }
+
+  .listing-questions-badge svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 .listing-condition,
 .listing-status {
   color: #66645f;

@@ -10,13 +10,41 @@
       <h1>
         Welcome back
         @if (displayName()) {
-           {{ displayName() }}
+          {{ displayName() }}
         }
         !
       </h1>
 
       <p>Your space to manage, save and share your pieces.</p>
     </header>
+
+    <!-- UNANSWERED SELLER QUESTIONS -->
+    @if (unansweredQuestionsCount() > 0) {
+      <a
+        routerLink="/listing-management"
+        class="seller-questions-notice"
+        [attr.aria-label]="
+          'You have ' + unansweredQuestionsCount() + ' unanswered questions. View your listings.'
+        "
+      >
+        <div class="seller-questions-notice-content">
+          <span class="seller-questions-notice-label"> ASK THE SELLER / NEW QUESTIONS </span>
+
+          <p class="seller-questions-notice-title">
+            You have {{ unansweredQuestionsCount() }}
+            {{ unansweredQuestionsCount() === 1 ? 'unanswered question' : 'unanswered questions' }}
+          </p>
+
+          <span class="seller-questions-notice-description">
+            Someone is waiting for your reply.
+          </span>
+        </div>
+
+        <span class="seller-questions-notice-action" aria-hidden="true">
+          VIEW MY LISTINGS &rarr;
+        </span>
+      </a>
+    }
 
     <!-- PUBLIC STOREFRONT -->
     <div class="storefront-section">

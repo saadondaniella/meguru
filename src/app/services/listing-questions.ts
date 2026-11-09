@@ -65,6 +65,35 @@ export class ListingQuestionsService {
     }
   }
 
+  // Get unanswered question counts for the signed-in seller's published listings.
+  async getUnansweredCounts(): Promise<{
+    data: { listing_id: string; unanswered_count: number }[] | null;
+    error: QuestionsError | null;
+  }> {
+    try {
+      const { data, error } = await this.supabase.rpc('get_seller_unanswered_questions');
+
+      if (error) return { data: null, error };
+
+      return {
+        data: (data ?? []).map(
+          (row: { listing_id: string; unanswered_count: number | string }) => ({
+            listing_id: row.listing_id,
+            unanswered_count: Number(row.unanswered_count),
+          }),
+        ),
+        error: null,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Could not load unanswered questions.',
+        },
+      };
+    }
+  }
+
   // Asks a question through the ask_listing_question function, which checks
   // everything again on the server: that the user is signed in, that the
   // listing is published and not their own, the length, and the rate limits.

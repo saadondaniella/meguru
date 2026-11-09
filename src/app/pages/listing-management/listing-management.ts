@@ -16,6 +16,7 @@ import { SUPABASE_CLIENT } from '../../services/supabase';
 import { Listing } from '../../models/listing';
 import { ListingForm, ListingSavedType } from './listing-form/listing-form';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ListingQuestionsService } from '../../services/listing-questions';
 
 @Component({
   selector: 'app-listing-management',
@@ -27,8 +28,10 @@ export class ListingManagement implements OnInit {
   private supabase = inject(SUPABASE_CLIENT);
 
   listingService = inject(ListingService);
+  private listingQuestionsService = inject(ListingQuestionsService);
 
   listings = signal<Listing[]>([]);
+  unansweredCounts = signal<Record<string, number>>({});
 
   publishedListings = computed(() =>
     this.listings().filter((listing) => listing.status === 'published'),
@@ -454,5 +457,21 @@ export class ListingManagement implements OnInit {
     }
 
     this.listings.set(data as Listing[]);
+    // Get unanswered question counts for the seller's listings.
+    const { data: questionCounts, error: questionsError } =
+      await this.listingQuestionsService.getUnansweredCounts();
+
+    if (questionsError) {
+      console.error('Could not load unanswered question counts:', questionsError);
+      this.unansweredCounts.set({});
+    } else {
+      const counts: Record<string, number> = {};
+
+      for (const item of questionCounts ?? []) {
+        counts[item.listing_id] = item.unanswered_count;
+      }
+
+      this.unansweredCounts.set(counts);
+    }
   }
 }
