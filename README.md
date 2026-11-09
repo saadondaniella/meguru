@@ -12,6 +12,37 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+## Local Supabase
+
+Development uses a local Supabase stack in Docker, never the production project.
+
+1. Start Docker Desktop, then start the local stack:
+
+   ```bash
+   npx supabase start
+   ```
+
+2. Start Angular in a second terminal:
+
+   ```bash
+   ng serve
+   ```
+
+3. Open `http://localhost:4200/` (use `localhost`, not `127.0.0.1`: the local auth redirect list is configured for it).
+
+Useful local URLs: API `http://127.0.0.1:54321`, Studio `http://127.0.0.1:54323`, test emails (Mailpit) `http://127.0.0.1:54324`. Email confirmation is required, as in production, so open confirmation links from Mailpit.
+
+To rebuild the local database from the migrations in `supabase/migrations/`, run `npx supabase db reset`. It only affects the local stack unless you pass `--remote`, so never pass that flag.
+
+### Which Supabase project is used
+
+| Command | Supabase project |
+| --- | --- |
+| `ng serve`, `ng test`, `npm run watch` | Local (`src/environments/environment.ts`) |
+| `ng build` (production, the default) | Production (`src/environments/environment.production.ts` replaces `environment.ts`) |
+
+Only the publishable key belongs in frontend code. Never add a secret or service-role key to `src/`. In development, `src/app/services/supabase.ts` throws if the configured URL is not local. Do not deploy a build made with `--configuration development`.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
