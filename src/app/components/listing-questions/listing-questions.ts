@@ -25,10 +25,18 @@ import {
   ANSWER_MAX_LENGTH,
   answerQuestionErrorMessage,
   askQuestionErrorMessage,
+  isAlreadyReportedError,
+  isReportLoginError,
   ListingQuestion,
   QUESTION_MAX_LENGTH,
   QUESTIONS_INITIAL_PAGE_SIZE,
   QUESTIONS_PAGE_SIZE,
+  REPORT_ALREADY_REPORTED,
+  REPORT_DETAILS_MAX_LENGTH,
+  REPORT_REASONS,
+  reportErrorMessage,
+  ReportReason,
+  ReportTarget,
 } from '../../models/listing-question';
 import { Auth } from '../../services/auth';
 import { ListingQuestionsService } from '../../services/listing-questions';
@@ -208,10 +216,76 @@ export class ListingQuestions {
     return '';
   });
 
+  // REPORTING
+
+  readonly reportReasons = REPORT_REASONS;
+  readonly maxReportDetailsLength = REPORT_DETAILS_MAX_LENGTH;
+
+  // Anyone who can read a question or answer can report it, except their own
+  // content: the asker's own question and the seller's own answer. The seller
+  // is only known once the signed-in user has been looked up.
+  readonly canReportAnswer = computed(() => this.isUserResolved() && !this.isOwner());
+
+  private readonly reportModel = signal({ reason: '', details: '' });
+
+  // Signal form of the report modal. No reason is preselected. The database
+  // checks the same rules again.
+  readonly reportForm = form(this.reportModel, (path) => {
+    required(path.reason);
+    validate(path.reason, ({ value }) =>
+      REPORT_REASONS.some((reason) => reason.value === value()) ? undefined : requiredError(),
+    );
+    maxLength(path.details, REPORT_DETAILS_MAX_LENGTH);
+  });
+
+  // What the open modal reports (null while it is closed). A question and the
+  // seller's answer are reported separately, both by the question's id.
+  readonly reportTarget = signal<{ questionId: string; target: ReportTarget } | null>(null);
+  readonly isSendingReport = signal(false);
+  readonly reportError = signal('');
+  // The error says the person has to log in, so the modal offers a link.
+  readonly reportNeedsLogin = signal(false);
+  private readonly reportSubmitAttempted = signal(false);
+  // Items reported during this visit, as "questionId:target". They show
+  // REPORTED and cannot be reported again.
+  private readonly reportedKeys = signal<ReadonlySet<string>>(new Set());
+  // "Report sent" (or "You've already reported this."), shown by the item.
+  readonly reportNotice = signal<{ key: string; text: string } | null>(null);
+  // Who the login prompt is for, because both asking and reporting open it.
+  readonly loginPromptFor = signal<'ask' | 'report'>('ask');
+
+  // The controls that opened the modal and the login prompt, so focus can go
+  // back to them.
+  private reportTrigger: HTMLElement | null = null;
+  private loginTrigger: HTMLElement | null = null;
+
+  readonly reportDetailsLength = computed(() => this.reportForm.details().value().length);
+
+  readonly reportReasonError = computed(() => {
+    const field = this.reportForm.reason();
+
+    if (!field.touched() && !this.reportSubmitAttempted()) return '';
+
+    return field.invalid() ? 'Choose a reason for your report.' : '';
+  });
+
+  readonly reportDetailsError = computed(() => {
+    const field = this.reportForm.details();
+
+    if (!field.touched() && !this.reportSubmitAttempted()) return '';
+
+    return field.errors().some((error) => error.kind === 'maxLength')
+      ? `Details can be at most ${REPORT_DETAILS_MAX_LENGTH} characters.`
+      : '';
+  });
+
   private readonly askToggle = viewChild<ElementRef<HTMLButtonElement>>('askToggle');
   private readonly questionInput = viewChild<ElementRef<HTMLTextAreaElement>>('questionInput');
   private readonly successClose = viewChild<ElementRef<HTMLButtonElement>>('successClose');
   private readonly loginDialog = viewChild<ElementRef<HTMLElement>>('loginDialog');
+  private readonly reportDialog = viewChild<ElementRef<HTMLElement>>('reportDialog');
+  private readonly reportSelect = viewChild<ElementRef<HTMLSelectElement>>('reportSelect');
+  private readonly reportDetails = viewChild<ElementRef<HTMLTextAreaElement>>('reportDetails');
 
   // Incremented whenever the listing changes. A response that belongs to an
   // older generation is ignored, so stale data never reaches the screen.
@@ -257,6 +331,11 @@ export class ListingQuestions {
 
     effect(() => {
       this.loginDialog()?.nativeElement.querySelector<HTMLElement>('a, button')?.focus();
+    });
+
+    // The report modal opens with the reason field focused.
+    effect(() => {
+      this.reportSelect()?.nativeElement.focus();
     });
   }
 
@@ -415,12 +494,204 @@ export class ListingQuestions {
     this.replySubmitAttempted.set(false);
   }
 
+  // REPORT A QUESTION OR AN ANSWER
+
+  reportKey(questionId: string, target: ReportTarget): string {
+    return `${questionId}:${target}`;
+  }
+
+  isReported(questionId: string, target: ReportTarget): boolean {
+    return this.reportedKeys().has(this.reportKey(questionId, target));
+  }
+
+  // The note shown next to an item that was just reported ("Report sent").
+  reportNoticeFor(questionId: string, target: ReportTarget): string {
+    const notice = this.reportNotice();
+
+    return notice && notice.key === this.reportKey(questionId, target) ? notice.text : '';
+  }
+
+  // The visible text is just "REPORT" or "REPORTED", so each control also names
+  // what it belongs to. The visible words come first.
+  reportLabel(item: ListingQuestion, target: ReportTarget): string {
+    if (this.isReported(item.id, target)) {
+      return target === 'question' ? 'Question reported' : 'Answer reported';
+    }
+
+    const preview = item.question.length > 60 ? `${item.question.slice(0, 60)}…` : item.question;
+
+    return target === 'question'
+      ? `Report this question: ${preview}`
+      : `Report the answer to the question: ${preview}`;
+  }
+
+  // Opens the report modal. Visitors who are not signed in are asked to log in
+  // instead.
+  openReport(item: ListingQuestion, target: ReportTarget, event: Event) {
+    // Nothing to do for an item that was reported already, or while a report is
+    // being sent.
+    if (this.isSendingReport() || this.isReported(item.id, target)) return;
+
+    const trigger = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+
+    this.reportNotice.set(null);
+
+    if (!this.isLoggedIn()) {
+      this.openLoginPrompt('report', trigger);
+      return;
+    }
+
+    this.clearReportForm();
+    this.reportTrigger = trigger;
+    this.reportTarget.set({ questionId: item.id, target });
+  }
+
+  // Closes the modal and throws away what was typed. Ignored while a report is
+  // being sent, so the result is not hidden.
+  closeReport() {
+    if (this.isSendingReport()) return;
+
+    this.closeReportModal(true);
+  }
+
+  async submitReport(event: Event) {
+    event.preventDefault();
+
+    // aria-disabled keeps focus on the button, so a second click or press is
+    // ignored here. This is what prevents duplicate reports.
+    if (this.isSendingReport()) return;
+
+    const open = this.reportTarget();
+
+    if (!open) return;
+
+    const reason = this.reportForm.reason();
+    const details = this.reportForm.details();
+
+    this.reportSubmitAttempted.set(true);
+    reason.markAsTouched();
+    details.markAsTouched();
+
+    if (reason.invalid()) {
+      this.reportSelect()?.nativeElement.focus();
+      return;
+    }
+
+    if (details.invalid()) {
+      this.reportDetails()?.nativeElement.focus();
+      return;
+    }
+
+    const listingId = this.listingId();
+
+    this.isSendingReport.set(true);
+    this.reportError.set('');
+    this.reportNeedsLogin.set(false);
+
+    const { error } = await this.questionsService.reportContent(
+      open.questionId,
+      open.target,
+      reason.value() as ReportReason,
+      details.value(),
+    );
+
+    // The visitor moved to another listing while the report was being sent.
+    if (listingId !== this.listingId()) return;
+
+    this.isSendingReport.set(false);
+
+    if (error) {
+      // Repeating a report is not a failure: the item is simply marked.
+      if (isAlreadyReportedError(error)) {
+        this.finishReport(open, REPORT_ALREADY_REPORTED);
+        return;
+      }
+
+      // The modal stays open with everything that was typed.
+      console.error('Error sending report:', error);
+      this.reportError.set(reportErrorMessage(error));
+      this.reportNeedsLogin.set(isReportLoginError(error));
+      return;
+    }
+
+    this.finishReport(open, 'Report sent');
+  }
+
+  // Escape closes the modal, and Tab stays inside it.
+  onReportKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeReport();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const dialog = this.reportDialog()?.nativeElement;
+    if (!dialog) return;
+
+    const focusable = Array.from(
+      dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), select, textarea'),
+    );
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  // The item is marked as reported for the rest of the visit, a short note
+  // appears next to it, and focus goes back to its REPORTED control. The
+  // reported content stays visible: nothing is removed by reporting.
+  private finishReport(open: { questionId: string; target: ReportTarget }, text: string) {
+    const key = this.reportKey(open.questionId, open.target);
+
+    this.reportedKeys.update((keys) => new Set(keys).add(key));
+    this.reportNotice.set({ key, text });
+    this.announcement.set(text);
+    this.closeReportModal(true);
+  }
+
+  private closeReportModal(restoreFocus: boolean) {
+    const trigger = this.reportTrigger;
+
+    this.reportTrigger = null;
+    this.reportTarget.set(null);
+    this.clearReportForm();
+
+    if (restoreFocus && trigger) {
+      afterNextRender(
+        () => {
+          if (trigger.isConnected) trigger.focus();
+        },
+        { injector: this.injector },
+      );
+    }
+  }
+
+  private clearReportForm() {
+    this.reportModel.set({ reason: '', details: '' });
+    this.reportForm.reason().reset();
+    this.reportForm.details().reset();
+    this.reportSubmitAttempted.set(false);
+    this.reportError.set('');
+    this.reportNeedsLogin.set(false);
+  }
+
   // ASK A QUESTION
 
   toggleForm() {
     // Visitors who are not signed in are asked to log in instead.
     if (!this.isLoggedIn()) {
-      this.showLoginPrompt.set(true);
+      this.openLoginPrompt('ask', null);
       return;
     }
 
@@ -450,7 +721,7 @@ export class ListingQuestions {
     if (this.isSubmitting()) return;
 
     if (!this.isLoggedIn()) {
-      this.showLoginPrompt.set(true);
+      this.openLoginPrompt('ask', null);
       return;
     }
 
@@ -495,9 +766,22 @@ export class ListingQuestions {
     this.askToggle()?.nativeElement.focus();
   }
 
+  private openLoginPrompt(forAction: 'ask' | 'report', trigger: HTMLElement | null) {
+    this.loginPromptFor.set(forAction);
+    this.loginTrigger = trigger;
+    this.showLoginPrompt.set(true);
+  }
+
   closeLoginPrompt() {
     this.showLoginPrompt.set(false);
-    this.askToggle()?.nativeElement.focus();
+
+    // Focus goes back to whatever opened the prompt: a REPORT control, or the
+    // "Ask a question" button.
+    const trigger = this.loginTrigger;
+
+    this.loginTrigger = null;
+
+    (trigger?.isConnected ? trigger : this.askToggle()?.nativeElement)?.focus();
   }
 
   // Escape closes the login prompt, and Tab stays inside it.
@@ -647,6 +931,15 @@ export class ListingQuestions {
     this.closeReply();
     this.isSavingReply.set(false);
     this.replyNotice.set(null);
+
+    // And for a report: an open modal and the "Report sent" note do not carry
+    // over to another listing. What was reported stays marked, because it is
+    // still true if the person comes back to this listing.
+    this.closeReportModal(false);
+    this.isSendingReport.set(false);
+    this.reportNotice.set(null);
+    this.loginPromptFor.set('ask');
+    this.loginTrigger = null;
   }
 
   private async resolveUser(isLoggedIn: boolean) {
@@ -655,6 +948,12 @@ export class ListingQuestions {
     if (!isLoggedIn) {
       this.isFormOpen.set(false);
     }
+
+    // Reports belong to the person who sent them: when someone else signs in
+    // (or the person signs out), what was reported is forgotten.
+    this.closeReportModal(false);
+    this.reportedKeys.set(new Set());
+    this.reportNotice.set(null);
 
     // The session is read even while the Auth signal still says "signed out"
     // (it is filled in a moment after the page loads), so a seller is

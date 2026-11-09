@@ -314,4 +314,100 @@ describe('ListingQuestionsService', () => {
       expect(Object.keys(supabase)).toEqual(['rpc']);
     });
   });
+
+  describe('reportContent', () => {
+    it('calls the report_listing_content function with the exact parameter names', async () => {
+      rpc.mockResolvedValue({ data: null, error: null });
+
+      await service.reportContent('q1', 'question', 'spam', 'Looks like an advert');
+
+      expect(rpc).toHaveBeenCalledTimes(1);
+      expect(rpc).toHaveBeenCalledWith('report_listing_content', {
+        p_question_id: 'q1',
+        p_target: 'question',
+        p_reason: 'spam',
+        p_details: 'Looks like an advert',
+      });
+    });
+
+    it('reports an answer with the question id and the target "answer"', async () => {
+      rpc.mockResolvedValue({ data: null, error: null });
+
+      await service.reportContent('q1', 'answer', 'misleading', null);
+
+      expect(rpc).toHaveBeenCalledWith('report_listing_content', {
+        p_question_id: 'q1',
+        p_target: 'answer',
+        p_reason: 'misleading',
+        p_details: null,
+      });
+    });
+
+    it.each(['spam', 'offensive', 'misleading', 'other'] as const)(
+      'passes the reason "%s" on unchanged',
+      async (reason) => {
+        rpc.mockResolvedValue({ data: null, error: null });
+
+        await service.reportContent('q1', 'question', reason, null);
+
+        expect(rpc.mock.calls[0][1].p_reason).toBe(reason);
+      },
+    );
+
+    it('trims the details', async () => {
+      rpc.mockResolvedValue({ data: null, error: null });
+
+      await service.reportContent('q1', 'question', 'other', '  Please have a look.  \n');
+
+      expect(rpc.mock.calls[0][1].p_details).toBe('Please have a look.');
+    });
+
+    // An empty string, only spaces and line breaks, and nothing at all.
+    it.each(['', '   \n  ', null] as (string | null)[])(
+      'sends no details for %j',
+      async (details) => {
+        rpc.mockResolvedValue({ data: null, error: null });
+
+        await service.reportContent('q1', 'question', 'spam', details);
+
+        expect(rpc.mock.calls[0][1].p_details).toBeNull();
+      },
+    );
+
+    it('succeeds without an error, because the function returns nothing', async () => {
+      rpc.mockResolvedValue({ data: null, error: null });
+
+      const result = await service.reportContent('q1', 'question', 'spam', null);
+
+      expect(result).toEqual({ error: null });
+    });
+
+    it('returns the error when the database refuses the report', async () => {
+      const refusal = { message: 'already_reported', code: 'P0001' };
+      rpc.mockResolvedValue({ data: null, error: refusal });
+
+      const result = await service.reportContent('q1', 'question', 'spam', null);
+
+      expect(result.error).toBe(refusal);
+    });
+
+    it('turns a thrown error into an error result', async () => {
+      rpc.mockRejectedValue(new Error('network down'));
+
+      const result = await service.reportContent('q1', 'question', 'spam', null);
+
+      expect(result.error).toEqual({ message: 'network down' });
+    });
+
+    it('goes through the RPC only: the fake client has no table access', async () => {
+      rpc.mockResolvedValue({ data: null, error: null });
+
+      // A direct write to the reports table (supabase.from(...)) would throw
+      // and surface as an error.
+      const { error } = await service.reportContent('q1', 'question', 'spam', null);
+
+      expect(error).toBeNull();
+      expect(Object.keys(supabase)).toEqual(['rpc']);
+    });
+  });
 });

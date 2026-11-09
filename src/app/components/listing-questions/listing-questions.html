@@ -107,6 +107,22 @@
                   <span>MEGURU MEMBER</span>
                   <span aria-hidden="true">·</span>
                   <time [attr.datetime]="item.created_at">{{ formatDate(item.created_at) }}</time>
+                  <!-- Not on the viewer's own question. -->
+                  @if (!item.is_own) {
+                    <span aria-hidden="true">·</span>
+                    <button
+                      type="button"
+                      class="report-link"
+                      [attr.aria-label]="reportLabel(item, 'question')"
+                      [attr.aria-disabled]="isReported(item.id, 'question') ? 'true' : null"
+                      (click)="openReport(item, 'question', $event)"
+                    >
+                      {{ isReported(item.id, 'question') ? 'REPORTED' : 'REPORT' }}
+                    </button>
+                    @if (reportNoticeFor(item.id, 'question'); as note) {
+                      <span class="report-notice" aria-hidden="true">{{ note }}</span>
+                    }
+                  }
                 </p>
 
                 <p class="question-text">{{ item.question }}</p>
@@ -213,6 +229,22 @@
                     <span aria-hidden="true">·</span>
                     <span class="answer-edited">Edited</span>
                   }
+                  <!-- Not on the seller's own answer. -->
+                  @if (canReportAnswer()) {
+                    <span aria-hidden="true">·</span>
+                    <button
+                      type="button"
+                      class="report-link"
+                      [attr.aria-label]="reportLabel(item, 'answer')"
+                      [attr.aria-disabled]="isReported(item.id, 'answer') ? 'true' : null"
+                      (click)="openReport(item, 'answer', $event)"
+                    >
+                      {{ isReported(item.id, 'answer') ? 'REPORTED' : 'REPORT' }}
+                    </button>
+                    @if (reportNoticeFor(item.id, 'answer'); as note) {
+                      <span class="report-notice" aria-hidden="true">{{ note }}</span>
+                    }
+                  }
                 </p>
 
                 <p class="answer-text">{{ item.answer }}</p>
@@ -279,10 +311,16 @@
           (click)="$event.stopPropagation()"
           (keydown)="onLoginPromptKeydown($event)"
         >
-          <h2 id="ask-login-title">Ask the seller</h2>
+          <h2 id="ask-login-title">
+            {{ loginPromptFor() === 'report' ? 'Report content' : 'Ask the seller' }}
+          </h2>
 
           <p id="ask-login-description">
-            Log in or create an account to ask this seller a question.
+            {{
+              loginPromptFor() === 'report'
+                ? 'Log in or create an account to report this content.'
+                : 'Log in or create an account to ask this seller a question.'
+            }}
           </p>
 
           <div class="login-prompt-actions">
@@ -292,6 +330,119 @@
               Continue browsing
             </button>
           </div>
+        </div>
+      </div>
+    }
+
+    <!-- REPORT MODAL (signed-in readers) -->
+    @if (reportTarget()) {
+      <div class="login-prompt-overlay">
+        <div
+          #reportDialog
+          class="report-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="report-title"
+          aria-describedby="report-description"
+          (keydown)="onReportKeydown($event)"
+        >
+          <button
+            type="button"
+            class="report-close"
+            aria-label="Close"
+            [attr.aria-disabled]="isSendingReport() ? 'true' : null"
+            (click)="closeReport()"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+
+          <h2 id="report-title">Report content</h2>
+
+          <p id="report-description">
+            Help us keep MEGURU a respectful space. Tell us why you're reporting this content.
+          </p>
+
+          <form class="report-form" novalidate (submit)="submitReport($event)">
+            <label class="ask-label" for="report-reason">REASON</label>
+
+            <select
+              #reportSelect
+              id="report-reason"
+              class="report-select"
+              [formField]="reportForm.reason"
+              [attr.aria-invalid]="reportReasonError() ? 'true' : null"
+              [attr.aria-describedby]="reportReasonError() ? 'report-reason-error' : null"
+            >
+              <option value="">Select a reason</option>
+              @for (reason of reportReasons; track reason.value) {
+                <option [value]="reason.value">{{ reason.label }}</option>
+              }
+            </select>
+
+            @if (reportReasonError()) {
+              <p id="report-reason-error" class="questions-error" role="alert">
+                {{ reportReasonError() }}
+              </p>
+            }
+
+            <label class="ask-label" for="report-details">ADDITIONAL DETAILS (OPTIONAL)</label>
+
+            <textarea
+              #reportDetails
+              id="report-details"
+              class="ask-input"
+              rows="4"
+              [formField]="reportForm.details"
+              [attr.aria-invalid]="reportDetailsError() ? 'true' : null"
+              [attr.aria-describedby]="
+                reportDetailsError()
+                  ? 'report-details-counter report-details-error'
+                  : 'report-details-counter'
+              "
+            ></textarea>
+
+            <div class="ask-meta">
+              <p id="report-details-counter" class="ask-counter">
+                {{ reportDetailsLength() }} / {{ maxReportDetailsLength }}
+                <span class="visually-hidden"> characters</span>
+              </p>
+            </div>
+
+            @if (reportDetailsError()) {
+              <p id="report-details-error" class="questions-error" role="alert">
+                {{ reportDetailsError() }}
+              </p>
+            }
+
+            @if (reportError()) {
+              <p class="questions-error" role="alert">
+                {{ reportError() }}
+                @if (reportNeedsLogin()) {
+                  <a routerLink="/login" class="report-login-link">Log in</a>
+                }
+              </p>
+            }
+
+            <div class="ask-actions">
+              <button
+                type="button"
+                class="questions-button report-cancel"
+                [attr.aria-disabled]="isSendingReport() ? 'true' : null"
+                (click)="closeReport()"
+              >
+                CANCEL
+              </button>
+
+              <button
+                type="submit"
+                class="questions-button ask-submit report-submit"
+                [attr.aria-disabled]="isSendingReport() ? 'true' : null"
+                [attr.aria-busy]="isSendingReport() ? 'true' : null"
+              >
+                {{ isSendingReport() ? 'SENDING…' : 'SUBMIT REPORT' }}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     }

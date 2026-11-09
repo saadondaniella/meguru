@@ -546,6 +546,162 @@
   outline-offset: 3px;
 }
 
+/* REPORT: a very small text link in the metadata row of a question or answer */
+
+.report-link {
+  /* A little padding makes it easier to hit without changing how it looks. */
+  padding: 4px 2px;
+  margin: -4px 0;
+  border: 0;
+  background: none;
+  color: #9e5a44;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: inherit;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.report-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.report-link:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 2px;
+}
+
+/* REPORTED: nothing left to do, so it looks quiet and does not react. */
+.report-link[aria-disabled='true'] {
+  color: #66645f;
+  text-decoration: none;
+  cursor: default;
+}
+
+/* The seller's answer sits on a tinted background, where #9e5a44 reaches only
+   4.2:1. A slightly darker rust keeps the same look and reaches 4.6:1 (WCAG AA
+   needs 4.5:1 for small text). REPORTED keeps its own grey (4.7:1 there). */
+.answer-meta .report-link:not([aria-disabled='true']) {
+  color: #955540;
+}
+
+/* "Report sent" */
+.report-notice {
+  font-size: 10px;
+  color: #4d5d46;
+  animation: reply-notice-in 0.3s ease;
+}
+
+/* REPORT MODAL (same overlay and cream dialog as the other popups) */
+
+.report-dialog {
+  position: relative;
+  width: min(100%, 420px);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 32px 28px 24px;
+  box-sizing: border-box;
+  background: #f5f2eb;
+  color: #1c1917;
+  box-shadow: 0 16px 60px rgba(28, 25, 23, 0.18);
+}
+
+.report-dialog h2 {
+  margin: 0 36px 10px 0;
+  font-family: 'Noto Serif', serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.report-dialog > p {
+  margin: 0;
+  color: #66645f;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.report-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  color: #4d5d46;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.report-close:hover {
+  color: #1c1917;
+}
+
+.report-close:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: -4px;
+}
+
+.report-form {
+  margin-top: 22px;
+}
+
+.report-form .ask-label:not(:first-child) {
+  margin-top: 18px;
+}
+
+.report-select {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #b8b7ad;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.5);
+  color: #1c1917;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+}
+
+.report-select:focus-visible {
+  border-color: #4d5d46;
+  outline: 2px solid #9e5a44;
+  outline-offset: 2px;
+}
+
+.report-select[aria-invalid='true'] {
+  border-color: #9e5a44;
+}
+
+.report-form .questions-error {
+  margin: 12px 0 0;
+}
+
+.report-form .ask-actions {
+  margin-top: 22px;
+}
+
+.report-form .ask-actions .questions-button {
+  margin-top: 0;
+}
+
+.report-close[aria-disabled='true'],
+.report-cancel[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.report-login-link {
+  margin-left: 4px;
+  color: #9e5a44;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -583,11 +739,13 @@
 
 @media (prefers-reduced-motion: reduce) {
   .questions-button,
-  .reply-button {
+  .reply-button,
+  .report-link {
     transition: none;
   }
 
-  .reply-notice {
+  .reply-notice,
+  .report-notice {
     animation: none;
   }
 }

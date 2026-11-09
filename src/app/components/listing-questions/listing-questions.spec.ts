@@ -36,7 +36,12 @@ describe('ListingQuestions', () => {
   let fixture: ComponentFixture<ListingQuestions>;
   let el: HTMLElement;
 
-  const service = { getQuestions: vi.fn(), askQuestion: vi.fn(), answerQuestion: vi.fn() };
+  const service = {
+    getQuestions: vi.fn(),
+    askQuestion: vi.fn(),
+    answerQuestion: vi.fn(),
+    reportContent: vi.fn(),
+  };
 
   // The signed-in state. Visitors are signed out unless a test signs in.
   const isLoggedIn = signal(false);
@@ -80,6 +85,7 @@ describe('ListingQuestions', () => {
     service.getQuestions.mockReset();
     service.askQuestion.mockReset();
     service.answerQuestion.mockReset();
+    service.reportContent.mockReset();
     auth.getSession.mockReset();
     signOut();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -2239,6 +2245,1080 @@ describe('ListingQuestions', () => {
         expect(items().length).toBe(2);
         expect(replyButtons().length).toBe(0);
         expect(el.querySelector('.ask-toggle')).not.toBeNull();
+      });
+    });
+  });
+
+  describe('reporting a question or an answer', () => {
+    const itemFor = (id: string) =>
+      el.querySelector<HTMLElement>(`.question-item[data-question-id="${id}"]`)!;
+    const questionReport = (id: string) =>
+      itemFor(id).querySelector<HTMLButtonElement>('.question-meta .report-link');
+    const answerReport = (id: string) =>
+      itemFor(id).querySelector<HTMLButtonElement>('.answer-meta .report-link');
+    const allReportLinks = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.report-link'));
+    const loginPrompt = () => el.querySelector<HTMLElement>('.login-prompt');
+    const modal = () => el.querySelector<HTMLElement>('.report-dialog');
+    const reasonSelect = () => el.querySelector<HTMLSelectElement>('#report-reason');
+    const detailsInput = () => el.querySelector<HTMLTextAreaElement>('#report-details');
+    const submitButton = () => el.querySelector<HTMLButtonElement>('.report-submit');
+    const cancelButton = () => el.querySelector<HTMLButtonElement>('.report-cancel');
+    const closeButton = () => el.querySelector<HTMLButtonElement>('.report-close');
+    const modalAlerts = () =>
+      Array.from(modal()?.querySelectorAll('[role="alert"]') ?? [])
+        .map((node) => node.textContent?.trim())
+        .join(' | ');
+    const liveMessage = () => el.querySelector('[aria-live="polite"]')?.textContent ?? '';
+
+    const answered = (n: number, answer = 'It fits well.') =>
+      question(n, { answer, answered_at: '2026-11-04T10:00:00Z' });
+
+    // q3 is unanswered, q2 is answered, q1 is the viewer's own question.
+    const threeQuestions = () => [question(3), answered(2), question(1, { is_own: true })];
+
+    const createWith = async (
+      signedInAs: string | null,
+      questions: ListingQuestion[] = threeQuestions(),
+      status: ListingStatus = 'published',
+    ) => {
+      service.getQuestions.mockResolvedValue(page(questions, questions.length));
+
+      if (signedInAs) signIn(signedInAs);
+
+      await create('listing-1', status, 'seller-1');
+    };
+
+    const open = async (button: HTMLButtonElement | null) => {
+      button!.click();
+      await settle();
+    };
+
+    const chooseReason = async (value: string) => {
+      const select = reasonSelect()!;
+
+      select.value = value;
+      select.dispatchEvent(new Event('input', { bubbles: true }));
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    const typeDetails = async (text: string) => {
+      const field = detailsInput()!;
+
+      field.value = text;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    const submitForm = () =>
+      el
+        .querySelector('form.report-form')!
+        .dispatchEvent(new Event('submit', { cancelable: true }));
+
+    const keydown = (key: string, shiftKey = false) => {
+      const event = new KeyboardEvent('keydown', {
+        key,
+        shiftKey,
+        bubbles: true,
+        cancelable: true,
+      });
+
+      modal()!.dispatchEvent(event);
+
+      return event;
+    };
+
+    beforeEach(() => {
+      service.reportContent.mockResolvedValue({ error: null });
+    });
+
+    describe('the REPORT controls', () => {
+      it("puts REPORT directly after the date in each question's metadata row", async () => {
+        await createWith('buyer-1');
+
+        const meta = itemFor('q3').querySelector('.question-meta')!;
+        const button = questionReport('q3')!;
+
+        expect(button.textContent).toContain('REPORT');
+        expect(button.textContent).not.toContain('REPORTED');
+        // Directly after the date: only a hidden separator dot comes in between.
+        const date = meta.querySelector('time')!;
+        const separator = date.nextElementSibling!;
+
+        expect(separator.getAttribute('aria-hidden')).toBe('true');
+        expect(separator.nextElementSibling).toBe(button);
+        expect(meta.firstElementChild!.textContent).toContain('MEGURU MEMBER');
+      });
+
+      it("has a separate REPORT after the date in each seller answer's metadata row", async () => {
+        await createWith('buyer-1');
+
+        const meta = itemFor('q2').querySelector('.answer-meta')!;
+        const button = answerReport('q2')!;
+
+        expect(button.textContent).toContain('REPORT');
+        expect(
+          meta.querySelector('time')!.compareDocumentPosition(button) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        // A different control from the one on the question above it.
+        expect(button).not.toBe(questionReport('q2'));
+        expect(itemFor('q2').querySelectorAll('.report-link').length).toBe(2);
+      });
+
+      it('puts REPORT after "Edited" in the answer row, when the answer was edited', async () => {
+        await createWith('buyer-1', [
+          question(2, {
+            answer: 'Edited.',
+            answered_at: '2026-11-04T10:00:00Z',
+            answer_updated_at: '2026-11-05T10:00:00Z',
+          }),
+        ]);
+
+        const meta = itemFor('q2').querySelector('.answer-meta')!;
+
+        expect(
+          meta.querySelector('.answer-edited')!.compareDocumentPosition(answerReport('q2')!) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+      });
+
+      it('is only a small text control: a real button without icons or images', async () => {
+        await createWith('buyer-1');
+
+        for (const link of allReportLinks()) {
+          expect(link.tagName).toBe('BUTTON');
+          expect(link.getAttribute('type')).toBe('button');
+          expect(link.classList.contains('report-link')).toBe(true);
+          expect(link.querySelector('svg, img')).toBeNull();
+        }
+      });
+
+      it("has no REPORT on the viewer's own question", async () => {
+        await createWith('buyer-1');
+
+        expect(questionReport('q1')).toBeNull();
+        expect(questionReport('q3')).not.toBeNull();
+        expect(questionReport('q2')).not.toBeNull();
+      });
+
+      it('has no answer REPORT for the seller, but they can report questions', async () => {
+        await createWith('seller-1', [question(3), answered(2)]);
+
+        expect(answerReport('q2')).toBeNull();
+        expect(questionReport('q3')).not.toBeNull();
+        expect(questionReport('q2')).not.toBeNull();
+      });
+
+      it("lets the asker report the seller's answer to their own question", async () => {
+        await createWith(
+          'buyer-1',
+          [answered(2)].map((q) => ({ ...q, is_own: true })),
+        );
+
+        expect(questionReport('q2')).toBeNull();
+        expect(answerReport('q2')).not.toBeNull();
+      });
+
+      it('shows REPORT to visitors who are not signed in', async () => {
+        await createWith(null);
+
+        expect(questionReport('q3')).not.toBeNull();
+        expect(questionReport('q2')).not.toBeNull();
+        expect(answerReport('q2')).not.toBeNull();
+      });
+
+      it('has no answer REPORT on a question without an answer', async () => {
+        await createWith('buyer-1');
+
+        expect(answerReport('q3')).toBeNull();
+        expect(itemFor('q3').querySelectorAll('.report-link').length).toBe(1);
+      });
+
+      it('stays available on a sold listing', async () => {
+        await createWith('buyer-1', threeQuestions(), 'sold');
+
+        expect(questionReport('q3')).not.toBeNull();
+        expect(answerReport('q2')).not.toBeNull();
+      });
+
+      it('does not show the answer REPORT to the seller before it is known who is signed in', async () => {
+        const session = deferred<{ data: { session: { user: { id: string } } } }>();
+        service.getQuestions.mockResolvedValue(page([answered(2)], 1));
+        isLoggedIn.set(true);
+        auth.getSession.mockReturnValue(session.promise);
+
+        await create('listing-1', 'published', 'seller-1');
+        expect(answerReport('q2')).toBeNull();
+
+        session.resolve({ data: { session: { user: { id: 'seller-1' } } } });
+        await settle();
+
+        // It was the seller: still no REPORT on their own answer.
+        expect(answerReport('q2')).toBeNull();
+      });
+
+      it('names what each control reports, with the visible word first', async () => {
+        await createWith('buyer-1', [
+          question(3, { question: 'Is it true to size?' }),
+          answered(2),
+          question(1, { question: 'x'.repeat(80) }),
+        ]);
+
+        expect(questionReport('q3')!.getAttribute('aria-label')).toBe(
+          'Report this question: Is it true to size?',
+        );
+        expect(answerReport('q2')!.getAttribute('aria-label')).toBe(
+          'Report the answer to the question: Question 2',
+        );
+        expect(questionReport('q1')!.getAttribute('aria-label')).toBe(
+          `Report this question: ${'x'.repeat(60)}…`,
+        );
+        expect(answerReport('q2')!.getAttribute('aria-label')!.toLowerCase()).toContain('report');
+      });
+    });
+
+    describe('visitors who are not signed in', () => {
+      it('get the login prompt for reporting instead of the modal', async () => {
+        await createWith(null);
+
+        await open(questionReport('q3'));
+
+        expect(modal()).toBeNull();
+        expect(loginPrompt()).not.toBeNull();
+        expect(loginPrompt()!.textContent).toContain('Report content');
+        expect(loginPrompt()!.textContent).toContain('report this content');
+        expect(loginPrompt()!.querySelector('a[href="/login"]')).not.toBeNull();
+        expect(service.reportContent).not.toHaveBeenCalled();
+      });
+
+      it("get it for the seller's answer too", async () => {
+        await createWith(null);
+
+        await open(answerReport('q2'));
+
+        expect(modal()).toBeNull();
+        expect(loginPrompt()).not.toBeNull();
+      });
+
+      it('get focus back on the REPORT control they pressed', async () => {
+        await createWith(null);
+        const button = questionReport('q3')!;
+
+        await open(button);
+        loginPrompt()!.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+        );
+        await settle();
+
+        expect(loginPrompt()).toBeNull();
+        expect(document.activeElement).toBe(button);
+      });
+
+      it('still get the question wording when they press "Ask a question"', async () => {
+        await createWith(null);
+        await open(questionReport('q3'));
+        loginPrompt()!.querySelector<HTMLButtonElement>('.login-prompt-dismiss')!.click();
+        await settle();
+
+        await open(el.querySelector<HTMLButtonElement>('.ask-toggle'));
+
+        expect(loginPrompt()!.textContent).toContain('Ask the seller');
+        expect(loginPrompt()!.textContent).toContain('ask this seller a question');
+        expect(loginPrompt()!.textContent).not.toContain('Report content');
+      });
+
+      it('send no report', async () => {
+        await createWith(null);
+
+        await open(questionReport('q3'));
+        loginPrompt()!.querySelector<HTMLButtonElement>('.login-prompt-dismiss')!.click();
+        await settle();
+
+        expect(service.reportContent).not.toHaveBeenCalled();
+        expect(questionReport('q3')!.textContent).toContain('REPORT');
+        expect(questionReport('q3')!.textContent).not.toContain('REPORTED');
+      });
+    });
+
+    describe('the modal', () => {
+      it('opens, centred, when a signed-in reader presses REPORT', async () => {
+        await createWith('buyer-1');
+
+        await open(questionReport('q3'));
+
+        expect(modal()).not.toBeNull();
+        expect(modal()!.getAttribute('role')).toBe('dialog');
+        expect(modal()!.getAttribute('aria-modal')).toBe('true');
+        expect(el.querySelector('.login-prompt-overlay')!.contains(modal())).toBe(true);
+        expect(loginPrompt()).toBeNull();
+      });
+
+      it('has the specified title and description', async () => {
+        await createWith('buyer-1');
+
+        await open(questionReport('q3'));
+
+        const title = modal()!.querySelector('h2')!;
+        const description = modal()!.querySelector('#report-description')!;
+
+        expect(title.textContent?.trim()).toBe('Report content');
+        expect(description.textContent?.trim()).toBe(
+          "Help us keep MEGURU a respectful space. Tell us why you're reporting this content.",
+        );
+        expect(modal()!.getAttribute('aria-labelledby')).toBe(title.id);
+        expect(modal()!.getAttribute('aria-describedby')).toBe(description.id);
+      });
+
+      it('has a required reason dropdown with the four backend values and no preselection', async () => {
+        await createWith('buyer-1');
+
+        await open(questionReport('q3'));
+
+        const options = Array.from(reasonSelect()!.options);
+
+        expect(reasonSelect()!.tagName).toBe('SELECT');
+        expect(reasonSelect()!.value).toBe('');
+        expect(
+          options
+            .filter((option) => option.value !== '')
+            .map((o) => [o.value, o.textContent?.trim()]),
+        ).toEqual([
+          ['spam', 'Spam'],
+          ['offensive', 'Offensive content'],
+          ['misleading', 'Misleading information'],
+          ['other', 'Other'],
+        ]);
+        // The only other option is the empty prompt.
+        expect(options.length).toBe(5);
+        expect(options[0].value).toBe('');
+        expect(options.some((option) => option.selected && option.value !== '')).toBe(false);
+      });
+
+      it('has an optional details field limited to 300 characters, with a counter', async () => {
+        await createWith('buyer-1');
+
+        await open(questionReport('q3'));
+
+        expect(detailsInput()!.tagName).toBe('TEXTAREA');
+        expect(detailsInput()!.value).toBe('');
+        expect(modal()!.querySelector('.ask-counter')!.textContent).toContain('0 / 300');
+
+        await typeDetails('Looks like an advert');
+
+        expect(modal()!.querySelector('.ask-counter')!.textContent).toContain('20 / 300');
+      });
+
+      it('labels both fields', async () => {
+        await createWith('buyer-1');
+
+        await open(questionReport('q3'));
+
+        expect(modal()!.querySelector('label[for="report-reason"]')!.textContent).toContain(
+          'REASON',
+        );
+        expect(modal()!.querySelector('label[for="report-details"]')!.textContent).toContain(
+          'OPTIONAL',
+        );
+        expect(detailsInput()!.getAttribute('aria-describedby')).toContain(
+          'report-details-counter',
+        );
+      });
+
+      it('has CANCEL and SUBMIT REPORT, and an accessible close control', async () => {
+        await createWith('buyer-1');
+
+        await open(questionReport('q3'));
+
+        expect(cancelButton()!.textContent).toContain('CANCEL');
+        expect(submitButton()!.textContent).toContain('SUBMIT REPORT');
+        expect(submitButton()!.getAttribute('type')).toBe('submit');
+        expect(cancelButton()!.getAttribute('type')).toBe('button');
+        expect(closeButton()!.getAttribute('aria-label')).toBe('Close');
+        expect(closeButton()!.getAttribute('type')).toBe('button');
+      });
+
+      it('moves focus to the reason field', async () => {
+        await createWith('buyer-1');
+
+        await open(questionReport('q3'));
+
+        expect(document.activeElement).toBe(reasonSelect());
+      });
+
+      it("opens for the seller's answer as well", async () => {
+        await createWith('buyer-1');
+
+        await open(answerReport('q2'));
+
+        expect(modal()).not.toBeNull();
+      });
+
+      it('opens for a seller reporting a question on their own listing', async () => {
+        await createWith('seller-1', [question(3)]);
+
+        await open(questionReport('q3'));
+
+        expect(modal()).not.toBeNull();
+      });
+    });
+
+    describe('closing the modal', () => {
+      it('closes with Escape and returns focus to the control that opened it', async () => {
+        await createWith('buyer-1');
+        const button = questionReport('q3')!;
+        await open(button);
+
+        const event = keydown('Escape');
+        await settle();
+
+        expect(event.defaultPrevented).toBe(true);
+        expect(modal()).toBeNull();
+        expect(document.activeElement).toBe(button);
+        expect(service.reportContent).not.toHaveBeenCalled();
+      });
+
+      it('closes with CANCEL and returns focus', async () => {
+        await createWith('buyer-1');
+        const button = answerReport('q2')!;
+        await open(button);
+
+        cancelButton()!.click();
+        await settle();
+
+        expect(modal()).toBeNull();
+        expect(document.activeElement).toBe(button);
+      });
+
+      it('closes with the close control and returns focus', async () => {
+        await createWith('buyer-1');
+        const button = questionReport('q3')!;
+        await open(button);
+
+        closeButton()!.click();
+        await settle();
+
+        expect(modal()).toBeNull();
+        expect(document.activeElement).toBe(button);
+      });
+
+      it('throws the draft away when it is closed', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+        await typeDetails('Something I typed');
+
+        cancelButton()!.click();
+        await settle();
+        await open(questionReport('q3'));
+
+        expect(reasonSelect()!.value).toBe('');
+        expect(detailsInput()!.value).toBe('');
+        expect(modal()!.querySelector('.ask-counter')!.textContent).toContain('0 / 300');
+        expect(modalAlerts()).toBe('');
+      });
+
+      it('is not closed by a click on the dimmed background', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+
+        el.querySelector<HTMLElement>('.login-prompt-overlay')!.click();
+        await settle();
+
+        expect(modal()).not.toBeNull();
+        expect(reasonSelect()!.value).toBe('spam');
+      });
+
+      it('keeps Tab inside the modal, in both directions', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+
+        const focusable = Array.from(
+          modal()!.querySelectorAll<HTMLElement>('button, select, textarea, a[href]'),
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        expect(first).toBe(closeButton());
+        expect(last).toBe(submitButton());
+
+        last.focus();
+        const forward = keydown('Tab');
+        expect(forward.defaultPrevented).toBe(true);
+        expect(document.activeElement).toBe(first);
+
+        first.focus();
+        const backward = keydown('Tab', true);
+        expect(backward.defaultPrevented).toBe(true);
+        expect(document.activeElement).toBe(last);
+      });
+
+      it('lets Tab move on normally from the middle of the modal', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+
+        reasonSelect()!.focus();
+        const event = keydown('Tab');
+
+        expect(event.defaultPrevented).toBe(false);
+      });
+    });
+
+    describe('validation', () => {
+      it('asks for a reason and sends nothing without one', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+
+        submitForm();
+        await settle();
+
+        expect(service.reportContent).not.toHaveBeenCalled();
+        expect(modalAlerts()).toContain('Choose a reason');
+        expect(reasonSelect()!.getAttribute('aria-invalid')).toBe('true');
+        expect(document.activeElement).toBe(reasonSelect());
+        expect(modal()).not.toBeNull();
+      });
+
+      it('shows no error on a fresh modal', async () => {
+        await createWith('buyer-1');
+
+        await open(questionReport('q3'));
+
+        expect(modalAlerts()).toBe('');
+        expect(reasonSelect()!.getAttribute('aria-invalid')).toBeNull();
+      });
+
+      it('sends no report with more than 300 characters of details, and says so', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+        await typeDetails('x'.repeat(301));
+
+        submitForm();
+        await settle();
+
+        expect(service.reportContent).not.toHaveBeenCalled();
+        expect(modalAlerts()).toContain('at most 300');
+        expect(detailsInput()!.getAttribute('aria-invalid')).toBe('true');
+        expect(document.activeElement).toBe(detailsInput());
+      });
+
+      it('accepts exactly 300 characters of details', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+        await typeDetails('x'.repeat(300));
+
+        submitForm();
+        await settle();
+
+        expect(service.reportContent).toHaveBeenCalledWith(
+          'q3',
+          'question',
+          'spam',
+          'x'.repeat(300),
+        );
+      });
+
+      it('lets the details stay empty', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('other');
+
+        submitForm();
+        await settle();
+
+        expect(service.reportContent).toHaveBeenCalledTimes(1);
+        expect(service.reportContent).toHaveBeenCalledWith('q3', 'question', 'other', '');
+      });
+    });
+
+    describe('sending a report', () => {
+      it('reports a question with the question id and target "question"', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+        await typeDetails('Looks like an advert');
+
+        submitForm();
+        await settle();
+
+        expect(service.reportContent).toHaveBeenCalledTimes(1);
+        expect(service.reportContent).toHaveBeenCalledWith(
+          'q3',
+          'question',
+          'spam',
+          'Looks like an advert',
+        );
+      });
+
+      it('reports an answer with the question id and target "answer"', async () => {
+        await createWith('buyer-1');
+        await open(answerReport('q2'));
+        await chooseReason('misleading');
+
+        submitForm();
+        await settle();
+
+        expect(service.reportContent).toHaveBeenCalledWith('q2', 'answer', 'misleading', '');
+      });
+
+      it.each(['spam', 'offensive', 'misleading', 'other'])(
+        'sends the exact backend value "%s"',
+        async (value) => {
+          await createWith('buyer-1');
+          await open(questionReport('q3'));
+          await chooseReason(value);
+
+          submitForm();
+          await settle();
+
+          expect(service.reportContent.mock.calls[0][2]).toBe(value);
+        },
+      );
+
+      it('lets a seller report a question on their own listing', async () => {
+        await createWith('seller-1', [question(3)]);
+        await open(questionReport('q3'));
+        await chooseReason('offensive');
+
+        submitForm();
+        await settle();
+
+        expect(service.reportContent).toHaveBeenCalledWith('q3', 'question', 'offensive', '');
+      });
+
+      it('disables submitting while the report is being sent', async () => {
+        const pending = deferred<{ error: null }>();
+        service.reportContent.mockReturnValue(pending.promise);
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+
+        submitForm();
+        fixture.detectChanges();
+
+        expect(submitButton()!.getAttribute('aria-disabled')).toBe('true');
+        expect(submitButton()!.getAttribute('aria-busy')).toBe('true');
+        expect(submitButton()!.textContent).toContain('SENDING');
+        expect(cancelButton()!.getAttribute('aria-disabled')).toBe('true');
+        expect(closeButton()!.getAttribute('aria-disabled')).toBe('true');
+
+        pending.resolve({ error: null });
+        await settle();
+      });
+
+      it('prevents duplicate submissions', async () => {
+        const pending = deferred<{ error: null }>();
+        service.reportContent.mockReturnValue(pending.promise);
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+
+        submitForm();
+        submitForm();
+        submitButton()!.click();
+        fixture.detectChanges();
+        submitForm();
+
+        expect(service.reportContent).toHaveBeenCalledTimes(1);
+
+        // The same through the component itself, whatever the browser does with events.
+        void fixture.componentInstance.submitReport(new Event('submit'));
+        void fixture.componentInstance.submitReport(new Event('submit'));
+
+        expect(service.reportContent).toHaveBeenCalledTimes(1);
+
+        pending.resolve({ error: null });
+        await settle();
+
+        expect(service.reportContent).toHaveBeenCalledTimes(1);
+      });
+
+      it('stays open, even if Escape, CANCEL or the close control are used while sending', async () => {
+        const pending = deferred<{ error: null }>();
+        service.reportContent.mockReturnValue(pending.promise);
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+        submitForm();
+        fixture.detectChanges();
+
+        keydown('Escape');
+        cancelButton()!.click();
+        closeButton()!.click();
+        fixture.detectChanges();
+
+        expect(modal()).not.toBeNull();
+
+        pending.resolve({ error: null });
+        await settle();
+
+        expect(modal()).toBeNull();
+      });
+    });
+
+    describe('after a successful report', () => {
+      const reportFirstQuestion = async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+        submitForm();
+        await settle();
+      };
+
+      it('closes the modal', async () => {
+        await reportFirstQuestion();
+
+        expect(modal()).toBeNull();
+      });
+
+      it('shows a small "Report sent" note next to the reported question', async () => {
+        await reportFirstQuestion();
+
+        const note = itemFor('q3').querySelector('.question-meta .report-notice');
+
+        expect(note!.textContent).toContain('Report sent');
+        // Only there, and not as a popup.
+        expect(el.querySelectorAll('.report-notice').length).toBe(1);
+        expect(el.querySelector('.success-dialog')).toBeNull();
+        expect(el.querySelector('.success-overlay')).toBeNull();
+        expect(liveMessage()).toContain('Report sent');
+      });
+
+      it('turns that REPORT into a disabled REPORTED', async () => {
+        await reportFirstQuestion();
+
+        const button = questionReport('q3')!;
+
+        expect(button.textContent).toContain('REPORTED');
+        expect(button.getAttribute('aria-disabled')).toBe('true');
+        expect(button.getAttribute('aria-label')).toBe('Question reported');
+      });
+
+      it('does not open anything when REPORTED is pressed', async () => {
+        await reportFirstQuestion();
+
+        questionReport('q3')!.click();
+        await settle();
+
+        expect(modal()).toBeNull();
+        expect(loginPrompt()).toBeNull();
+        expect(service.reportContent).toHaveBeenCalledTimes(1);
+      });
+
+      it('changes only that control, not the other ones', async () => {
+        await reportFirstQuestion();
+
+        expect(questionReport('q2')!.textContent).not.toContain('REPORTED');
+        expect(answerReport('q2')!.textContent).not.toContain('REPORTED');
+        expect(questionReport('q2')!.getAttribute('aria-disabled')).toBeNull();
+        expect(itemFor('q2').querySelector('.report-notice')).toBeNull();
+      });
+
+      it('keeps the question and answer on the same item reportable separately', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q2'));
+        await chooseReason('spam');
+        submitForm();
+        await settle();
+
+        expect(questionReport('q2')!.textContent).toContain('REPORTED');
+        expect(answerReport('q2')!.textContent).not.toContain('REPORTED');
+
+        await open(answerReport('q2'));
+        await chooseReason('offensive');
+        submitForm();
+        await settle();
+
+        expect(service.reportContent).toHaveBeenCalledTimes(2);
+        expect(service.reportContent.mock.calls[1].slice(0, 3)).toEqual([
+          'q2',
+          'answer',
+          'offensive',
+        ]);
+        expect(answerReport('q2')!.textContent).toContain('REPORTED');
+        expect(answerReport('q2')!.getAttribute('aria-label')).toBe('Answer reported');
+      });
+
+      it('does not hide or remove the reported content', async () => {
+        await reportFirstQuestion();
+
+        expect(items().length).toBe(3);
+        expect(itemFor('q3').querySelector('.question-text')!.textContent).toBe('Question 3');
+        expect(service.getQuestions).toHaveBeenCalledTimes(1);
+      });
+
+      it('says nothing about removal or review', async () => {
+        await reportFirstQuestion();
+
+        const text = (el.textContent ?? '').toLowerCase();
+
+        expect(text).not.toContain('removed');
+        expect(text).not.toContain('reviewed');
+        expect(text).not.toContain('under review');
+        expect(text).not.toContain('taken down');
+      });
+
+      it('returns focus to the control, which now reads REPORTED', async () => {
+        await reportFirstQuestion();
+
+        expect(document.activeElement).toBe(questionReport('q3'));
+      });
+
+      it('shows the note next to a reported answer', async () => {
+        await createWith('buyer-1');
+        await open(answerReport('q2'));
+        await chooseReason('spam');
+        submitForm();
+        await settle();
+
+        expect(itemFor('q2').querySelector('.answer-meta .report-notice')!.textContent).toContain(
+          'Report sent',
+        );
+      });
+
+      it('replaces the note when another item is reported', async () => {
+        await reportFirstQuestion();
+
+        await open(answerReport('q2'));
+        expect(el.querySelector('.report-notice')).toBeNull();
+      });
+    });
+
+    describe('when the same item was reported before', () => {
+      it('closes the modal, says so, and marks the item as reported', async () => {
+        service.reportContent.mockResolvedValue({ error: { message: 'already_reported' } });
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+
+        submitForm();
+        await settle();
+
+        expect(modal()).toBeNull();
+        expect(itemFor('q3').querySelector('.report-notice')!.textContent).toContain(
+          "You've already reported this.",
+        );
+        expect(questionReport('q3')!.textContent).toContain('REPORTED');
+        expect(questionReport('q3')!.getAttribute('aria-disabled')).toBe('true');
+        expect(liveMessage()).toContain("You've already reported this.");
+        // It is not shown as a failure.
+        expect(el.querySelector('[role="alert"]')).toBeNull();
+      });
+    });
+
+    describe('when the report fails', () => {
+      const failWith = async (error: { message: string; code?: string }) => {
+        service.reportContent.mockResolvedValue({ error });
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('misleading');
+        await typeDetails('This is not what it looks like');
+        submitForm();
+        await settle();
+      };
+
+      it.each([
+        ['report_rate_limited', 'daily reporting limit'],
+        ['not_reportable', 'can no longer be reported'],
+        ['own_content', 'cannot report your own content'],
+        ['not_authenticated', 'log in'],
+        ['invalid_length', 'at most 300'],
+        ['invalid_text', 'not allowed'],
+      ])('explains %s in plain words', async (key, text) => {
+        await failWith({ message: key });
+
+        expect(modalAlerts().toLowerCase()).toContain(text);
+        // No raw error key is shown.
+        expect(el.textContent).not.toContain(key);
+      });
+
+      it('offers a Log in link when the person is not signed in', async () => {
+        await failWith({ message: 'not_authenticated' });
+
+        expect(modal()!.querySelector('a[href="/login"]')).not.toBeNull();
+      });
+
+      it('offers no Log in link for other errors', async () => {
+        await failWith({ message: 'report_rate_limited' });
+
+        expect(modal()!.querySelector('a[href="/login"]')).toBeNull();
+      });
+
+      it('offers no Log in link for own_content, although it shares its error code with a missing permission', async () => {
+        await failWith({ message: 'own_content', code: '42501' });
+
+        expect(modalAlerts().toLowerCase()).toContain('cannot report your own content');
+        expect(modal()!.querySelector('a[href="/login"]')).toBeNull();
+      });
+
+      it('asks to log in when the request was not signed in', async () => {
+        await failWith({
+          message: 'permission denied for function report_listing_content',
+          code: '42501',
+        });
+
+        expect(modalAlerts().toLowerCase()).toContain('log in');
+        expect(modal()!.querySelector('a[href="/login"]')).not.toBeNull();
+      });
+
+      it('shows a general message for anything unexpected', async () => {
+        await failWith({ message: 'something odd happened' });
+
+        expect(modalAlerts()).toContain('Could not send your report. Please try again.');
+        expect(modalAlerts()).not.toContain('something odd happened');
+      });
+
+      it('keeps the modal open with the reason and the details', async () => {
+        await failWith({ message: 'report_rate_limited' });
+
+        expect(modal()).not.toBeNull();
+        expect(reasonSelect()!.value).toBe('misleading');
+        expect(detailsInput()!.value).toBe('This is not what it looks like');
+        expect(submitButton()!.getAttribute('aria-disabled')).toBeNull();
+        expect(submitButton()!.textContent).toContain('SUBMIT REPORT');
+      });
+
+      it('does not mark anything as reported, or show a note', async () => {
+        await failWith({ message: 'not_reportable' });
+
+        expect(questionReport('q3')!.textContent).not.toContain('REPORTED');
+        expect(el.querySelector('.report-notice')).toBeNull();
+      });
+
+      it('lets the person try again', async () => {
+        await failWith({ message: 'report_rate_limited' });
+
+        service.reportContent.mockResolvedValue({ error: null });
+        submitForm();
+        await settle();
+
+        expect(service.reportContent).toHaveBeenCalledTimes(2);
+        expect(modal()).toBeNull();
+        expect(questionReport('q3')!.textContent).toContain('REPORTED');
+      });
+
+      it('announces the error to screen readers', async () => {
+        await failWith({ message: 'not_reportable' });
+
+        expect(modal()!.querySelector('[role="alert"]')).not.toBeNull();
+      });
+    });
+
+    describe('when things change around the modal', () => {
+      it('forgets the "Report sent" note, but remembers what was reported, when the person leaves and comes back', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+        submitForm();
+        await settle();
+        expect(el.querySelector('.report-notice')).not.toBeNull();
+
+        service.getQuestions.mockResolvedValue(page([question(30)], 1));
+        fixture.componentRef.setInput('listingId', 'listing-2');
+        fixture.detectChanges();
+        await settle();
+
+        expect(questionReport('q30')!.textContent).not.toContain('REPORTED');
+
+        service.getQuestions.mockResolvedValue(page(threeQuestions(), 3));
+        fixture.componentRef.setInput('listingId', 'listing-1');
+        fixture.detectChanges();
+        await settle();
+
+        // Nothing is opened or announced again, and the earlier report still shows.
+        expect(modal()).toBeNull();
+        expect(el.querySelector('.report-notice')).toBeNull();
+        expect(questionReport('q3')!.textContent).toContain('REPORTED');
+        expect(questionReport('q3')!.getAttribute('aria-disabled')).toBe('true');
+      });
+
+      it('closes an open modal when the listing changes', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+        expect(modal()).not.toBeNull();
+
+        service.getQuestions.mockResolvedValue(page([question(30)], 1));
+        fixture.componentRef.setInput('listingId', 'listing-2');
+        fixture.detectChanges();
+        await settle();
+
+        expect(modal()).toBeNull();
+        expect(service.reportContent).not.toHaveBeenCalled();
+
+        // It opens empty for the new listing.
+        await open(questionReport('q30'));
+
+        expect(reasonSelect()!.value).toBe('');
+      });
+
+      it('ignores a result that arrives after the visitor moved to another listing', async () => {
+        const pending = deferred<{ error: null }>();
+        service.reportContent.mockReturnValue(pending.promise);
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+        submitForm();
+
+        service.getQuestions.mockResolvedValue(page([question(30)], 1));
+        fixture.componentRef.setInput('listingId', 'listing-2');
+        fixture.detectChanges();
+        await settle();
+
+        pending.resolve({ error: null });
+        await settle();
+
+        expect(modal()).toBeNull();
+        expect(el.querySelector('.report-notice')).toBeNull();
+        expect(el.textContent).not.toContain('Report sent');
+      });
+
+      it('closes it, and forgets what was reported, when the person signs out', async () => {
+        await createWith('buyer-1');
+        await open(questionReport('q3'));
+        await chooseReason('spam');
+        submitForm();
+        await settle();
+        await open(questionReport('q2'));
+        expect(modal()).not.toBeNull();
+
+        signOut();
+        await settle();
+
+        expect(modal()).toBeNull();
+        expect(questionReport('q3')!.textContent).not.toContain('REPORTED');
+        expect(el.querySelector('.report-notice')).toBeNull();
+      });
+    });
+
+    describe('what stays the same', () => {
+      it('still shows the questions, answers and pagination', async () => {
+        await createWith('buyer-1', [question(9), answered(8, 'An answer.'), question(7)]);
+
+        expect(items().length).toBe(3);
+        expect(itemFor('q8').querySelector('.answer-text')!.textContent).toBe('An answer.');
+        expect(itemFor('q9').querySelector('.question-meta')!.textContent).toContain(
+          'MEGURU MEMBER',
+        );
+        expect(itemFor('q9').querySelector('time')!.textContent?.trim()).toBe('9 Nov 2026');
+      });
+
+      it('still lets a buyer ask a question', async () => {
+        await createWith('buyer-1');
+
+        expect(el.querySelector('.ask-toggle')).not.toBeNull();
+      });
+
+      it('still lets the seller reply, next to the REPORT control on the question', async () => {
+        await createWith('seller-1', [question(3)]);
+
+        expect(el.querySelector('[data-reply-button="q3"]')).not.toBeNull();
+        expect(questionReport('q3')).not.toBeNull();
       });
     });
   });

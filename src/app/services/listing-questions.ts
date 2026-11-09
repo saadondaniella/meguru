@@ -5,9 +5,12 @@ import {
   ListingQuestionsPage,
   PostedAnswer,
   PostedQuestion,
+  ReportReason,
+  ReportTarget,
 } from '../models/listing-question';
 
 type QuestionsError = { message: string; code?: string };
+type ReportResult = { error: QuestionsError | null };
 type QuestionsResult = { data: ListingQuestionsPage | null; error: QuestionsError | null };
 type AskResult = { data: PostedQuestion | null; error: QuestionsError | null };
 type AnswerResult = { data: PostedAnswer | null; error: QuestionsError | null };
@@ -130,6 +133,37 @@ export class ListingQuestionsService {
         data: null,
         error: {
           message: error instanceof Error ? error.message : 'Could not save your reply.',
+        },
+      };
+    }
+  }
+
+  // Reports a question or the seller's answer through the
+  // report_listing_content function. Both targets use the id of the question.
+  // The function returns nothing: no error means the report was saved. The
+  // database decides who may report what (for example not your own content),
+  // limits reports and ignores repeats. The reports table is never written
+  // directly, and cannot be read by clients.
+  async reportContent(
+    questionId: string,
+    target: ReportTarget,
+    reason: ReportReason,
+    details: string | null,
+  ): Promise<ReportResult> {
+    try {
+      const { error } = await this.supabase.rpc('report_listing_content', {
+        p_question_id: questionId,
+        p_target: target,
+        p_reason: reason,
+        // Optional text: trimmed, and nothing at all when it is empty.
+        p_details: details?.trim() ? details.trim() : null,
+      });
+
+      return { error: error ?? null };
+    } catch (error) {
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Could not send your report.',
         },
       };
     }

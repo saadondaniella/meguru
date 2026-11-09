@@ -107,3 +107,63 @@ export function answerQuestionErrorMessage(error: DatabaseError): string {
 
   return ANSWER_QUESTION_FALLBACK_ERROR;
 }
+
+// REPORTS
+
+// A question and the seller's answer to it are reported separately. Both use
+// the id of the question.
+export type ReportTarget = 'question' | 'answer';
+
+// The values report_listing_content accepts, with the words shown to people.
+export type ReportReason = 'spam' | 'offensive' | 'misleading' | 'other';
+
+export const REPORT_REASONS: readonly { value: ReportReason; label: string }[] = [
+  { value: 'spam', label: 'Spam' },
+  { value: 'offensive', label: 'Offensive content' },
+  { value: 'misleading', label: 'Misleading information' },
+  { value: 'other', label: 'Other' },
+];
+
+// The database enforces the same limit (optional details, up to 300 characters).
+export const REPORT_DETAILS_MAX_LENGTH = 300;
+
+export const REPORT_FALLBACK_ERROR = 'Could not send your report. Please try again.';
+
+export const REPORT_ALREADY_REPORTED = "You've already reported this.";
+
+const REPORT_ERRORS: Record<string, string> = {
+  not_authenticated: 'Please log in to report content.',
+  already_reported: REPORT_ALREADY_REPORTED,
+  report_rate_limited: 'You have reached the daily reporting limit. Please try again tomorrow.',
+  not_reportable: 'This content can no longer be reported.',
+  own_content: 'You cannot report your own content.',
+  invalid_length: `Details can be at most ${REPORT_DETAILS_MAX_LENGTH} characters.`,
+  invalid_text: 'Your details contain characters that are not allowed.',
+};
+
+export function reportErrorMessage(error: DatabaseError): string {
+  const known = knownMessage(REPORT_ERRORS, error);
+
+  if (known) return known;
+
+  if (isNotSignedInError(error)) return REPORT_ERRORS['not_authenticated'];
+
+  return REPORT_FALLBACK_ERROR;
+}
+
+// The person has already reported this item. That is not a failure: the item
+// is simply marked as reported.
+export function isAlreadyReportedError(error: DatabaseError): boolean {
+  return error?.message === 'already_reported';
+}
+
+// The person has to sign in before they can report.
+export function isReportLoginError(error: DatabaseError): boolean {
+  if (error?.message === 'not_authenticated') return true;
+
+  // own_content shares the "not allowed" error code (42501) with a missing
+  // permission, but signing in would not help: go by the message key first.
+  if (knownMessage(REPORT_ERRORS, error)) return false;
+
+  return isNotSignedInError(error);
+}
