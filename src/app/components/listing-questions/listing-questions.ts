@@ -22,6 +22,8 @@ import {
 import { RouterLink } from '@angular/router';
 import { ListingStatus } from '../../models/listing';
 import {
+  ANSWER_MAX_LENGTH,
+  answerQuestionErrorMessage,
   askQuestionErrorMessage,
   ListingQuestion,
   QUESTION_MAX_LENGTH,
@@ -39,9 +41,9 @@ const DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 });
 
-// Public Q&A of a listing. Anyone can read it, and signed-in visitors who are
-// not the seller can ask a question. Askers are always shown as
-// "MEGURU member".
+// Public Q&A of a listing. Anyone can read it, signed-in visitors who are not
+// the seller can ask a question, and the seller can reply to (and edit the
+// reply to) each question. Askers are always shown as "MEGURU member".
 @Component({
   imports: [FormField, RouterLink],
   selector: 'app-listing-questions',
@@ -156,6 +158,56 @@ export class ListingQuestions {
     return '';
   });
 
+  // REPLYING (the seller)
+
+  readonly maxAnswerLength = ANSWER_MAX_LENGTH;
+
+  // Only the owner of a published listing gets the reply controls. The
+  // database checks again who may reply and when.
+  readonly canReply = computed(
+    () => this.status() === 'published' && this.isUserResolved() && this.isOwner(),
+  );
+
+  private readonly replyModel = signal({ reply: '' });
+
+  // Signal form of the single reply form that can be open. The database
+  // checks the same rules again.
+  readonly replyForm = form(this.replyModel, (path) => {
+    required(path.reply);
+    validate(path.reply, ({ value }) =>
+      value().trim().length === 0 ? requiredError() : undefined,
+    );
+    maxLength(path.reply, ANSWER_MAX_LENGTH);
+  });
+
+  // The question whose reply form is open. Only one form is open at a time.
+  readonly replyingToId = signal<string | null>(null);
+  readonly isSavingReply = signal(false);
+  readonly replyError = signal('');
+  private readonly replySubmitAttempted = signal(false);
+  // "Reply posted" or "Reply updated", shown under the question that changed.
+  readonly replyNotice = signal<{ id: string; text: string } | null>(null);
+
+  readonly replyLength = computed(() => this.replyForm.reply().value().length);
+
+  readonly replyFieldError = computed(() => {
+    const field = this.replyForm.reply();
+
+    if (!field.touched() && !this.replySubmitAttempted()) return '';
+
+    const errors = field.errors();
+
+    if (errors.some((error) => error.kind === 'required')) {
+      return 'Write your reply before saving it.';
+    }
+
+    if (errors.some((error) => error.kind === 'maxLength')) {
+      return `Your reply can be at most ${ANSWER_MAX_LENGTH} characters.`;
+    }
+
+    return '';
+  });
+
   private readonly askToggle = viewChild<ElementRef<HTMLButtonElement>>('askToggle');
   private readonly questionInput = viewChild<ElementRef<HTMLTextAreaElement>>('questionInput');
   private readonly successClose = viewChild<ElementRef<HTMLButtonElement>>('successClose');
@@ -187,6 +239,17 @@ export class ListingQuestions {
       });
     });
 
+    // A reply form never stays open when the person may no longer reply (they
+    // signed out, or the listing was sold).
+    effect(() => {
+      if (!this.canReply()) {
+        untracked(() => {
+          this.closeReply();
+          this.replyNotice.set(null);
+        });
+      }
+    });
+
     // Move focus into the popups as soon as they appear.
     effect(() => {
       this.successClose()?.nativeElement.focus();
@@ -211,6 +274,145 @@ export class ListingQuestions {
     );
 
     return `${parts['day']} ${parts['month']} ${parts['year']}`;
+  }
+
+  // REPLY TO A QUESTION (the seller)
+
+  isReplying(questionId: string): boolean {
+    return this.canReply() && this.replyingToId() === questionId;
+  }
+
+  // The visible text is just "REPLY" or "EDIT REPLY", so each button also names
+  // the question it belongs to for screen readers. The visible words come first.
+  replyLabel(item: ListingQuestion): string {
+    const preview = item.question.length > 60 ? `${item.question.slice(0, 60)}…` : item.question;
+
+    return `${item.answer ? 'Edit reply' : 'Reply'} to the question: ${preview}`;
+  }
+
+  // Opens the reply form under a question, with the current reply filled in
+  // when there is one. Opening a form closes any other one, and pressing the
+  // same button again closes it.
+  openReply(item: ListingQuestion) {
+    // A reply that is still being saved has to finish first.
+    if (this.isSavingReply() || !this.canReply()) return;
+
+    if (this.replyingToId() === item.id) {
+      this.cancelReply();
+      return;
+    }
+
+    this.closeReply();
+    this.replyNotice.set(null);
+    this.replyModel.set({ reply: item.answer ?? '' });
+    this.replyForm.reply().reset();
+    this.replyingToId.set(item.id);
+
+    afterNextRender(
+      () => {
+        this.host.nativeElement
+          .querySelector<HTMLTextAreaElement>(`[data-reply-input="${item.id}"]`)
+          ?.focus();
+      },
+      { injector: this.injector },
+    );
+  }
+
+  cancelReply() {
+    // Closing while a request is running would hide its result.
+    if (this.isSavingReply()) return;
+
+    const id = this.replyingToId();
+
+    this.closeReply();
+
+    if (id) {
+      afterNextRender(
+        () => {
+          this.host.nativeElement
+            .querySelector<HTMLElement>(`[data-reply-button="${id}"]`)
+            ?.focus();
+        },
+        { injector: this.injector },
+      );
+    }
+  }
+
+  async submitReply(event: Event) {
+    event.preventDefault();
+
+    // aria-disabled keeps focus on the button, so a second click or press is
+    // ignored here. This is what prevents duplicate replies.
+    if (this.isSavingReply()) return;
+
+    const id = this.replyingToId();
+    const item = this.questions().find((question) => question.id === id);
+
+    if (!id || !item || !this.canReply()) return;
+
+    const field = this.replyForm.reply();
+
+    this.replySubmitAttempted.set(true);
+    field.markAsTouched();
+
+    if (field.invalid()) {
+      this.host.nativeElement
+        .querySelector<HTMLTextAreaElement>(`[data-reply-input="${id}"]`)
+        ?.focus();
+      return;
+    }
+
+    const listingId = this.listingId();
+    const wasEdit = !!item.answer;
+
+    this.isSavingReply.set(true);
+    this.replyError.set('');
+
+    const { data, error } = await this.questionsService.answerQuestion(id, field.value().trim());
+
+    // The visitor moved to another listing while the reply was saving.
+    if (listingId !== this.listingId()) return;
+
+    this.isSavingReply.set(false);
+
+    if (error || !data) {
+      // The form stays open with the text, so nothing the seller wrote is lost.
+      console.error('Error saving reply:', error);
+      this.replyError.set(answerQuestionErrorMessage(error));
+      return;
+    }
+
+    // Show the saved reply at once, with the timestamps the database returned:
+    // the date of the first reply never changes, and "Edited" appears when an
+    // existing reply was changed.
+    this.questions.update((current) =>
+      current.map((question) =>
+        question.id === data.id
+          ? {
+              ...question,
+              answer: data.answer,
+              answered_at: data.answered_at,
+              answer_updated_at: data.answer_updated_at,
+            }
+          : question,
+      ),
+    );
+
+    this.closeReply();
+
+    const text = wasEdit ? 'Reply updated' : 'Reply posted';
+
+    this.replyNotice.set({ id, text });
+    this.announcement.set(`${text}.`);
+    this.focusQuestion(id);
+  }
+
+  private closeReply() {
+    this.replyModel.set({ reply: '' });
+    this.replyForm.reply().reset();
+    this.replyingToId.set(null);
+    this.replyError.set('');
+    this.replySubmitAttempted.set(false);
   }
 
   // ASK A QUESTION
@@ -395,6 +597,18 @@ export class ListingQuestions {
     this.loadMoreError.set(false);
     this.announcement.set(`Showing the ${QUESTIONS_INITIAL_PAGE_SIZE} newest questions.`);
 
+    // A reply form under a question that was just collapsed has nothing to
+    // belong to any more.
+    const replyingTo = this.replyingToId();
+
+    if (
+      replyingTo &&
+      !this.isSavingReply() &&
+      !this.visibleQuestions().some((question) => question.id === replyingTo)
+    ) {
+      this.closeReply();
+    }
+
     // The "Show less" button disappears. Keep focus on the controls (or, if
     // there is nothing more to show, on the last question) so it is not lost.
     afterNextRender(
@@ -428,6 +642,11 @@ export class ListingQuestions {
     this.isSubmitting.set(false);
     this.showLoginPrompt.set(false);
     this.showSuccess.set(false);
+
+    // The same for a reply that was being written or saved.
+    this.closeReply();
+    this.isSavingReply.set(false);
+    this.replyNotice.set(null);
   }
 
   private async resolveUser(isLoggedIn: boolean) {
@@ -465,6 +684,9 @@ export class ListingQuestions {
 
     // Never show data of a previous listing.
     this.questions.set([]);
+    // The questions are gone, so a reply form (or note) for one has no home.
+    this.closeReply();
+    this.replyNotice.set(null);
     this.visibleCount.set(QUESTIONS_INITIAL_PAGE_SIZE);
     this.total.set(0);
     this.nextOffset.set(0);

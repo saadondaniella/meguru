@@ -14,6 +14,14 @@
   font-weight: 400;
 }
 
+.questions-intro {
+  max-width: 560px;
+  margin: -12px 0 28px;
+  color: #66645f;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
 .questions-note,
 .questions-message,
 .questions-error {
@@ -80,6 +88,111 @@
 
 .question-text {
   color: #1c1917;
+}
+
+/* QUESTION ROW: the question on the left, the seller's reply button on the right */
+
+.question-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.question-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.question-main .question-meta {
+  margin-bottom: 10px;
+}
+
+/* SELLER REPLY BUTTONS */
+
+.reply-button {
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid #9e5a44;
+  background: transparent;
+  color: #9e5a44;
+
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.reply-button:hover {
+  background: #9e5a44;
+  color: #f5f2eb;
+}
+
+/* EDIT REPLY is quieter: a thin grey outline and the olive text colour. */
+.reply-button.is-edit {
+  border-color: #b8b7ad;
+  color: #4d5d46;
+}
+
+.reply-button.is-edit:hover {
+  border-color: #4d5d46;
+  background: #4d5d46;
+  color: #f5f2eb;
+}
+
+.reply-button:focus-visible {
+  outline: 2px solid #1c1917;
+  outline-offset: 3px;
+}
+
+.reply-button[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* REPLY FORM (shares the field, counter and button styles of the question form) */
+
+.reply-form {
+  max-width: 560px;
+  margin-top: 20px;
+}
+
+.reply-form .questions-error {
+  margin: 12px 0 0;
+}
+
+.reply-form .ask-actions .questions-button {
+  margin-top: 0;
+}
+
+.questions-button.reply-cancel[aria-disabled='true'] {
+  cursor: progress;
+}
+
+/* "Reply posted" / "Reply updated" */
+
+.reply-notice {
+  margin: 14px 0 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  animation: reply-notice-in 0.3s ease;
+}
+
+@keyframes reply-notice-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* SELLER ANSWER */
@@ -459,8 +572,22 @@
   }
 }
 
+/* The reply button moves below the question when there is little room. */
+@media (max-width: 600px) {
+  .question-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .questions-button {
+  .questions-button,
+  .reply-button {
     transition: none;
+  }
+
+  .reply-notice {
+    animation: none;
   }
 }

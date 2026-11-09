@@ -1,10 +1,16 @@
 import { Service, inject } from '@angular/core';
 import { SUPABASE_CLIENT } from './supabase';
-import { ListingQuestion, ListingQuestionsPage, PostedQuestion } from '../models/listing-question';
+import {
+  ListingQuestion,
+  ListingQuestionsPage,
+  PostedAnswer,
+  PostedQuestion,
+} from '../models/listing-question';
 
 type QuestionsError = { message: string; code?: string };
 type QuestionsResult = { data: ListingQuestionsPage | null; error: QuestionsError | null };
 type AskResult = { data: PostedQuestion | null; error: QuestionsError | null };
+type AnswerResult = { data: PostedAnswer | null; error: QuestionsError | null };
 
 // A row of get_listing_questions. total_count is a bigint, which may arrive as
 // a number or a string.
@@ -85,6 +91,45 @@ export class ListingQuestionsService {
         data: null,
         error: {
           message: error instanceof Error ? error.message : 'Could not post your question.',
+        },
+      };
+    }
+  }
+
+  // Saves the seller's reply to a question (a first reply, or a change to an
+  // existing one) through the answer_listing_question function. The database
+  // decides who may reply: only the owner of the listing, only while it is
+  // published. The questions table is never written directly.
+  async answerQuestion(questionId: string, answer: string): Promise<AnswerResult> {
+    try {
+      const { data, error } = await this.supabase.rpc('answer_listing_question', {
+        p_question_id: questionId,
+        p_answer: answer,
+      });
+
+      if (error) return { data: null, error };
+
+      // The function returns one row with the saved reply and its timestamps.
+      const row = (Array.isArray(data) ? data[0] : data) as PostedAnswer | null | undefined;
+
+      if (!row) {
+        return { data: null, error: { message: 'No reply was returned.' } };
+      }
+
+      return {
+        data: {
+          id: row.id,
+          answer: row.answer,
+          answered_at: row.answered_at,
+          answer_updated_at: row.answer_updated_at ?? null,
+        },
+        error: null,
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: error instanceof Error ? error.message : 'Could not save your reply.',
         },
       };
     }

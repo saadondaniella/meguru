@@ -36,7 +36,7 @@ describe('ListingQuestions', () => {
   let fixture: ComponentFixture<ListingQuestions>;
   let el: HTMLElement;
 
-  const service = { getQuestions: vi.fn(), askQuestion: vi.fn() };
+  const service = { getQuestions: vi.fn(), askQuestion: vi.fn(), answerQuestion: vi.fn() };
 
   // The signed-in state. Visitors are signed out unless a test signs in.
   const isLoggedIn = signal(false);
@@ -79,6 +79,7 @@ describe('ListingQuestions', () => {
   beforeEach(() => {
     service.getQuestions.mockReset();
     service.askQuestion.mockReset();
+    service.answerQuestion.mockReset();
     auth.getSession.mockReset();
     signOut();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -1323,6 +1324,922 @@ describe('ListingQuestions', () => {
 
       expect(el.innerHTML).not.toContain('secret-user-id');
       expect(items()[0].querySelector('.question-meta')?.textContent).toContain('MEGURU MEMBER');
+    });
+  });
+
+  describe('replying to a question (the seller)', () => {
+    const replyButton = (id: string) =>
+      el.querySelector<HTMLButtonElement>(`[data-reply-button="${id}"]`);
+    const replyButtons = () => Array.from(el.querySelectorAll<HTMLButtonElement>('.reply-button'));
+    const replyForm = () => el.querySelector<HTMLFormElement>('form.reply-form');
+    const replyForms = () => el.querySelectorAll('form.reply-form');
+    const replyInput = () => el.querySelector<HTMLTextAreaElement>('textarea[data-reply-input]');
+    const replySubmit = () => replyForm()!.querySelector<HTMLButtonElement>('.ask-submit');
+    const replyCancel = () => replyForm()!.querySelector<HTMLButtonElement>('.reply-cancel');
+    const notice = () => el.querySelector('.reply-notice');
+    const liveMessage = () => el.querySelector('[aria-live="polite"]')?.textContent ?? '';
+    const itemFor = (id: string) =>
+      el.querySelector<HTMLElement>(`.question-item[data-question-id="${id}"]`)!;
+
+    const answered = (n: number, answer = 'It fits well.') =>
+      question(n, { answer, answered_at: '2026-11-04T10:00:00Z' });
+
+    const saved = (id: string, answer: string, extra: Record<string, unknown> = {}) => ({
+      data: {
+        id,
+        answer,
+        answered_at: '2026-11-04T10:00:00Z',
+        answer_updated_at: null,
+        ...extra,
+      },
+      error: null,
+    });
+
+    // The seller of the listing, with q3 and q1 unanswered and q2 answered.
+    const createAsSeller = async (
+      questions: ListingQuestion[] = [question(3), answered(2), question(1)],
+      total = questions.length,
+    ) => {
+      service.getQuestions.mockResolvedValue(page(questions, total));
+      signIn('seller-1');
+      await create('listing-1', 'published', 'seller-1');
+    };
+
+    const openReply = async (id: string) => {
+      replyButton(id)!.click();
+      await settle();
+    };
+
+    const typeReply = async (text: string) => {
+      const field = replyInput()!;
+
+      field.value = text;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    const submitReply = () => replyForm()!.dispatchEvent(new Event('submit', { cancelable: true }));
+
+    beforeEach(() => {
+      service.answerQuestion.mockImplementation((id: string, answer: string) =>
+        Promise.resolve(saved(id, answer)),
+      );
+    });
+
+    describe('who sees the reply buttons', () => {
+      it('shows REPLY on unanswered questions and EDIT REPLY on answered ones', async () => {
+        await createAsSeller();
+
+        expect(replyButtons().length).toBe(3);
+        expect(replyButton('q3')!.textContent).toContain('REPLY');
+        expect(replyButton('q3')!.textContent).not.toContain('EDIT');
+        expect(replyButton('q2')!.textContent).toContain('EDIT REPLY');
+        expect(replyButton('q1')!.textContent).toContain('REPLY');
+        expect(replyButton('q1')!.textContent).not.toContain('EDIT');
+      });
+
+      it('puts each button to the right of its question, in the same row', async () => {
+        await createAsSeller();
+
+        const row = itemFor('q3').querySelector('.question-row')!;
+        const main = row.querySelector('.question-main')!;
+
+        expect(main.textContent).toContain('Question 3');
+        expect(row.contains(replyButton('q3'))).toBe(true);
+        expect(
+          main.compareDocumentPosition(replyButton('q3')!) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        // The seller's answer is below the row, not inside it.
+        expect(row.querySelector('.question-answer')).toBeNull();
+      });
+
+      it('gives REPLY and EDIT REPLY their own look', async () => {
+        await createAsSeller();
+
+        expect(replyButton('q3')!.classList.contains('reply-button')).toBe(true);
+        expect(replyButton('q3')!.classList.contains('is-edit')).toBe(false);
+        expect(replyButton('q2')!.classList.contains('is-edit')).toBe(true);
+      });
+
+      it('shows nothing to a visitor who is not signed in', async () => {
+        service.getQuestions.mockResolvedValue(page([question(3), answered(2)], 2));
+
+        await create('listing-1', 'published', 'seller-1');
+
+        expect(replyButtons().length).toBe(0);
+        expect(items().length).toBe(2);
+      });
+
+      it('shows nothing to a signed-in buyer', async () => {
+        service.getQuestions.mockResolvedValue(page([question(3), answered(2)], 2));
+        signIn('buyer-1');
+
+        await create('listing-1', 'published', 'seller-1');
+
+        expect(replyButtons().length).toBe(0);
+      });
+
+      it("shows nothing to a seller on someone else's listing", async () => {
+        service.getQuestions.mockResolvedValue(page([question(3)], 1));
+        signIn('another-seller');
+
+        await create('listing-1', 'published', 'seller-1');
+
+        expect(replyButtons().length).toBe(0);
+      });
+
+      it('shows nothing, even to the owner, once the listing is sold', async () => {
+        service.getQuestions.mockResolvedValue(page([question(3), answered(2)], 2));
+        signIn('seller-1');
+
+        await create('listing-1', 'sold', 'seller-1');
+
+        expect(items().length).toBe(2);
+        expect(replyButtons().length).toBe(0);
+      });
+
+      it('does not show the buttons before it is known who is signed in', async () => {
+        const session = deferred<{ data: { session: { user: { id: string } } } }>();
+        service.getQuestions.mockResolvedValue(page([question(3)], 1));
+        isLoggedIn.set(true);
+        auth.getSession.mockReturnValue(session.promise);
+
+        await create('listing-1', 'published', 'seller-1');
+        expect(replyButtons().length).toBe(0);
+
+        session.resolve({ data: { session: { user: { id: 'seller-1' } } } });
+        await settle();
+
+        expect(replyButtons().length).toBe(1);
+      });
+
+      it('does not give the seller the buyer question form', async () => {
+        await createAsSeller();
+
+        expect(el.querySelector('.ask-toggle')).toBeNull();
+      });
+
+      it('names the question in the accessible label, after the visible words', async () => {
+        await createAsSeller([
+          question(3, { question: 'Is it true to size?' }),
+          answered(2),
+          question(1, { question: 'x'.repeat(80) }),
+        ]);
+
+        expect(replyButton('q3')!.getAttribute('aria-label')).toBe(
+          'Reply to the question: Is it true to size?',
+        );
+        expect(replyButton('q2')!.getAttribute('aria-label')).toBe(
+          'Edit reply to the question: Question 2',
+        );
+        expect(replyButton('q1')!.getAttribute('aria-label')).toBe(
+          `Reply to the question: ${'x'.repeat(60)}…`,
+        );
+        // The visible text is part of the accessible name.
+        expect(replyButton('q3')!.getAttribute('aria-label')!.toLowerCase()).toContain('reply');
+        expect(replyButton('q2')!.getAttribute('aria-label')!.toLowerCase()).toContain(
+          'edit reply',
+        );
+      });
+
+      it('uses real buttons that do not submit anything', async () => {
+        await createAsSeller();
+
+        for (const button of replyButtons()) {
+          expect(button.tagName).toBe('BUTTON');
+          expect(button.getAttribute('type')).toBe('button');
+        }
+      });
+    });
+
+    describe('the reply form', () => {
+      it('opens directly below the question it belongs to', async () => {
+        await createAsSeller();
+
+        await openReply('q3');
+
+        const form = replyForm()!;
+
+        expect(replyForms().length).toBe(1);
+        expect(itemFor('q3').contains(form)).toBe(true);
+        expect(
+          itemFor('q3').querySelector('.question-row')!.compareDocumentPosition(form) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        expect(itemFor('q1').querySelector('form')).toBeNull();
+      });
+
+      it('is empty for a new reply, with SUBMIT REPLY and CANCEL', async () => {
+        await createAsSeller();
+
+        await openReply('q3');
+
+        expect(replyInput()!.value).toBe('');
+        expect(replySubmit()!.textContent).toContain('SUBMIT REPLY');
+        expect(replySubmit()!.getAttribute('type')).toBe('submit');
+        expect(replyCancel()!.textContent).toContain('CANCEL');
+        expect(replyCancel()!.getAttribute('type')).toBe('button');
+        expect(replyForm()!.querySelector('.ask-counter')!.textContent).toContain('0 / 500');
+      });
+
+      it('moves focus to the reply field', async () => {
+        await createAsSeller();
+
+        await openReply('q3');
+
+        expect(document.activeElement).toBe(replyInput());
+      });
+
+      it('is filled with the current reply when editing, with SAVE CHANGES', async () => {
+        await createAsSeller();
+
+        await openReply('q2');
+
+        expect(replyInput()!.value).toBe('It fits well.');
+        expect(replySubmit()!.textContent).toContain('SAVE CHANGES');
+        expect(replyForm()!.querySelector('.ask-counter')!.textContent).toContain('13 / 500');
+        expect(document.activeElement).toBe(replyInput());
+      });
+
+      it('replaces the shown reply while it is being edited', async () => {
+        await createAsSeller();
+        expect(itemFor('q2').querySelector('.question-answer')).not.toBeNull();
+
+        await openReply('q2');
+
+        expect(itemFor('q2').querySelector('.question-answer')).toBeNull();
+        expect(itemFor('q2').querySelector('.question-text')!.textContent).toContain('Question 2');
+      });
+
+      it('counts the characters as the seller types', async () => {
+        await createAsSeller();
+        await openReply('q3');
+
+        await typeReply('Yes, it is.');
+
+        expect(replyForm()!.querySelector('.ask-counter')!.textContent).toContain('11 / 500');
+      });
+
+      it('has a label, a hint and a counter tied to the field', async () => {
+        await createAsSeller();
+        await openReply('q3');
+
+        const label = replyForm()!.querySelector('label')!;
+
+        expect(label.getAttribute('for')).toBe(replyInput()!.id);
+        expect(label.textContent).toContain('YOUR REPLY');
+
+        const described = replyInput()!.getAttribute('aria-describedby')!.split(' ');
+
+        expect(described.length).toBe(2);
+
+        for (const id of described) {
+          expect(replyForm()!.querySelector(`#${id}`)).not.toBeNull();
+        }
+
+        expect(replyForm()!.textContent).toContain('Your reply is public.');
+      });
+
+      it('tells screen readers which button opened it', async () => {
+        await createAsSeller();
+
+        await openReply('q3');
+
+        expect(replyButton('q3')!.getAttribute('aria-expanded')).toBe('true');
+        expect(replyButton('q3')!.getAttribute('aria-controls')).toBe(replyForm()!.id);
+        expect(replyButton('q1')!.getAttribute('aria-expanded')).toBe('false');
+      });
+
+      it('allows only one reply form at a time', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('A half written reply');
+
+        await openReply('q1');
+
+        expect(replyForms().length).toBe(1);
+        expect(itemFor('q3').querySelector('form')).toBeNull();
+        expect(itemFor('q1').querySelector('form')).not.toBeNull();
+        // The other draft is not carried over.
+        expect(replyInput()!.value).toBe('');
+        expect(replyButton('q3')!.getAttribute('aria-expanded')).toBe('false');
+      });
+
+      it('can open an edit form after a reply form, with the right text', async () => {
+        await createAsSeller();
+        await openReply('q3');
+
+        await openReply('q2');
+
+        expect(replyForms().length).toBe(1);
+        expect(replyInput()!.value).toBe('It fits well.');
+      });
+
+      it('closes when the same button is pressed again', async () => {
+        await createAsSeller();
+        await openReply('q3');
+
+        await openReply('q3');
+
+        expect(replyForm()).toBeNull();
+        expect(document.activeElement).toBe(replyButton('q3'));
+      });
+    });
+
+    describe('cancelling', () => {
+      it('closes the form, throws the text away and returns focus to the button', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Never mind');
+
+        replyCancel()!.click();
+        await settle();
+
+        expect(replyForm()).toBeNull();
+        expect(document.activeElement).toBe(replyButton('q3'));
+        expect(service.answerQuestion).not.toHaveBeenCalled();
+
+        await openReply('q3');
+
+        expect(replyInput()!.value).toBe('');
+      });
+
+      it('leaves the saved reply untouched when an edit is cancelled', async () => {
+        await createAsSeller();
+        await openReply('q2');
+        await typeReply('Something else entirely');
+
+        replyCancel()!.click();
+        await settle();
+
+        expect(itemFor('q2').querySelector('.answer-text')!.textContent).toBe('It fits well.');
+        expect(document.activeElement).toBe(replyButton('q2'));
+
+        await openReply('q2');
+
+        expect(replyInput()!.value).toBe('It fits well.');
+      });
+
+      it('clears an error message', async () => {
+        service.answerQuestion.mockResolvedValue({ data: null, error: { message: 'boom' } });
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('A reply');
+        submitReply();
+        await settle();
+        expect(replyForm()!.querySelector('[role="alert"]')).not.toBeNull();
+
+        replyCancel()!.click();
+        await settle();
+        await openReply('q3');
+
+        expect(replyForm()!.querySelector('[role="alert"]')).toBeNull();
+      });
+    });
+
+    describe('validation', () => {
+      it('does not save an empty reply, and explains why', async () => {
+        await createAsSeller();
+        await openReply('q3');
+
+        submitReply();
+        await settle();
+
+        expect(service.answerQuestion).not.toHaveBeenCalled();
+        expect(replyForm()!.querySelector('[role="alert"]')!.textContent).toContain(
+          'Write your reply',
+        );
+        expect(replyInput()!.getAttribute('aria-invalid')).toBe('true');
+        expect(document.activeElement).toBe(replyInput());
+        expect(replyInput()!.getAttribute('aria-describedby')).toContain('reply-error-');
+      });
+
+      it('does not save a reply made of spaces and line breaks', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('   \n  ');
+
+        submitReply();
+        await settle();
+
+        expect(service.answerQuestion).not.toHaveBeenCalled();
+        expect(replyForm()!.querySelector('[role="alert"]')).not.toBeNull();
+      });
+
+      it('does not save a reply that has been emptied while editing', async () => {
+        await createAsSeller();
+        await openReply('q2');
+        await typeReply('');
+
+        submitReply();
+        await settle();
+
+        expect(service.answerQuestion).not.toHaveBeenCalled();
+        expect(itemFor('q2').querySelector('form')).not.toBeNull();
+      });
+
+      it('shows no error on a fresh form', async () => {
+        await createAsSeller();
+
+        await openReply('q3');
+
+        expect(replyForm()!.querySelector('[role="alert"]')).toBeNull();
+        expect(replyInput()!.getAttribute('aria-invalid')).toBeNull();
+      });
+
+      it('does not save more than 500 characters, and says so', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('x'.repeat(501));
+
+        expect(replyForm()!.querySelector('.ask-counter')!.classList.contains('is-over')).toBe(
+          true,
+        );
+
+        submitReply();
+        await settle();
+
+        expect(service.answerQuestion).not.toHaveBeenCalled();
+        expect(replyForm()!.querySelector('[role="alert"]')!.textContent).toContain('at most 500');
+      });
+
+      it('accepts exactly 500 characters', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('x'.repeat(500));
+
+        submitReply();
+        await settle();
+
+        expect(service.answerQuestion).toHaveBeenCalledWith('q3', 'x'.repeat(500));
+      });
+    });
+
+    describe('saving a reply', () => {
+      it('sends the trimmed reply for that question through the service', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('  Yes, it fits.  ');
+
+        submitReply();
+        await settle();
+
+        expect(service.answerQuestion).toHaveBeenCalledTimes(1);
+        expect(service.answerQuestion).toHaveBeenCalledWith('q3', 'Yes, it fits.');
+      });
+
+      it('disables saving while the reply is being saved', async () => {
+        const pending = deferred<ReturnType<typeof saved>>();
+        service.answerQuestion.mockReturnValue(pending.promise);
+
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+
+        submitReply();
+        fixture.detectChanges();
+
+        expect(replySubmit()!.getAttribute('aria-disabled')).toBe('true');
+        expect(replySubmit()!.getAttribute('aria-busy')).toBe('true');
+        expect(replySubmit()!.textContent).toContain('SAVING');
+        expect(replyCancel()!.getAttribute('aria-disabled')).toBe('true');
+
+        pending.resolve(saved('q3', 'Yes, it fits.'));
+        await settle();
+      });
+
+      it('prevents duplicate requests', async () => {
+        const pending = deferred<ReturnType<typeof saved>>();
+        service.answerQuestion.mockReturnValue(pending.promise);
+
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+
+        submitReply();
+        submitReply();
+        replySubmit()!.click();
+        fixture.detectChanges();
+        submitReply();
+
+        expect(service.answerQuestion).toHaveBeenCalledTimes(1);
+
+        // The same through the component itself, whatever the browser does with events.
+        void fixture.componentInstance.submitReply(new Event('submit'));
+        void fixture.componentInstance.submitReply(new Event('submit'));
+
+        expect(service.answerQuestion).toHaveBeenCalledTimes(1);
+
+        pending.resolve(saved('q3', 'Yes, it fits.'));
+        await settle();
+
+        expect(service.answerQuestion).toHaveBeenCalledTimes(1);
+      });
+
+      it('keeps the form open while saving, even if CANCEL or another REPLY is pressed', async () => {
+        const pending = deferred<ReturnType<typeof saved>>();
+        service.answerQuestion.mockReturnValue(pending.promise);
+
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+        submitReply();
+        fixture.detectChanges();
+
+        replyCancel()!.click();
+        replyButton('q1')!.click();
+        fixture.detectChanges();
+
+        expect(replyForms().length).toBe(1);
+        expect(itemFor('q3').querySelector('form')).not.toBeNull();
+
+        pending.resolve(saved('q3', 'Yes, it fits.'));
+        await settle();
+
+        expect(replyForm()).toBeNull();
+      });
+
+      it('shows a new reply at once, without reloading the list or opening a popup', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+
+        submitReply();
+        await settle();
+
+        expect(replyForm()).toBeNull();
+        expect(itemFor('q3').querySelector('.answer-text')!.textContent).toBe('Yes, it fits.');
+        expect(itemFor('q3').querySelector('.answer-meta')!.textContent).toContain(
+          'ANSWER FROM THE SELLER',
+        );
+        expect(itemFor('q3').querySelector('.answer-meta')!.textContent).toContain('4 Nov 2026');
+        // A first reply is not "edited".
+        expect(itemFor('q3').querySelector('.answer-edited')).toBeNull();
+        // No page refresh and no popup.
+        expect(service.getQuestions).toHaveBeenCalledTimes(1);
+        expect(el.querySelector('.success-dialog')).toBeNull();
+        expect(el.querySelector('.success-overlay')).toBeNull();
+      });
+
+      it('turns REPLY into EDIT REPLY once the reply is saved', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+
+        submitReply();
+        await settle();
+
+        expect(replyButton('q3')!.textContent).toContain('EDIT REPLY');
+        expect(replyButton('q3')!.classList.contains('is-edit')).toBe(true);
+      });
+
+      it('confirms a new reply inline with "Reply posted"', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+
+        submitReply();
+        await settle();
+
+        expect(itemFor('q3').querySelector('.reply-notice')!.textContent).toContain('Reply posted');
+        // Only under the question that was answered.
+        expect(itemFor('q1').querySelector('.reply-notice')).toBeNull();
+        expect(liveMessage()).toContain('Reply posted.');
+      });
+
+      it('keeps keyboard focus on the question after saving', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+
+        submitReply();
+        await settle();
+
+        expect(document.activeElement).toBe(itemFor('q3'));
+      });
+
+      it('updates an edited reply, keeping the original date and showing "Edited"', async () => {
+        service.answerQuestion.mockResolvedValue(
+          saved('q2', 'It runs a little small.', {
+            answer_updated_at: '2026-11-09T10:00:00Z',
+          }),
+        );
+        await createAsSeller();
+        expect(itemFor('q2').querySelector('.answer-edited')).toBeNull();
+
+        await openReply('q2');
+        await typeReply('It runs a little small.');
+        submitReply();
+        await settle();
+
+        expect(service.answerQuestion).toHaveBeenCalledWith('q2', 'It runs a little small.');
+        expect(itemFor('q2').querySelector('.answer-text')!.textContent).toBe(
+          'It runs a little small.',
+        );
+        // The date of the first reply, as returned by the database.
+        expect(itemFor('q2').querySelector('.answer-meta')!.textContent).toContain('4 Nov 2026');
+        expect(itemFor('q2').querySelector('.answer-edited')!.textContent).toContain('Edited');
+      });
+
+      it('confirms an edit inline with "Reply updated"', async () => {
+        service.answerQuestion.mockResolvedValue(
+          saved('q2', 'Changed.', { answer_updated_at: '2026-11-09T10:00:00Z' }),
+        );
+        await createAsSeller();
+        await openReply('q2');
+        await typeReply('Changed.');
+
+        submitReply();
+        await settle();
+
+        expect(itemFor('q2').querySelector('.reply-notice')!.textContent).toContain(
+          'Reply updated',
+        );
+        expect(liveMessage()).toContain('Reply updated.');
+        expect(el.querySelector('.success-dialog')).toBeNull();
+      });
+
+      it('shows "Edited" only when the database reports a change', async () => {
+        // Saving the same text again: the database keeps answer_updated_at empty.
+        service.answerQuestion.mockResolvedValue(saved('q2', 'It fits well.'));
+        await createAsSeller();
+        await openReply('q2');
+
+        submitReply();
+        await settle();
+
+        expect(itemFor('q2').querySelector('.answer-edited')).toBeNull();
+      });
+
+      it('keeps "Edited" on a reply that was changed earlier and is saved again', async () => {
+        const edited = question(2, {
+          answer: 'Earlier edit.',
+          answered_at: '2026-11-04T10:00:00Z',
+          answer_updated_at: '2026-11-05T10:00:00Z',
+        });
+        service.answerQuestion.mockResolvedValue(
+          saved('q2', 'Earlier edit.', { answer_updated_at: '2026-11-05T10:00:00Z' }),
+        );
+        await createAsSeller([question(3), edited]);
+        expect(itemFor('q2').querySelector('.answer-edited')).not.toBeNull();
+
+        await openReply('q2');
+        submitReply();
+        await settle();
+
+        expect(itemFor('q2').querySelector('.answer-edited')).not.toBeNull();
+      });
+
+      it('leaves every other question as it was', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+
+        submitReply();
+        await settle();
+
+        expect(items().map((item) => item.getAttribute('data-question-id'))).toEqual([
+          'q3',
+          'q2',
+          'q1',
+        ]);
+        expect(itemFor('q2').querySelector('.answer-text')!.textContent).toBe('It fits well.');
+        expect(itemFor('q1').querySelector('.question-answer')).toBeNull();
+      });
+
+      it('replaces the confirmation when another reply is opened', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+        submitReply();
+        await settle();
+        expect(notice()).not.toBeNull();
+
+        await openReply('q1');
+
+        expect(notice()).toBeNull();
+      });
+
+      it('lets the seller edit a reply they just posted', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('First version.');
+        submitReply();
+        await settle();
+
+        await openReply('q3');
+
+        expect(replyInput()!.value).toBe('First version.');
+        expect(replySubmit()!.textContent).toContain('SAVE CHANGES');
+      });
+    });
+
+    describe('when saving fails', () => {
+      const failWith = async (error: { message: string; code?: string }) => {
+        service.answerQuestion.mockResolvedValue({ data: null, error });
+
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+        submitReply();
+        await settle();
+      };
+
+      const alertText = () =>
+        Array.from(replyForm()!.querySelectorAll('[role="alert"]'))
+          .map((node) => node.textContent)
+          .join(' ');
+
+      it.each([
+        ['not_answerable', 'cannot reply to this question'],
+        ['listing_not_open', 'not open for replies'],
+        ['not_authenticated', 'log in'],
+        ['invalid_length', 'between 1 and 500'],
+        ['invalid_text', 'not allowed'],
+      ])('explains %s in plain words', async (key, text) => {
+        await failWith({ message: key });
+
+        expect(alertText()).toContain(text);
+        // No raw error key is shown to the seller.
+        expect(el.textContent).not.toContain(key);
+      });
+
+      it('asks the seller to log in when the request was not signed in', async () => {
+        await failWith({
+          message: 'permission denied for function answer_listing_question',
+          code: '42501',
+        });
+
+        expect(alertText()).toContain('log in');
+      });
+
+      it('shows a general message for anything unexpected', async () => {
+        await failWith({ message: 'something odd happened' });
+
+        expect(alertText()).toContain('Could not save your reply. Please try again.');
+        expect(alertText()).not.toContain('something odd happened');
+      });
+
+      it('announces the error to screen readers', async () => {
+        await failWith({ message: 'listing_not_open' });
+
+        expect(replyForm()!.querySelector('[role="alert"]')).not.toBeNull();
+      });
+
+      it('keeps the form open with everything the seller wrote', async () => {
+        await failWith({ message: 'listing_not_open' });
+
+        expect(replyForm()).not.toBeNull();
+        expect(replyInput()!.value).toBe('Yes, it fits.');
+        expect(replySubmit()!.getAttribute('aria-disabled')).toBeNull();
+        expect(replySubmit()!.textContent).toContain('SUBMIT REPLY');
+      });
+
+      it('keeps what the seller wrote when editing, and the old reply stays saved', async () => {
+        service.answerQuestion.mockResolvedValue({
+          data: null,
+          error: { message: 'not_answerable' },
+        });
+        await createAsSeller();
+        await openReply('q2');
+        await typeReply('A better reply');
+
+        submitReply();
+        await settle();
+
+        expect(replyInput()!.value).toBe('A better reply');
+
+        replyCancel()!.click();
+        await settle();
+
+        // Nothing was saved, so the old reply is still what visitors see.
+        expect(itemFor('q2').querySelector('.answer-text')!.textContent).toBe('It fits well.');
+      });
+
+      it('shows no confirmation, and changes nothing on screen', async () => {
+        await failWith({ message: 'listing_not_open' });
+
+        expect(notice()).toBeNull();
+        expect(itemFor('q3').querySelector('.question-answer')).toBeNull();
+        expect(replyButton('q3')!.textContent).not.toContain('EDIT');
+      });
+
+      it('lets the seller try again', async () => {
+        await failWith({ message: 'listing_not_open' });
+
+        service.answerQuestion.mockResolvedValue(saved('q3', 'Yes, it fits.'));
+        submitReply();
+        await settle();
+
+        expect(service.answerQuestion).toHaveBeenCalledTimes(2);
+        expect(replyForm()).toBeNull();
+        expect(itemFor('q3').querySelector('.answer-text')!.textContent).toBe('Yes, it fits.');
+      });
+    });
+
+    describe('when things change around an open form', () => {
+      it('closes the form when the question is collapsed by SHOW LESS', async () => {
+        const first = [question(9), question(8), question(7)];
+        const second = [question(6), question(5), question(4), question(3), question(2)];
+
+        service.getQuestions.mockResolvedValueOnce(page(first, 9));
+        signIn('seller-1');
+        await create('listing-1', 'published', 'seller-1');
+
+        service.getQuestions.mockResolvedValueOnce(page(second, 9));
+        showMoreButton()!.click();
+        await settle();
+
+        await openReply('q4');
+        expect(replyForm()).not.toBeNull();
+
+        el.querySelector<HTMLButtonElement>('.show-less')!.click();
+        await settle();
+
+        expect(replyForm()).toBeNull();
+        expect(items().length).toBe(3);
+      });
+
+      it('keeps the form open when SHOW LESS does not hide its question', async () => {
+        const first = [question(9), question(8), question(7)];
+        const second = [question(6), question(5), question(4), question(3), question(2)];
+
+        service.getQuestions.mockResolvedValueOnce(page(first, 9));
+        signIn('seller-1');
+        await create('listing-1', 'published', 'seller-1');
+
+        service.getQuestions.mockResolvedValueOnce(page(second, 9));
+        showMoreButton()!.click();
+        await settle();
+
+        await openReply('q9');
+        el.querySelector<HTMLButtonElement>('.show-less')!.click();
+        await settle();
+
+        expect(replyForm()).not.toBeNull();
+      });
+
+      it('closes the form when the seller signs out', async () => {
+        await createAsSeller();
+        await openReply('q3');
+        expect(replyForm()).not.toBeNull();
+
+        signOut();
+        await settle();
+
+        expect(replyForm()).toBeNull();
+        expect(replyButtons().length).toBe(0);
+      });
+
+      it('starts again when the listing changes, and ignores a late result', async () => {
+        const pending = deferred<ReturnType<typeof saved>>();
+        service.answerQuestion.mockReturnValue(pending.promise);
+        await createAsSeller();
+        await openReply('q3');
+        await typeReply('Yes, it fits.');
+        submitReply();
+
+        service.getQuestions.mockResolvedValue(page([question(30, { question: 'Other' })], 1));
+        fixture.componentRef.setInput('listingId', 'listing-2');
+        fixture.detectChanges();
+        await settle();
+
+        expect(replyForm()).toBeNull();
+        expect(notice()).toBeNull();
+
+        pending.resolve(saved('q3', 'Yes, it fits.'));
+        await settle();
+
+        expect(notice()).toBeNull();
+        expect(items().length).toBe(1);
+        expect(items()[0].textContent).toContain('Other');
+        expect(el.textContent).not.toContain('Yes, it fits.');
+      });
+    });
+
+    describe('what stays the same', () => {
+      it('still shows the questions, answers and pagination to the seller', async () => {
+        await createAsSeller([question(9), answered(8, 'An answer.'), question(7)], 9);
+
+        expect(items().length).toBe(3);
+        expect(itemFor('q8').querySelector('.answer-text')!.textContent).toBe('An answer.');
+        expect(showMoreButton()).not.toBeNull();
+        expect(itemFor('q9').querySelector('.question-meta')!.textContent).toContain(
+          'MEGURU MEMBER',
+        );
+      });
+
+      it('still shows no reply buttons, only the read-only list, to a buyer', async () => {
+        service.getQuestions.mockResolvedValue(page([question(3), answered(2)], 2));
+        signIn('buyer-1');
+
+        await create('listing-1', 'published', 'seller-1');
+
+        expect(items().length).toBe(2);
+        expect(replyButtons().length).toBe(0);
+        expect(el.querySelector('.ask-toggle')).not.toBeNull();
+      });
     });
   });
 

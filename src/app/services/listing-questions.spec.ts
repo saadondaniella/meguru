@@ -205,4 +205,113 @@ describe('ListingQuestionsService', () => {
       expect(Object.keys(supabase)).toEqual(['rpc']);
     });
   });
+
+  describe('answerQuestion', () => {
+    const savedRow = {
+      id: 'q1',
+      answer: 'Yes, it fits.',
+      answered_at: '2026-11-04T10:00:00Z',
+      answer_updated_at: null,
+    };
+
+    it('calls the answer_listing_question function with the question and the reply', async () => {
+      rpc.mockResolvedValue({ data: [savedRow], error: null });
+
+      await service.answerQuestion('q1', 'Yes, it fits.');
+
+      expect(rpc).toHaveBeenCalledTimes(1);
+      expect(rpc).toHaveBeenCalledWith('answer_listing_question', {
+        p_question_id: 'q1',
+        p_answer: 'Yes, it fits.',
+      });
+    });
+
+    it('returns the saved reply with the timestamps from the database', async () => {
+      rpc.mockResolvedValue({
+        data: [{ ...savedRow, answer_updated_at: '2026-11-09T10:00:00Z' }],
+        error: null,
+      });
+
+      const { data, error } = await service.answerQuestion('q1', 'Yes, it fits.');
+
+      expect(error).toBeNull();
+      expect(data).toEqual({
+        id: 'q1',
+        answer: 'Yes, it fits.',
+        answered_at: '2026-11-04T10:00:00Z',
+        answer_updated_at: '2026-11-09T10:00:00Z',
+      });
+    });
+
+    it('returns no edit timestamp for a first reply', async () => {
+      rpc.mockResolvedValue({ data: [savedRow], error: null });
+
+      const { data } = await service.answerQuestion('q1', 'Yes, it fits.');
+
+      expect(data?.answer_updated_at).toBeNull();
+    });
+
+    it('treats a missing edit timestamp as empty', async () => {
+      const { answer_updated_at: omitted, ...withoutTimestamp } = savedRow;
+      void omitted;
+      rpc.mockResolvedValue({ data: [withoutTimestamp], error: null });
+
+      const { data } = await service.answerQuestion('q1', 'Yes, it fits.');
+
+      expect(data?.answer_updated_at).toBeNull();
+    });
+
+    it('also accepts a single row instead of a list', async () => {
+      rpc.mockResolvedValue({ data: savedRow, error: null });
+
+      const { data } = await service.answerQuestion('q1', 'Yes, it fits.');
+
+      expect(data?.answer).toBe('Yes, it fits.');
+    });
+
+    it('passes on only the reply fields', async () => {
+      rpc.mockResolvedValue({ data: [{ ...savedRow, asker_id: 'user-1' }], error: null });
+
+      const { data } = await service.answerQuestion('q1', 'Yes, it fits.');
+
+      expect(data).not.toHaveProperty('asker_id');
+    });
+
+    it('returns the error when the database refuses the reply', async () => {
+      const refusal = { message: 'listing_not_open', code: 'P0002' };
+      rpc.mockResolvedValue({ data: null, error: refusal });
+
+      const result = await service.answerQuestion('q1', 'Yes, it fits.');
+
+      expect(result.data).toBeNull();
+      expect(result.error).toBe(refusal);
+    });
+
+    it('reports an error when nothing comes back', async () => {
+      rpc.mockResolvedValue({ data: [], error: null });
+
+      const result = await service.answerQuestion('q1', 'Yes, it fits.');
+
+      expect(result.data).toBeNull();
+      expect(result.error).not.toBeNull();
+    });
+
+    it('turns a thrown error into an error result', async () => {
+      rpc.mockRejectedValue(new Error('network down'));
+
+      const result = await service.answerQuestion('q1', 'Yes, it fits.');
+
+      expect(result.data).toBeNull();
+      expect(result.error).toEqual({ message: 'network down' });
+    });
+
+    it('goes through the RPC only: the fake client has no table access', async () => {
+      rpc.mockResolvedValue({ data: [savedRow], error: null });
+
+      const { error } = await service.answerQuestion('q1', 'Yes, it fits.');
+
+      expect(error).toBeNull();
+      expect(Object.keys(supabase)).toEqual(['rpc']);
+    });
+  });
 });

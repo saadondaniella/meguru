@@ -1,6 +1,10 @@
 @if (isVisible()) {
   <section class="listing-questions" id="questions" aria-labelledby="listing-questions-title">
     <h2 id="listing-questions-title">ASK THE SELLER</h2>
+    <p class="questions-intro">
+      Curious about an item? Ask the seller anything related to the piece. Keep your questions
+      clear, relevant and respectful. Questions and answers are public.
+    </p>
 
     @if (isSold()) {
       <p class="questions-note">This listing is sold, so new questions are closed.</p>
@@ -97,15 +101,105 @@
       <ul class="question-list">
         @for (item of visibleQuestions(); track item.id) {
           <li class="question-item" [attr.data-question-id]="item.id" tabindex="-1">
-            <p class="question-meta">
-              <span>MEGURU MEMBER</span>
-              <span aria-hidden="true">·</span>
-              <time [attr.datetime]="item.created_at">{{ formatDate(item.created_at) }}</time>
-            </p>
+            <div class="question-row">
+              <div class="question-main">
+                <p class="question-meta">
+                  <span>MEGURU MEMBER</span>
+                  <span aria-hidden="true">·</span>
+                  <time [attr.datetime]="item.created_at">{{ formatDate(item.created_at) }}</time>
+                </p>
 
-            <p class="question-text">{{ item.question }}</p>
+                <p class="question-text">{{ item.question }}</p>
+              </div>
 
-            @if (item.answer) {
+              <!-- REPLY (the seller of a published listing only) -->
+              @if (canReply()) {
+                <button
+                  type="button"
+                  class="reply-button"
+                  [class.is-edit]="!!item.answer"
+                  [attr.data-reply-button]="item.id"
+                  [attr.aria-label]="replyLabel(item)"
+                  [attr.aria-expanded]="isReplying(item.id)"
+                  [attr.aria-controls]="isReplying(item.id) ? 'reply-form-' + item.id : null"
+                  [attr.aria-disabled]="isSavingReply() ? 'true' : null"
+                  (click)="openReply(item)"
+                >
+                  {{ item.answer ? 'EDIT REPLY' : 'REPLY' }}
+                </button>
+              }
+            </div>
+
+            @if (isReplying(item.id)) {
+              <form
+                class="reply-form"
+                novalidate
+                [attr.id]="'reply-form-' + item.id"
+                (submit)="submitReply($event)"
+              >
+                <label class="ask-label" [attr.for]="'reply-input-' + item.id">YOUR REPLY</label>
+
+                <textarea
+                  class="ask-input"
+                  rows="4"
+                  [attr.id]="'reply-input-' + item.id"
+                  [attr.data-reply-input]="item.id"
+                  [formField]="replyForm.reply"
+                  [attr.aria-invalid]="replyFieldError() ? 'true' : null"
+                  [attr.aria-describedby]="
+                    'reply-hint-' +
+                    item.id +
+                    ' reply-counter-' +
+                    item.id +
+                    (replyFieldError() ? ' reply-error-' + item.id : '')
+                  "
+                ></textarea>
+
+                <div class="ask-meta">
+                  <p class="ask-hint" [attr.id]="'reply-hint-' + item.id">Your reply is public.</p>
+                  <p
+                    class="ask-counter"
+                    [attr.id]="'reply-counter-' + item.id"
+                    [class.is-over]="replyLength() > maxAnswerLength"
+                  >
+                    {{ replyLength() }} / {{ maxAnswerLength }}
+                    <span class="visually-hidden"> characters</span>
+                  </p>
+                </div>
+
+                @if (replyFieldError()) {
+                  <p class="questions-error" role="alert" [attr.id]="'reply-error-' + item.id">
+                    {{ replyFieldError() }}
+                  </p>
+                }
+
+                @if (replyError()) {
+                  <p class="questions-error" role="alert">{{ replyError() }}</p>
+                }
+
+                <div class="ask-actions">
+                  <button
+                    type="submit"
+                    class="questions-button ask-submit"
+                    [attr.aria-disabled]="isSavingReply() ? 'true' : null"
+                    [attr.aria-busy]="isSavingReply() ? 'true' : null"
+                  >
+                    {{
+                      isSavingReply() ? 'SAVING…' : item.answer ? 'SAVE CHANGES' : 'SUBMIT REPLY'
+                    }}
+                  </button>
+
+                  <button
+                    type="button"
+                    class="questions-button reply-cancel"
+                    [attr.aria-disabled]="isSavingReply() ? 'true' : null"
+                    (click)="cancelReply()"
+                  >
+                    CANCEL
+                  </button>
+                </div>
+              </form>
+            } @else if (item.answer) {
               <div class="question-answer">
                 <p class="answer-meta">
                   <span>ANSWER FROM THE SELLER</span>
@@ -123,6 +217,13 @@
 
                 <p class="answer-text">{{ item.answer }}</p>
               </div>
+            }
+
+            <!-- Visible confirmation. Screen readers hear it from the live region below. -->
+            @if (replyNotice(); as notice) {
+              @if (notice.id === item.id) {
+                <p class="reply-notice" aria-hidden="true">{{ notice.text }}</p>
+              }
             }
           </li>
         }
