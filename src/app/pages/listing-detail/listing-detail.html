@@ -150,6 +150,11 @@
       </div>
     </div>
 
+    <!-- ASK THE SELLER -->
+    @if (listing.status !== 'draft') {
+      <app-listing-questions [listingId]="listing.id" [status]="listing.status" />
+    }
+
     <!-- RELATED PRODUCTS -->
     @if (relatedListings().length > 0) {
       <section class="recommendations">

@@ -7,6 +7,7 @@ import { Listing, LISTING_COLOR_LABELS, LISTING_CONDITION_LABELS } from '../../m
 import { Profile } from '../../services/profile';
 import { FavouriteButton } from '../../components/favourite-button/favourite-button';
 import { ListingCard } from '../../components/listing-card/listing-card';
+import { ListingQuestions } from '../../components/listing-questions/listing-questions';
 import { ShareButton } from '../../components/share-button/share-button';
 
 const SHARE_META_NAMES = [
@@ -23,7 +24,7 @@ const SHARE_META_NAMES = [
 const META_ATTRIBUTE = (tag: string) => (tag.startsWith('og:') ? 'property' : 'name');
 
 @Component({
-  imports: [RouterLink, FavouriteButton, ListingCard, ShareButton],
+  imports: [RouterLink, FavouriteButton, ListingCard, ListingQuestions, ShareButton],
   selector: 'app-listing-detail',
   styleUrl: './listing-detail.css',
   templateUrl: './listing-detail.html',

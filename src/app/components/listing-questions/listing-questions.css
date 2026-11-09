@@ -1,0 +1,184 @@
+:host {
+  display: block;
+  margin-top: 100px;
+  color: #4d5d46;
+}
+
+.listing-questions {
+  max-width: 760px;
+}
+
+.listing-questions h2 {
+  margin: 0 0 32px;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.questions-note,
+.questions-message,
+.questions-error {
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.questions-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.questions-error {
+  color: #9e5a44;
+}
+
+/* QUESTION LIST */
+
+.question-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.question-item {
+  padding: 24px 0;
+  border-top: 1px solid #b8b7ad;
+}
+
+.question-item:last-child {
+  border-bottom: 1px solid #b8b7ad;
+}
+
+/* Only focused from code after "Show more"; no outline needed on a container
+   that is not interactive, but keep it visible for keyboard users. */
+.question-item:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 4px;
+}
+
+.question-meta,
+.answer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.question-text,
+.answer-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  /* Keep the line breaks the person typed. */
+  white-space: pre-line;
+}
+
+.question-text {
+  color: #1c1917;
+}
+
+/* SELLER ANSWER */
+
+.question-answer {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: rgba(77, 93, 70, 0.08);
+}
+
+.question-answer .answer-meta {
+  margin-bottom: 8px;
+}
+
+.answer-edited {
+  font-style: italic;
+}
+
+/* BUTTONS */
+
+.questions-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+  padding: 12px 24px;
+  border: 1px solid #4d5d46;
+  background: transparent;
+  color: #4d5d46;
+
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.questions-message .questions-button {
+  margin-top: 12px;
+}
+
+/* SHOW MORE and SHOW LESS side by side */
+
+.questions-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.questions-actions .questions-button {
+  margin-top: 0;
+}
+
+.questions-button:hover {
+  background: #4d5d46;
+  color: #f5f2eb;
+}
+
+.questions-button:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 3px;
+}
+
+.questions-button[aria-disabled='true'] {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  :host {
+    margin-top: 64px;
+  }
+
+  .listing-questions h2 {
+    margin-bottom: 24px;
+    font-size: 20px;
+  }
+
+  .question-answer {
+    padding: 14px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .questions-button {
+    transition: none;
+  }
+}

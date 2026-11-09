@@ -1,0 +1,92 @@
+@if (isVisible()) {
+  <section class="listing-questions" id="questions" aria-labelledby="listing-questions-title">
+    <h2 id="listing-questions-title">ASK THE SELLER</h2>
+
+    @if (isSold()) {
+      <p class="questions-note">This listing is sold, so new questions are closed.</p>
+    }
+
+    @if (isLoading()) {
+      <p class="questions-message" role="status">Loading questions…</p>
+    } @else if (loadError()) {
+      <div class="questions-message" role="alert">
+        <p>Could not load the questions.</p>
+        <button type="button" class="questions-button" (click)="retry()">TRY AGAIN</button>
+      </div>
+    } @else if (questions().length === 0) {
+      <p class="questions-message">
+        {{ isSold() ? 'No questions were asked.' : 'No questions yet.' }}
+      </p>
+    } @else {
+      <ul class="question-list">
+        @for (item of visibleQuestions(); track item.id) {
+          <li class="question-item" [attr.data-question-id]="item.id" tabindex="-1">
+            <p class="question-meta">
+              <span>MEGURU MEMBER</span>
+              <span aria-hidden="true">·</span>
+              <time [attr.datetime]="item.created_at">{{ formatDate(item.created_at) }}</time>
+            </p>
+
+            <p class="question-text">{{ item.question }}</p>
+
+            @if (item.answer) {
+              <div class="question-answer">
+                <p class="answer-meta">
+                  <span>ANSWER FROM THE SELLER</span>
+                  @if (item.answered_at) {
+                    <span aria-hidden="true">·</span>
+                    <time [attr.datetime]="item.answered_at">{{
+                      formatDate(item.answered_at)
+                    }}</time>
+                  }
+                  @if (item.answer_updated_at) {
+                    <span aria-hidden="true">·</span>
+                    <span class="answer-edited">Edited</span>
+                  }
+                </p>
+
+                <p class="answer-text">{{ item.answer }}</p>
+              </div>
+            }
+          </li>
+        }
+      </ul>
+
+      @if (loadMoreError()) {
+        <p class="questions-error" role="alert">Could not load more questions. Please try again.</p>
+      }
+
+      @if (hasMore() || canShowLess()) {
+        <div class="questions-actions">
+          @if (hasMore()) {
+            <button
+              type="button"
+              class="questions-button show-more"
+              [attr.aria-disabled]="isLoadingMore() ? 'true' : null"
+              [attr.aria-busy]="isLoadingMore() ? 'true' : null"
+              (click)="showMore()"
+            >
+              {{ isLoadingMore() ? 'LOADING…' : 'SHOW MORE' }}
+              @if (!isLoadingMore()) {
+                <span class="visually-hidden"> questions</span>
+              }
+            </button>
+          }
+
+          @if (canShowLess()) {
+            <button
+              type="button"
+              class="questions-button show-less"
+              [attr.aria-disabled]="isLoadingMore() ? 'true' : null"
+              (click)="showLess()"
+            >
+              SHOW LESS<span class="visually-hidden"> questions</span>
+            </button>
+          }
+        </div>
+      }
+
+      <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+    }
+  </section>
+}
