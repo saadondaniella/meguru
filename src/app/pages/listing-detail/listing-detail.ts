@@ -3,6 +3,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Location } from '@angular/common';
 import { ListingService } from '../../services/listing';
+import { SUPABASE_CLIENT } from '../../services/supabase';
 import { Listing, LISTING_COLOR_LABELS, LISTING_CONDITION_LABELS } from '../../models/listing';
 import { Profile } from '../../services/profile';
 import { FavouriteButton } from '../../components/favourite-button/favourite-button';
@@ -32,6 +33,7 @@ const META_ATTRIBUTE = (tag: string) => (tag.startsWith('og:') ? 'property' : 'n
 export class ListingDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private listingService = inject(ListingService);
+  private supabase = inject(SUPABASE_CLIENT);
   private profileService = inject(Profile);
   private router = inject(Router);
   private location = inject(Location);
@@ -47,6 +49,8 @@ export class ListingDetail implements OnInit {
 
   seller = signal<{ id: string; display_name: string } | null>(null);
   relatedListings = signal<Listing[]>([]);
+  checkoutTestPending = signal(false);
+  checkoutTestMessage = signal('');
 
   readonly conditionLabels = LISTING_CONDITION_LABELS;
   readonly colorLabels = LISTING_COLOR_LABELS;
@@ -107,6 +111,7 @@ export class ListingDetail implements OnInit {
       this.relatedListings.set([]);
       this.imageUrls.set([]);
       this.selectedImageIndex.set(0);
+      this.checkoutTestMessage.set('');
 
       void this.loadListing();
     });
@@ -207,6 +212,44 @@ export class ListingDetail implements OnInit {
     }
 
     event.preventDefault();
+  }
+
+  // Temporary test: verifies authenticated Angular -> Edge Function communication.
+  // The Edge Function does not create a Stripe session or reservation yet.
+  async testCheckoutConnection() {
+    const listingId = this.listing()?.id;
+    if (!listingId || this.checkoutTestPending()) return;
+
+    this.checkoutTestPending.set(true);
+    this.checkoutTestMessage.set('Testing connection...');
+
+    try {
+      const { data, error } = await this.supabase.functions.invoke('create-checkout-session', {
+        body: { listingId },
+      });
+
+      if (listingId !== this.listingId) return;
+
+      if (error) {
+        console.error('Checkout function test failed:', error);
+        this.checkoutTestMessage.set(`Connection failed: ${error.message}`);
+        return;
+      }
+
+      console.log('Checkout function test response:', data);
+      this.checkoutTestMessage.set(
+        data?.message === 'Checkout request received'
+          ? 'Connection successful!'
+          : 'Function responded; check the console for details.',
+      );
+    } catch (error) {
+      console.error('Unexpected checkout function error:', error);
+      if (listingId === this.listingId) {
+        this.checkoutTestMessage.set('Unexpected connection error. Check the console.');
+      }
+    } finally {
+      this.checkoutTestPending.set(false);
+    }
   }
 
   goBack() {
