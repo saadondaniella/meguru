@@ -1,0 +1,63 @@
+<section id="my-purchases" class="purchases" aria-labelledby="purchases-title">
+  <p class="section-label">YOUR ORDER HISTORY</p>
+  <div class="purchases-header">
+    <h2 id="purchases-title">My Purchases</h2>
+
+    @if (purchases().length > 1) {
+      <div class="purchases-navigation">
+        <button
+          type="button"
+          class="carousel-arrow"
+          aria-label="Previous purchases"
+          (click)="scrollPurchases(-1)"
+        >
+          &larr;
+        </button>
+
+        <button
+          type="button"
+          class="carousel-arrow"
+          aria-label="Next purchases"
+          (click)="scrollPurchases(1)"
+        >
+          &rarr;
+        </button>
+      </div>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <p role="status">Loading your purchases...</p>
+  } @else if (errorMessage()) {
+    <p role="alert">{{ errorMessage() }}</p>
+  } @else if (purchases().length === 0) {
+    <p>You haven't purchased anything yet.</p>
+    <a routerLink="/marketplace">EXPLORE MARKETPLACE &rarr;</a>
+  } @else {
+    <ul #purchasesList class="purchases-list">
+      @for (purchase of purchases(); track purchase.id) {
+        <li class="purchase-item">
+          @if (purchase.listings?.image_path; as imagePath) {
+            <img
+              [src]="getImageUrl(imagePath)"
+              [alt]="purchase.listings?.title ?? 'Purchased item'"
+              class="purchase-image"
+              loading="lazy"
+            />
+          }
+
+          <div class="purchase-details">
+            <h3>{{ purchase.listings?.title ?? 'Untitled item' }}</h3>
+
+            <p>{{ purchase.amount_ore / 100 }} SEK</p>
+
+            <p>
+              Delivery:
+              {{ purchase.delivery_method === 'shipping' ? 'Shipping' : 'Pickup' }}
+            </p>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

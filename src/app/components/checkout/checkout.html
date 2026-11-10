@@ -1,0 +1,86 @@
+<div class="checkout-overlay">
+  <section
+    class="checkout-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="checkout-title"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+  >
+    <!-- HEADER -->
+    <div class="checkout-header">
+      <h2 id="checkout-title">CHECKOUT</h2>
+
+      <button
+        #closeButton
+        type="button"
+        class="checkout-close"
+        aria-label="Close checkout"
+        (click)="closeCheckout()"
+      >
+        ×
+      </button>
+    </div>
+
+    <!-- PRODUCT SUMMARY -->
+    <div class="checkout-product">
+      <p class="checkout-product-title">{{ listingTitle() }}</p>
+      <p class="checkout-product-price">{{ listingPrice() }} SEK</p>
+    </div>
+
+    <!-- DELIVERY METHOD -->
+    <fieldset class="checkout-delivery">
+      <legend>HOW WOULD YOU LIKE TO RECEIVE YOUR ITEM?</legend>
+
+      <label class="delivery-option">
+        <input
+          type="radio"
+          name="delivery-method"
+          value="shipping"
+          [checked]="deliveryMethod() === 'shipping'"
+          (change)="selectDeliveryMethod('shipping')"
+        />
+
+        <span class="delivery-option-content">
+          <strong>SHIPPING</strong>
+          <span>
+            Enter your delivery address during payment. Shipping costs are arranged separately with
+            the seller.
+          </span>
+        </span>
+      </label>
+
+      <label class="delivery-option">
+        <input
+          type="radio"
+          name="delivery-method"
+          value="pickup"
+          [checked]="deliveryMethod() === 'pickup'"
+          (change)="selectDeliveryMethod('pickup')"
+        />
+
+        <span class="delivery-option-content">
+          <strong>PICKUP</strong>
+          <span>Arrange a pickup directly with the seller.</span>
+        </span>
+      </label>
+    </fieldset>
+
+    <!-- CHECKOUT ERROR -->
+    @if (checkoutError()) {
+      <p class="checkout-error" role="alert">
+        {{ checkoutError() }}
+      </p>
+    }
+
+    <!-- CONTINUE TO PAYMENT -->
+    <button
+      type="button"
+      class="checkout-continue"
+      [disabled]="!deliveryMethod() || checkoutPending()"
+      (click)="continueToPayment()"
+    >
+      {{ checkoutPending() ? 'REDIRECTING TO PAYMENT...' : 'CONTINUE TO PAYMENT' }}
+    </button>
+  </section>
+</div>

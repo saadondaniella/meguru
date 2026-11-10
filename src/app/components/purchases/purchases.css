@@ -1,0 +1,132 @@
+.purchases {
+  width: 100%;
+  margin-top: 64px;
+  padding: 32px 0;
+  background: transparent;
+  color: #4d5d46;
+  border-top: 1px solid #9e5a44;
+  border-bottom: 1px solid #9e5a44;
+}
+
+.purchases .section-label {
+  margin: 0 0 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.purchases h2 {
+  margin: 0;
+  font-family: 'Noto Serif', serif;
+  font-size: clamp(26px, 3vw, 38px);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.purchases-list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 40px) / 3);
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0 0 12px;
+}
+
+.purchase-item {
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.purchase-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.purchase-details {
+  padding-top: 14px;
+}
+
+.purchase-details h3 {
+  margin: 0 0 8px;
+  font-family: 'Noto Serif', serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.purchase-details p {
+  margin: 4px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.purchases-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.purchases-navigation {
+  display: flex;
+  gap: 8px;
+}
+
+.carousel-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #4d5d46;
+  border-radius: 50%;
+  background: transparent;
+  color: #4d5d46;
+  font-size: 18px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.carousel-arrow:hover {
+  background: #4d5d46;
+  color: #f5f2eb;
+}
+
+.carousel-arrow:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carousel-arrow {
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .purchases {
+    margin-top: 40px;
+    padding: 24px 0;
+  }
+
+  .purchases-list {
+    grid-auto-columns: 80%;
+    gap: 14px;
+    margin-top: 24px;
+  }
+
+  .purchase-image {
+    width: 100%;
+    max-height: 45vh;
+    object-fit: cover;
+  }
+}

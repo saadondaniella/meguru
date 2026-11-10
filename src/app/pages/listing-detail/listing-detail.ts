@@ -10,6 +10,7 @@ import { FavouriteButton } from '../../components/favourite-button/favourite-but
 import { ListingCard } from '../../components/listing-card/listing-card';
 import { ListingQuestions } from '../../components/listing-questions/listing-questions';
 import { ShareButton } from '../../components/share-button/share-button';
+import { Checkout } from '../../components/checkout/checkout';
 
 const SHARE_META_NAMES = [
   'og:title',
@@ -25,7 +26,7 @@ const SHARE_META_NAMES = [
 const META_ATTRIBUTE = (tag: string) => (tag.startsWith('og:') ? 'property' : 'name');
 
 @Component({
-  imports: [RouterLink, FavouriteButton, ListingCard, ListingQuestions, ShareButton],
+  imports: [RouterLink, FavouriteButton, ListingCard, ListingQuestions, ShareButton, Checkout],
   selector: 'app-listing-detail',
   styleUrl: './listing-detail.css',
   templateUrl: './listing-detail.html',
@@ -51,6 +52,7 @@ export class ListingDetail implements OnInit {
   relatedListings = signal<Listing[]>([]);
   checkoutTestPending = signal(false);
   checkoutTestMessage = signal('');
+  checkoutOpen = signal(false);
 
   readonly conditionLabels = LISTING_CONDITION_LABELS;
   readonly colorLabels = LISTING_COLOR_LABELS;
@@ -250,6 +252,14 @@ export class ListingDetail implements OnInit {
     } finally {
       this.checkoutTestPending.set(false);
     }
+  }
+
+  openCheckout() {
+    this.checkoutOpen.set(true);
+  }
+
+  closeCheckout() {
+    this.checkoutOpen.set(false);
   }
 
   goBack() {

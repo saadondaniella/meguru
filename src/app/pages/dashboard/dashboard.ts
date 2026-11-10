@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, afterNextRender } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Auth } from '../../services/auth';
 import { Profile } from '../../services/profile';
 import { EditorialFeature } from '../../components/editorial-feature/editorial-feature';
 import { ListingQuestionsService } from '../../services/listing-questions';
+import { Purchases } from '../../components/purchases/purchases';
 
 interface GuideItem {
   id: string;
@@ -15,7 +16,7 @@ interface GuideItem {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, EditorialFeature],
+  imports: [RouterLink, EditorialFeature, Purchases],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -152,6 +153,15 @@ export class Dashboard implements OnInit {
       this.errorMessage.set('Something went wrong while loading your dashboard.');
     } finally {
       this.isLoading.set(false);
+    }
+
+    if (window.location.hash === '#my-purchases') {
+      requestAnimationFrame(() => {
+        document.getElementById('my-purchases')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      });
     }
   }
 

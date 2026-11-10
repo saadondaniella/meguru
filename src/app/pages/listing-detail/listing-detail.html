@@ -1,4 +1,3 @@
-
 @if (listing(); as listing) {
   <section class="listing-detail">
     <button type="button" class="back-to-marketplace" (click)="goBack()">
@@ -58,9 +57,7 @@
                 <button
                   type="button"
                   class="gallery-thumbnail"
-                  [attr.aria-label]="
-                    'Show image ' + (i + 1) + ' of ' + imageUrls().length
-                  "
+                  [attr.aria-label]="'Show image ' + (i + 1) + ' of ' + imageUrls().length"
                   [attr.aria-pressed]="i === selectedImageIndex()"
                   (click)="selectImage(i)"
                 >
@@ -85,10 +82,7 @@
               />
             }
 
-            <app-favourite-button
-              [listingId]="listing.id"
-              [status]="listing.status"
-            />
+            <app-favourite-button [listingId]="listing.id" [status]="listing.status" />
           </div>
 
           <!-- TITLE -->
@@ -166,7 +160,7 @@
           <button
             type="button"
             class="buy-button"
-            (click)="testCheckoutConnection()"
+            (click)="openCheckout()"
             aria-label="Buy this item"
           >
             <svg
@@ -212,6 +206,14 @@
       </section>
     }
   </section>
+  @if (checkoutOpen()) {
+    <app-checkout
+      [listingId]="listing.id"
+      [listingTitle]="listing.title ?? 'Untitled item'"
+      [listingPrice]="listing.price ?? 0"
+      (closed)="closeCheckout()"
+    />
+  }
 } @else {
   <p>Loading listing...</p>
 }
