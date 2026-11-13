@@ -7,10 +7,16 @@
 .purchases {
   width: 100%;
   margin-top: 64px;
-  padding: 32px 0;
+  padding: 40px 32px;
   color: var(--olive);
+
   border-top: 1px solid var(--rust);
   border-bottom: 1px solid var(--rust);
+
+  background-color: var(--cream);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'%3E%3Cg fill='none' stroke='%234d5d46' stroke-opacity='.12' stroke-width='.8'%3E%3Cpath d='M-40 40a40 40 0 0 1 80 0M-30 40a30 30 0 0 1 60 0M-20 40a20 20 0 0 1 40 0M-10 40a10 10 0 0 1 20 0M0 0a40 40 0 0 1 80 0M10 0a30 30 0 0 1 60 0M20 0a20 20 0 0 1 40 0M30 0a10 10 0 0 1 20 0M40 40a40 40 0 0 1 80 0M50 40a30 30 0 0 1 60 0M60 40a20 20 0 0 1 40 0M70 40a10 10 0 0 1 20 0'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 80px 40px;
 }
 
 .purchases .section-label {
@@ -113,6 +119,46 @@
   margin: 4px 0;
   font-size: 13px;
   line-height: 1.5;
+}
+
+/* EMPTY PURCHASES */
+
+.explore-marketplace-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  width: fit-content;
+  margin-top: 20px;
+  padding-bottom: 6px;
+
+  color: var(--olive);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border: none;
+  transition: opacity 0.2s ease;
+}
+
+.explore-arrow {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.25s ease;
+}
+
+.explore-marketplace-link:hover {
+  opacity: 0.7;
+}
+
+.explore-marketplace-link:hover .explore-arrow {
+  transform: translateX(5px);
+}
+
+.explore-marketplace-link:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: 4px;
 }
 
 /* ORDER CONFIRMATION*/
@@ -263,7 +309,7 @@
 @media (max-width: 768px) {
   .purchases {
     margin-top: 40px;
-    padding: 24px 0;
+    padding: 28px 20px;
   }
 
   .purchases-list {

@@ -318,6 +318,25 @@
                     <p class="listing-price">{{ listing.price }} SEK</p>
                   }
                 </div>
+
+                <!-- SHIPPED CHECKBOX -->
+                <button
+                  type="button"
+                  class="shipped-toggle"
+                  [class.is-shipped]="listing.is_shipped"
+                  [attr.aria-pressed]="listing.is_shipped"
+                  (click)="onToggleShipped(listing)"
+                >
+                  <span class="shipped-checkbox" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M5 12.5L10 17L19 7" />
+                    </svg>
+                  </span>
+
+                  <span>
+                    {{ listing.is_shipped ? 'SHIPPED' : 'MARK AS SHIPPED' }}
+                  </span>
+                </button>
               </div>
 
               <div class="listing-card-actions">

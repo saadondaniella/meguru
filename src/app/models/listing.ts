@@ -80,4 +80,5 @@ export interface Listing {
   size_type: ListingSizeType | null;
   size: string | null;
   color: ListingColor | null;
+  is_shipped: boolean;
 }

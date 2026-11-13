@@ -360,6 +360,38 @@ export class ListingManagement implements OnInit {
     }
   }
 
+  // TOGGLE SHIPPED STATUS
+async onToggleShipped(listing: Listing) {
+  if (listing.status !== 'sold') return;
+
+  const newShippedStatus = !listing.is_shipped;
+
+  try {
+    const { error } = await this.listingService.updateListing(listing.id, {
+      is_shipped: newShippedStatus,
+    });
+
+    if (error) {
+      console.error('Could not update shipped status:', error);
+      this.soldErrorMessage.set('Could not update shipped status. Please try again.');
+      return;
+    }
+
+    this.listings.update((listings) =>
+      listings.map((item) =>
+        item.id === listing.id
+          ? { ...item, is_shipped: newShippedStatus }
+          : item,
+      ),
+    );
+
+    this.soldErrorMessage.set('');
+  } catch (error) {
+    console.error('Unexpected error updating shipped status:', error);
+    this.soldErrorMessage.set('Something went wrong. Please try again.');
+  }
+}
+
   onStatusDialogKeydown(event: KeyboardEvent) {
     if (event.key !== 'Tab') return;
     const dialog = this.statusDialog()?.nativeElement;

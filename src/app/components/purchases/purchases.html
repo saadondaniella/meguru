@@ -32,7 +32,10 @@
     <p role="alert">{{ errorMessage() }}</p>
   } @else if (purchases().length === 0) {
     <p>You haven't purchased anything yet.</p>
-    <a routerLink="/marketplace">EXPLORE MARKETPLACE &rarr;</a>
+    <a routerLink="/marketplace" class="explore-marketplace-link">
+      <span>EXPLORE MARKETPLACE</span>
+      <span class="explore-arrow" aria-hidden="true">&rarr;</span>
+    </a>
   } @else {
     <ul #purchasesList class="purchases-list">
       @for (purchase of purchases(); track purchase.id) {

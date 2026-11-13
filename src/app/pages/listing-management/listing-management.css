@@ -663,3 +663,95 @@
     margin-right: 12px;
   }
 }
+
+/* SHIPPED CHECKBOX */
+.shipped-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
+  margin-top: 22px;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  color: #4d5d46;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.shipped-toggle:hover {
+  opacity: 0.7;
+}
+
+.shipped-toggle:focus-visible {
+  outline: 2px solid #4d5d46;
+  outline-offset: 4px;
+}
+
+/* CHECKBOX */
+.shipped-checkbox {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 1px solid #4d5d46;
+  border-radius: 50%;
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+/* CHECKMARK */
+.shipped-checkbox svg {
+  width: 14px;
+  height: 14px;
+  stroke: #f5f2eb;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.shipped-checkbox svg path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+/* CHECKED STATE */
+.shipped-toggle.is-shipped .shipped-checkbox {
+  background-color: #4d5d46;
+  animation: shipped-pop 0.3s ease;
+}
+
+.shipped-toggle.is-shipped .shipped-checkbox svg path {
+  stroke-dashoffset: 0;
+}
+
+@keyframes shipped-pop {
+  0% {
+    transform: scale(0.85);
+  }
+
+  60% {
+    transform: scale(1.15);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ACCESSIBILITY */
+@media (prefers-reduced-motion: reduce) {
+  .shipped-toggle,
+  .shipped-checkbox,
+  .shipped-checkbox svg path {
+    transition: none;
+    animation: none;
+  }
+}
