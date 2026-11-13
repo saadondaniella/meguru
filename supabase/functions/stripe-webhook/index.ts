@@ -1,6 +1,6 @@
 import '@supabase/functions-js/edge-runtime.d.ts';
-import Stripe from 'npm:stripe';
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 
 // -----------------------------------------
 // ENVIRONMENT VARIABLES
@@ -67,7 +67,11 @@ function getShippingAddress(
   // Shipping details are supplied by Stripe Checkout.
   const shippingDetails = session.collected_information?.shipping_details;
 
-  const address = shippingDetails?.address;
+  if (!shippingDetails) {
+    throw new Error('Missing Stripe shipping details');
+  }
+
+  const address = shippingDetails.address;
 
   if (!address?.line1 || !address?.postal_code || !address?.city || address.country !== 'SE') {
     throw new Error('Missing or invalid Stripe shipping address');

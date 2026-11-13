@@ -1,12 +1,21 @@
-import { Component, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  inject,
+  OnInit,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { Orders } from '../../services/orders';
 import { Auth } from '../../services/auth';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ListingService } from '../../services/listing';
+import { A11yModule } from '@angular/cdk/a11y';
 
 @Component({
   selector: 'app-purchases',
-  imports: [RouterLink],
+  imports: [RouterLink, A11yModule],
   templateUrl: './purchases.html',
   styleUrl: './purchases.css',
 })
@@ -16,12 +25,16 @@ export class Purchases implements OnInit {
   private listingService = inject(ListingService);
 
   private purchasesList = viewChild<ElementRef<HTMLUListElement>>('purchasesList');
+  private route = inject(ActivatedRoute);
 
   purchases = signal<any[]>([]);
   isLoading = signal(true);
   errorMessage = signal('');
+  private checkoutSessionId: string | null = null;
+  confirmedPurchase = signal<any | null>(null);
 
   async ngOnInit() {
+    this.checkoutSessionId = this.route.snapshot.queryParamMap.get('session_id');
     try {
       const {
         data: { session },
@@ -33,6 +46,7 @@ export class Purchases implements OnInit {
       }
 
       await this.loadPurchases(session.user.id);
+      await this.checkConfirmedPurchase(session.user.id);
     } catch (error) {
       console.error('Failed to load purchases:', error);
       this.errorMessage.set('Could not load your purchases.');
@@ -49,6 +63,40 @@ export class Purchases implements OnInit {
     }
 
     this.purchases.set(data ?? []);
+  }
+
+  private async checkConfirmedPurchase(userId: string) {
+    if (!this.checkoutSessionId) return;
+
+    const maxAttempts = 10;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const { data, error } = await this.ordersService.getPurchaseBySessionId(
+        userId,
+        this.checkoutSessionId,
+      );
+
+      if (error) {
+        console.error('Failed to check checkout order:', error);
+        this.errorMessage.set('Could not verify your purchase.');
+        return;
+      }
+
+      if (data) {
+        await this.loadPurchases(userId);
+
+        this.confirmedPurchase.set(data);
+        return;
+      }
+
+      await this.wait(1500);
+    }
+
+    console.warn('Order confirmation is still pending.');
+  }
+
+  private wait(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   getImageUrl(imagePath: string | null): string | null {
@@ -72,5 +120,12 @@ export class Purchases implements OnInit {
       left: direction * (card.getBoundingClientRect().width + gap),
       behavior: 'smooth',
     });
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.confirmedPurchase()) {
+      this.confirmedPurchase.set(null);
+    }
   }
 }

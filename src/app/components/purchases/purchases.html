@@ -61,3 +61,59 @@
     </ul>
   }
 </section>
+
+@if (confirmedPurchase(); as order) {
+  <div class="order-confirmation-overlay">
+    <div
+      class="order-confirmation-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="order-confirmation-title"
+      cdkTrapFocus
+      [cdkTrapFocusAutoCapture]="true"
+    >
+      <button
+        type="button"
+        class="order-confirmation-close"
+        aria-label="Close order confirmation"
+        (click)="confirmedPurchase.set(null)"
+      >
+        &times;
+      </button>
+
+      <div class="order-confirmation-content">
+        <span class="order-confirmation-icon" aria-hidden="true">✓</span>
+
+        <p class="section-label">ORDER CONFIRMED</p>
+
+        <h2 id="order-confirmation-title">Thank you for your purchase!</h2>
+
+        <p>Your piece is ready for its next chapter.</p>
+
+        <div class="order-confirmation-product">
+          @if (order.listings?.image_path; as imagePath) {
+            <img [src]="getImageUrl(imagePath)" [alt]="order.listings?.title ?? 'Purchased item'" />
+          }
+
+          <div class="order-confirmation-details">
+            <h3>{{ order.listings?.title }}</h3>
+            <p>{{ order.amount_ore / 100 }} SEK</p>
+            <p>
+              {{ order.delivery_method === 'shipping' ? 'Shipping' : 'Pickup' }}
+            </p>
+          </div>
+        </div>
+
+        <p class="order-confirmation-message">You can find your order details in My Purchases.</p>
+
+        <button
+          type="button"
+          class="order-confirmation-button"
+          (click)="confirmedPurchase.set(null)"
+        >
+          VIEW MY PURCHASES
+        </button>
+      </div>
+    </div>
+  </div>
+}
