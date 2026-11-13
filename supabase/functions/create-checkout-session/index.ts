@@ -1,6 +1,6 @@
 import '@supabase/functions-js/edge-runtime.d.ts';
 import { withSupabase } from '@supabase/server';
-import Stripe from 'npm:stripe';
+import Stripe from 'stripe';
 
 // -----------------------------------------
 // STRIPE CLIENT
@@ -18,7 +18,7 @@ const stripe = new Stripe(stripeSecretKey);
 // FRONTEND URLS
 // -----------------------------------------
 
-const frontendUrl = 'http://localhost:4200';
+const frontendUrl = Deno.env.get('FRONTEND_URL') ?? 'http://localhost:4200';
 const successUrl = `${frontendUrl}/dashboard?session_id={CHECKOUT_SESSION_ID}#my-purchases`;
 const cancelUrl = `${frontendUrl}/checkout/cancel`;
 
