@@ -1,3 +1,5 @@
+/* LISTING DETAIL */
+
 .listing-detail {
   max-width: 1200px;
   margin: 10px auto;
@@ -17,7 +19,6 @@
   border: none;
   background: transparent;
   color: #4d5d46;
-
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -29,12 +30,7 @@
   opacity: 0.6;
 }
 
-.back-to-marketplace:focus-visible {
-  outline: 2px solid #9e5a44;
-  outline-offset: 4px;
-}
-
-/* TWO-COLUMN LAYOUT */
+/* TWO-COLUMN LAYOUT*/
 
 .listing-content {
   display: grid;
@@ -43,7 +39,7 @@
   align-items: start;
 }
 
-/* IMAGE GALLERY */
+/*  IMAGE GALLERY */
 
 .listing-gallery {
   min-width: 0;
@@ -74,23 +70,18 @@
   top: 18px;
   right: 22px;
   z-index: 2;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 65px;
   height: 105px;
   padding-top: 10px;
-
   background: #9e5a44;
   color: #f5f2eb;
-
   font-family: 'Noto Serif', serif;
   font-size: 15px;
   font-weight: 500;
   letter-spacing: 0.12em;
-
   transform: rotate(12deg);
   box-shadow: 3px 5px 12px rgba(0, 0, 0, 0.18);
 }
@@ -101,7 +92,6 @@
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-
   width: 8px;
   height: 8px;
   border: 2px solid #f5f2eb;
@@ -194,16 +184,24 @@
   padding-top: 8px;
 }
 
-.listing-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
+/* PRODUCT HEADER - DESKTOP */
+
+.listing-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'title actions'
+    'price actions';
+
+  column-gap: 16px;
+  row-gap: 16px;
+  align-items: start;
+
+  margin-bottom: 36px;
 }
 
-.listing-title-row h1 {
-  flex: 1;
+.listing-title {
+  grid-area: title;
   min-width: 0;
   margin: 0;
   font-size: clamp(2rem, 3vw, 3.5rem);
@@ -214,17 +212,25 @@
 }
 
 .listing-title-actions {
+  grid-area: actions;
   display: inline-flex;
   align-items: center;
-  flex-shrink: 0;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
 }
 
+/* PRICE */
+
 .listing-detail .listing-price {
-  margin: 0 0 36px;
+  grid-area: price;
+  margin: 0;
   font-size: 24px;
   font-weight: 500;
   color: #9e5a44;
 }
+
+/* DESCRIPTION */
 
 .listing-detail .listing-description {
   margin: 0 0 36px;
@@ -232,6 +238,8 @@
   line-height: 1.8;
   white-space: pre-line;
 }
+
+/* PRODUCT DETAILS */
 
 .listing-details {
   padding: 24px 0;
@@ -270,7 +278,88 @@
   color: #9e5a44;
 }
 
-/* ACCESSIBILITY */
+/* BUY BUTTON */
+
+.buy-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 50px;
+  margin-top: 28px;
+  padding: 12px 20px;
+  border: 1px solid #4d5d46;
+  border-radius: 0;
+  background: #4d5d46;
+  color: #f5f2eb;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.buy-button svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  /* Optical alignment with the text */
+  transform: translateY(2px);
+}
+
+.buy-button span {
+  display: block;
+  line-height: 1;
+}
+
+.buy-button:hover {
+  background: #9e5a44;
+  border-color: #9e5a44;
+  color: #f5f2eb;
+}
+
+.buy-button:active {
+  opacity: 0.85;
+}
+
+/* RELATED PRODUCTS*/
+
+.recommendations {
+  margin-top: 100px;
+}
+
+.recommendations h2 {
+  margin-bottom: 32px;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.recommendations-subtitle {
+  margin-top: -20px;
+  margin-bottom: 32px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #777;
+}
+
+.back-to-marketplace:focus-visible,
+.buy-button:focus-visible {
+  outline: 2px solid #9e5a44;
+  outline-offset: 4px;
+}
 
 .gallery-step:focus-visible,
 .gallery-thumbnail:focus-visible {
@@ -287,49 +376,7 @@
   white-space: nowrap;
 }
 
-/* RELATED LISTINGS & MORE FROM SELLER */
-
-.recommendations {
-  margin-top: 100px;
-}
-
-.recommendations h2 {
-  font-size: 24px;
-  font-weight: 400;
-  margin-bottom: 32px;
-}
-
-.recommendations-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 24px;
-}
-
-.recommendations-subtitle {
-  font-size: 12px;
-  font-weight: 400;
-  color: #777;
-  margin-top: -20px;
-  margin-bottom: 32px;
-}
-
-@media (max-width: 768px) {
-  .recommendations {
-    margin-top: 64px;
-  }
-
-  .recommendations h2 {
-    font-size: 20px;
-    margin-bottom: 24px;
-  }
-
-  .recommendations-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-  }
-}
-
-/* TABLET */
+/*  TABLET */
 
 @media (max-width: 900px) {
   .listing-detail {
@@ -341,12 +388,12 @@
   }
 }
 
-/* MOBILE */
+/*  SMALL TABLET */
 
 @media (max-width: 768px) {
   .listing-content {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 16px;
   }
 
   .listing-gallery .listing-image {
@@ -356,6 +403,20 @@
   .listing-info {
     padding-top: 0;
   }
+
+  .recommendations {
+    margin-top: 64px;
+  }
+
+  .recommendations h2 {
+    margin-bottom: 24px;
+    font-size: 20px;
+  }
+
+  .recommendations-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
 }
 
 @media (max-width: 600px) {
@@ -364,29 +425,71 @@
     padding: 16px;
   }
 
+  /* GALLERY */
+
   .listing-gallery .listing-image {
     height: min(60vh, 500px);
-  }
-
-  .listing-title-row h1 {
-    font-size: 28px;
-  }
-
-  .listing-detail .listing-price {
-    font-size: 20px;
-    margin-bottom: 28px;
   }
 
   .gallery-thumbnail {
     width: 52px;
     height: 66px;
   }
+
+  /* PRODUCT HEADER */
+
+  .listing-header {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'actions'
+      'title'
+      'price';
+
+    gap: 0;
+    margin-bottom: 28px;
+  }
+
+  /* SHARE & FAVOURITE ABOVE TITLE */
+
+  .listing-title-actions {
+    grid-area: actions;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+
+    margin-bottom: 8px;
+  }
+
+  /* TITLE */
+
+  .listing-title {
+    grid-area: title;
+    margin-bottom: 12px;
+    font-size: 28px;
+  }
+
+  /* PRICE */
+
+  .listing-detail .listing-price {
+    grid-area: price;
+    font-size: 20px;
+  }
+
+  /* BUY BUTTON */
+
+  .buy-button {
+    min-height: 48px;
+    margin-top: 24px;
+    padding: 12px 16px;
+  }
 }
 
 /* REDUCED MOTION */
 
 @media (prefers-reduced-motion: reduce) {
-  .back-to-marketplace {
+  .back-to-marketplace,
+  .buy-button {
     transition: none;
   }
 }
