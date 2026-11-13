@@ -1,6 +1,6 @@
 <div class="storefront" [class.is-preview]="preview()" [style]="cssVars()">
   <section class="storefront-profile">
-    <!-- Portrait comes first in the DOM so mobile reads portrait, then name. -->
+    <!-- Seller portrait -->
     <figure class="seller-portrait">
       @if (seller().avatarUrl; as avatarUrl) {
         <img
@@ -15,6 +15,7 @@
       }
     </figure>
 
+    <!-- Seller information -->
     <div class="seller-info">
       <p class="seller-label">SELLER</p>
 
@@ -32,16 +33,44 @@
         <p class="seller-bio">{{ seller().bio }}</p>
       }
 
+      <!-- Contact links -->
       @if (seller().contact_email || instagramUrl()) {
         <div class="seller-contact">
-          <p class="contact-heading">CONTACT</p>
-
           @if (seller().contact_email) {
-            <a [href]="'mailto:' + seller().contact_email"> Email seller ↗ </a>
+            <a [href]="'mailto:' + seller().contact_email">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="m3 7 9 6 9-6" />
+              </svg>
+              <span>Email</span>
+            </a>
           }
 
           @if (instagramUrl(); as url) {
-            <a [href]="url" target="_blank" rel="noopener noreferrer"> Instagram ↗ </a>
+            <a [href]="url" target="_blank" rel="noopener noreferrer">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none" />
+              </svg>
+              <span>Instagram</span>
+            </a>
           }
         </div>
       }
@@ -52,6 +81,7 @@
     </div>
   </section>
 
+  <!-- Seller's collection -->
   <section class="seller-listings">
     <h2>THE WARDROBE</h2>
 

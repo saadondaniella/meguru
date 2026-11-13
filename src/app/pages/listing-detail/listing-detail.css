@@ -278,6 +278,10 @@
   color: #9e5a44;
 }
 
+#listing-questions {
+  scroll-margin-top: 120px;
+}
+
 /* BUY BUTTON */
 
 .buy-button {

@@ -269,4 +269,10 @@ export class ListingDetail implements OnInit {
       void this.router.navigate(['/marketplace']);
     }
   }
+  scrollToQuestions() {
+    document.getElementById('listing-questions')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }
 }
