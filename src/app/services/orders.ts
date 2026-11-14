@@ -34,7 +34,8 @@ export class Orders {
         id,
         title,
         price,
-        image_path
+        image_path,
+        is_shipped
       )`,
       )
       .eq('seller_id', userId)

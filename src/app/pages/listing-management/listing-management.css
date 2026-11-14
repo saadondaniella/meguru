@@ -1,4 +1,5 @@
 /* MY WARDROBE — olive container with ivory cards */
+
 .wardrobe {
   margin-top: 16px;
   padding: clamp(24px, 5vw, 56px);
@@ -48,6 +49,8 @@
   border-top: 1px solid rgba(245, 242, 235, 0.25);
 }
 
+/* LISTING GRID */
+
 .listings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
@@ -80,10 +83,11 @@
   padding: 20px 20px 18px;
 }
 
-/* subtle uppercase label above the title */
 .listing-card-meta {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 4px 10px;
 }
 
@@ -92,11 +96,6 @@
 }
 
 /* UNANSWERED QUESTIONS BADGE */
-
-.listing-card-meta {
-  align-items: center;
-  justify-content: space-between;
-}
 
 .listing-questions-badge {
   display: inline-flex;
@@ -140,6 +139,8 @@
   }
 }
 
+/* LISTING LABELS */
+
 .listing-condition,
 .listing-status {
   color: #66645f;
@@ -154,7 +155,8 @@
   color: var(--color-tertiary, #9e5a44);
 }
 
-/* title left, price right, top-aligned */
+/* LISTING TITLE AND PRICE */
+
 .listing-card-heading {
   display: flex;
   align-items: flex-start;
@@ -184,7 +186,8 @@
   white-space: nowrap;
 }
 
-/* actions */
+/* LISTING ACTIONS */
+
 .listing-card-actions {
   display: flex;
   flex-wrap: wrap;
@@ -231,7 +234,8 @@
   color: var(--color-primary, #1c1917);
 }
 
-/* delete uses the muted rust accent (always the last action) */
+/* Delete uses the muted rust accent */
+
 .listing-action-secondary:last-child {
   color: var(--color-tertiary, #9e5a44);
 }
@@ -240,7 +244,6 @@
   color: #7d4636;
 }
 
-/* single secondary action (drafts, sold) sits at the start */
 .listing-action-primary + .listing-action-secondary:last-child {
   margin-left: 0;
 }
@@ -254,6 +257,8 @@
   outline: 2px solid var(--color-tertiary, #9e5a44);
   outline-offset: 3px;
 }
+
+/* MOBILE LISTING CARDS */
 
 @media (max-width: 600px) {
   .wardrobe {
@@ -291,7 +296,7 @@
   .listing-card-actions {
     flex-wrap: wrap;
     gap: 0 6px;
-    padding: 10px 10px 10px;
+    padding: 10px;
   }
 
   .listing-card-actions button {
@@ -303,7 +308,6 @@
     font-size: 10px;
   }
 
-  /* secondary actions share one row; text wraps rather than overflowing */
   .listing-action-secondary {
     flex: 1 1 0;
     min-width: 0;
@@ -323,6 +327,7 @@
 }
 
 /* LISTING SAVE / PUBLISH FEEDBACK */
+
 .listing-page-success {
   margin: 24px 0 0;
   padding: 15px 18px;
@@ -335,6 +340,7 @@
 }
 
 /* DELETE CONFIRMATION */
+
 .delete-overlay,
 .delete-overlay * {
   box-sizing: border-box;
@@ -556,6 +562,8 @@
   }
 }
 
+/* PAGE CONTAINER */
+
 :host {
   display: block;
   width: 100%;
@@ -601,7 +609,7 @@
   font-size: 13px;
 }
 
-/* ACTIONS */
+/* HEADER ACTIONS */
 
 .new-listing-btn {
   min-height: 42px;
@@ -641,7 +649,7 @@
   outline-offset: 3px;
 }
 
-/* MOBILE */
+/* MOBILE HEADER */
 
 @media (max-width: 600px) {
   .listing-management-header {
@@ -661,97 +669,5 @@
   .dashboard-profile-link {
     min-height: 32px;
     margin-right: 12px;
-  }
-}
-
-/* SHIPPED CHECKBOX */
-.shipped-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  align-self: flex-start;
-  margin-top: 22px;
-  padding: 8px 0;
-  border: none;
-  background: transparent;
-  color: #4d5d46;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.shipped-toggle:hover {
-  opacity: 0.7;
-}
-
-.shipped-toggle:focus-visible {
-  outline: 2px solid #4d5d46;
-  outline-offset: 4px;
-}
-
-/* CHECKBOX */
-.shipped-checkbox {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  border: 1px solid #4d5d46;
-  border-radius: 50%;
-  transition:
-    background-color 0.25s ease,
-    transform 0.25s ease;
-}
-
-/* CHECKMARK */
-.shipped-checkbox svg {
-  width: 14px;
-  height: 14px;
-  stroke: #f5f2eb;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.shipped-checkbox svg path {
-  stroke-dasharray: 24;
-  stroke-dashoffset: 24;
-  transition: stroke-dashoffset 0.3s ease;
-}
-
-/* CHECKED STATE */
-.shipped-toggle.is-shipped .shipped-checkbox {
-  background-color: #4d5d46;
-  animation: shipped-pop 0.3s ease;
-}
-
-.shipped-toggle.is-shipped .shipped-checkbox svg path {
-  stroke-dashoffset: 0;
-}
-
-@keyframes shipped-pop {
-  0% {
-    transform: scale(0.85);
-  }
-
-  60% {
-    transform: scale(1.15);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* ACCESSIBILITY */
-@media (prefers-reduced-motion: reduce) {
-  .shipped-toggle,
-  .shipped-checkbox,
-  .shipped-checkbox svg path {
-    transition: none;
-    animation: none;
   }
 }

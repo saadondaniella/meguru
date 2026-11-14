@@ -2,14 +2,19 @@
   --olive: #4d5d46;
   --rust: #9e5a44;
   --cream: #f5f2eb;
+
+  display: block;
+  min-width: 0;
 }
+
+/* SALES SECTION */
 
 .sales {
   width: 100%;
+  min-width: 0;
   margin-top: 32px;
   padding: 40px 32px;
   color: var(--olive);
-
   border-top: 1px solid var(--rust);
   border-bottom: 1px solid var(--rust);
 
@@ -18,6 +23,8 @@
   background-repeat: repeat;
   background-size: 80px 40px;
 }
+
+/* HEADINGS */
 
 .section-label,
 .shipping-label {
@@ -42,10 +49,13 @@
   line-height: 1.2;
 }
 
+/* SALES GRID - DESKTOP*/
+
 .sales-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
   gap: 28px 20px;
+
   list-style: none;
   margin: 28px 0 0;
   padding: 0;
@@ -55,12 +65,16 @@
   min-width: 0;
 }
 
+/* PRODUCT IMAGE */
+
 .sale-image {
   display: block;
   width: 100%;
   aspect-ratio: 3 / 4;
   object-fit: cover;
 }
+
+/* SALE DETAILS*/
 
 .sale-details {
   padding-top: 14px;
@@ -80,6 +94,10 @@
   line-height: 1.5;
 }
 
+/* -----------------------------------------
+   SHIPPING DETAILS
+----------------------------------------- */
+
 .shipping-details {
   margin-top: 16px;
   padding-top: 12px;
@@ -91,15 +109,131 @@
   font-size: 10px;
 }
 
+/* BUYER CONTACT*/
+
+.buyer-contact {
+  margin-top: 16px;
+}
+
+.buyer-contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  color: var(--olive);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition: color 0.2s ease;
+}
+
+.buyer-contact a:hover {
+  color: var(--rust);
+}
+
+.buyer-contact a:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: 4px;
+}
+
+.buyer-contact a svg {
+  flex-shrink: 0;
+}
+
+/* MARK AS SHIPPED*/
+
+.mark-shipped-btn {
+  margin-top: 16px;
+  padding: 10px 16px;
+  background: var(--olive);
+  color: var(--cream);
+  border: 1px solid var(--olive);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.mark-shipped-btn:hover {
+  background: var(--rust);
+  border-color: var(--rust);
+}
+
+.mark-shipped-btn:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: 3px;
+}
+
+.shipping-status {
+  margin-top: 16px;
+  color: var(--olive);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+/*MOBILE - HORIZONTAL CAROUSEL */
+
 @media (max-width: 768px) {
   .sales {
     margin-top: 24px;
     padding: 28px 20px;
+    overflow: hidden;
   }
 
   .sales-list {
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
-    gap: 24px 14px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 85%;
+    grid-template-columns: none;
+
+    gap: 16px;
     margin-top: 24px;
+    padding: 0 0 12px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+
+    scrollbar-width: none;
+  }
+
+  .sales-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sale-item {
+    width: 100%;
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+
+  .sale-details h3 {
+    font-size: 17px;
+  }
+
+  .buyer-contact a {
+    font-size: 12px;
+  }
+
+  .mark-shipped-btn {
+    width: 100%;
+    padding: 10px 8px;
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buyer-contact a,
+  .mark-shipped-btn {
+    transition: none;
   }
 }

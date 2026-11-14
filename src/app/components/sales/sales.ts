@@ -49,4 +49,41 @@ export class Sales implements OnInit {
 
     return this.listingService.getListingImageUrl(imagePath);
   }
+
+  async onMarkAsShipped(sale: any) {
+    if (
+      sale.status !== 'paid' ||
+      sale.delivery_method !== 'shipping' ||
+      !sale.listings ||
+      sale.listings.is_shipped
+    ) {
+      return;
+    }
+
+    try {
+      const { error } = await this.listingService.updateListing(sale.listing_id, {
+        is_shipped: true,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      this.sales.update((sales) =>
+        sales.map((item) =>
+          item.id === sale.id
+            ? {
+                ...item,
+                listings: { ...item.listings, is_shipped: true },
+              }
+            : item,
+        ),
+      );
+
+      this.errorMessage.set('');
+    } catch (error) {
+      console.error('Could not mark order as shipped:', error);
+      this.errorMessage.set('Could not update shipping status. Please try again.');
+    }
+  }
 }

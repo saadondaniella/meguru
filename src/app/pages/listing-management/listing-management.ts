@@ -78,6 +78,7 @@ export class ListingManagement implements OnInit {
   private deleteTrigger: HTMLButtonElement | null = null;
 
   newListingButton = viewChild<ElementRef<HTMLButtonElement>>('newListingButton');
+
   // Element that opened the form; focus returns here after the success popup if it still exists.
   private formTrigger: HTMLElement | null = null;
 
@@ -89,9 +90,6 @@ export class ListingManagement implements OnInit {
     this.successPopup.set(null);
     this.pageSuccessMessage.set('');
 
-    // The form modal is gone by now, so restore focus to the element that opened it,
-    // or to the "New listing" button when that element no longer exists
-    // (e.g. a draft that moved to the published list).
     const trigger = this.formTrigger?.isConnected ? this.formTrigger : null;
     this.formTrigger = null;
 
@@ -150,8 +148,6 @@ export class ListingManagement implements OnInit {
 
     afterNextRender(
       () => {
-        // After a successful status change, the original button moves
-        // to another section and may no longer exist in the DOM.
         const focusTarget = trigger?.isConnected ? trigger : this.newListingButton()?.nativeElement;
         focusTarget?.focus();
       },
@@ -169,7 +165,7 @@ export class ListingManagement implements OnInit {
     this.isModalOpen.set(true);
   }
 
-  // FORM SAVED — close the modal, refresh the list and confirm with the popup
+  // FORM SAVED
   async onListingSaved(type: ListingSavedType) {
     const wasEditing = this.editingListing() !== null;
 
@@ -195,11 +191,12 @@ export class ListingManagement implements OnInit {
     const trigger = this.formTrigger?.isConnected
       ? this.formTrigger
       : this.newListingButton()?.nativeElement;
+
     this.formTrigger = null;
     queueMicrotask(() => trigger?.focus());
   }
 
-  // OPEN DELETE CONFIRMATION — no database changes yet
+  // OPEN DELETE CONFIRMATION
   onDeleteListing(listingId: string, event?: Event) {
     if (this.isUploading() || this.isDeleting()) return;
 
@@ -208,10 +205,10 @@ export class ListingManagement implements OnInit {
 
     this.deleteTrigger =
       event?.currentTarget instanceof HTMLButtonElement ? event.currentTarget : null;
+
     this.deleteErrorMessage.set('');
     this.deleteTarget.set(listing);
 
-    // Wait for Angular to render the dialog before moving keyboard focus.
     setTimeout(() => {
       this.deleteDialog()
         ?.nativeElement.querySelector<HTMLButtonElement>('[data-delete-cancel]')
@@ -222,11 +219,13 @@ export class ListingManagement implements OnInit {
   // CLOSE DELETE CONFIRMATION
   onCancelDelete() {
     if (this.isDeleting()) return;
+
     this.deleteTarget.set(null);
     this.deleteErrorMessage.set('');
 
     const trigger = this.deleteTrigger;
     this.deleteTrigger = null;
+
     queueMicrotask(() => trigger?.isConnected && trigger.focus());
   }
 
@@ -259,7 +258,6 @@ export class ListingManagement implements OnInit {
   }
 
   // DELETE ONLY AFTER EXPLICIT CONFIRMATION
-
   async onConfirmDelete() {
     const listing = this.deleteTarget();
     if (!listing || this.isDeleting() || this.isUploading()) return;
@@ -281,6 +279,7 @@ export class ListingManagement implements OnInit {
         const { error: imageError } = await this.listingService.deleteListingImage(
           listing.image_path,
         );
+
         if (imageError) {
           console.error('Error deleting listing image:', imageError);
         }
@@ -294,6 +293,7 @@ export class ListingManagement implements OnInit {
       this.deleteTarget.set(null);
       this.deleteTrigger = null;
       this.pageSuccessMessage.set('Your listing has been deleted.');
+
       await this.loadListings();
     } catch (error) {
       console.error('Unexpected error deleting listing:', error);
@@ -360,40 +360,9 @@ export class ListingManagement implements OnInit {
     }
   }
 
-  // TOGGLE SHIPPED STATUS
-async onToggleShipped(listing: Listing) {
-  if (listing.status !== 'sold') return;
-
-  const newShippedStatus = !listing.is_shipped;
-
-  try {
-    const { error } = await this.listingService.updateListing(listing.id, {
-      is_shipped: newShippedStatus,
-    });
-
-    if (error) {
-      console.error('Could not update shipped status:', error);
-      this.soldErrorMessage.set('Could not update shipped status. Please try again.');
-      return;
-    }
-
-    this.listings.update((listings) =>
-      listings.map((item) =>
-        item.id === listing.id
-          ? { ...item, is_shipped: newShippedStatus }
-          : item,
-      ),
-    );
-
-    this.soldErrorMessage.set('');
-  } catch (error) {
-    console.error('Unexpected error updating shipped status:', error);
-    this.soldErrorMessage.set('Something went wrong. Please try again.');
-  }
-}
-
   onStatusDialogKeydown(event: KeyboardEvent) {
     if (event.key !== 'Tab') return;
+
     const dialog = this.statusDialog()?.nativeElement;
     if (!dialog) return;
 
@@ -489,6 +458,7 @@ async onToggleShipped(listing: Listing) {
     }
 
     this.listings.set(data as Listing[]);
+
     // Get unanswered question counts for the seller's listings.
     const { data: questionCounts, error: questionsError } =
       await this.listingQuestionsService.getUnansweredCounts();

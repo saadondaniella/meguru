@@ -145,7 +145,9 @@
               <div class="listing-card-body">
                 <div class="listing-card-meta">
                   @if (listing.condition) {
-                    <span class="listing-condition">{{ listing.condition }}</span>
+                    <span class="listing-condition">
+                      {{ listing.condition }}
+                    </span>
                   }
 
                   @if ((unansweredCounts()[listing.id] ?? 0) > 0) {
@@ -172,12 +174,15 @@
                       >
                         <path
                           d="M21 11.5a8.38 8.38 0 0 1-.9 3.8
-             8.5 8.5 0 0 1-7.6 4.7
-             8.38 8.38 0 0 1-3.8-.9L3 21
-             l1.9-5.7a8.38 8.38 0 0 1-.9-3.8
-             8.5 8.5 0 0 1 4.7-7.6
-             8.38 8.38 0 0 1 3.8-.9h.5
-             a8.48 8.48 0 0 1 8 8v.5z"
+                             8.5 8.5 0 0 1-7.6 4.7
+                             8.38 8.38 0 0 1-3.8-.9L3 21
+                             l1.9-5.7a8.38 8.38 0 0 1-.9-3.8
+                             8.5 8.5 0 0 1 4.7-7.6
+                             8.38 8.38 0 0 1 3.8-.9L3 21
+                             l1.9-5.7a8.38 8.38 0 0 1-.9-3.8
+                             8.5 8.5 0 0 1 4.7-7.6
+                             8.38 8.38 0 0 1 3.8-.9h.5
+                             a8.48 8.48 0 0 1 8 8v.5z"
                         />
                       </svg>
                       <span>{{ unansweredCounts()[listing.id] }}</span>
@@ -251,8 +256,11 @@
               <div class="listing-card-body">
                 <div class="listing-card-meta">
                   <span class="listing-status">Draft</span>
+
                   @if (listing.condition) {
-                    <span class="listing-condition">{{ listing.condition }}</span>
+                    <span class="listing-condition">
+                      {{ listing.condition }}
+                    </span>
                   }
                 </div>
 
@@ -318,25 +326,6 @@
                     <p class="listing-price">{{ listing.price }} SEK</p>
                   }
                 </div>
-
-                <!-- SHIPPED CHECKBOX -->
-                <button
-                  type="button"
-                  class="shipped-toggle"
-                  [class.is-shipped]="listing.is_shipped"
-                  [attr.aria-pressed]="listing.is_shipped"
-                  (click)="onToggleShipped(listing)"
-                >
-                  <span class="shipped-checkbox" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none">
-                      <path d="M5 12.5L10 17L19 7" />
-                    </svg>
-                  </span>
-
-                  <span>
-                    {{ listing.is_shipped ? 'SHIPPED' : 'MARK AS SHIPPED' }}
-                  </span>
-                </button>
               </div>
 
               <div class="listing-card-actions">
