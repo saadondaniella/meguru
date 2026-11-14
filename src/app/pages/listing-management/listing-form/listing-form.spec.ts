@@ -43,6 +43,7 @@ describe('ListingForm color', () => {
     size_type: null,
     size: null,
     color: null,
+    is_shipped: false,
     ...overrides,
   });
 
