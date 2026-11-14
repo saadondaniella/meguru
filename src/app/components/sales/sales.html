@@ -1,0 +1,78 @@
+<section id="my-sales" class="sales" aria-labelledby="sales-title">
+  <p class="section-label">YOUR SALES HISTORY</p>
+
+  <div class="sales-header">
+    <h2 id="sales-title">My Sales</h2>
+  </div>
+
+  @if (isLoading()) {
+    <p role="status">Loading your sales...</p>
+  } @else if (errorMessage()) {
+    <p role="alert">{{ errorMessage() }}</p>
+  } @else if (sales().length === 0) {
+    <p>You haven't sold anything yet.</p>
+  } @else {
+    <ul class="sales-list">
+      @for (sale of sales(); track sale.id) {
+        <li class="sale-item">
+          @if (sale.listings?.image_path; as imagePath) {
+            <img
+              [src]="getImageUrl(imagePath)"
+              [alt]="sale.listings?.title ?? 'Sold item'"
+              class="sale-image"
+              loading="lazy"
+            />
+          }
+
+          <div class="sale-details">
+            <h3>{{ sale.listings?.title ?? 'Untitled item' }}</h3>
+
+            <p>{{ sale.amount_ore / 100 }} SEK</p>
+
+            <p>
+              Delivery:
+              {{ sale.delivery_method === 'shipping' ? 'Shipping' : 'Pickup' }}
+            </p>
+
+            @if (sale.delivery_method === 'shipping') {
+              @if (sale.shipping_address; as address) {
+                <div class="shipping-details">
+                  <p class="shipping-label">SHIP TO</p>
+
+                  @if (address.name) {
+                    <p>{{ address.name }}</p>
+                  }
+
+                  <p>{{ address.line1 }}</p>
+
+                  @if (address.line2) {
+                    <p>{{ address.line2 }}</p>
+                  }
+
+                  <p>{{ address.postal_code }} {{ address.city }}</p>
+                  <p>{{ address.country }}</p>
+                </div>
+              } @else {
+                <p>Shipping details unavailable.</p>
+              }
+            } @else {
+              <p>Arrange pickup with the buyer.</p>
+            }
+
+            <div class="buyer-contact">
+              <p class="shipping-label">BUYER CONTACT</p>
+
+              @if (sale.buyer_email) {
+                <a [href]="'mailto:' + sale.buyer_email">
+                  {{ sale.buyer_email }}
+                </a>
+              } @else {
+                <p>Buyer email unavailable.</p>
+              }
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

@@ -24,6 +24,24 @@ export class Orders {
       .order('created_at', { ascending: false });
   }
 
+  // Get all sales for the logged-in seller
+  async getMySales(userId: string) {
+    return this.supabase
+      .from('orders')
+      .select(
+        `*,
+      listings (
+        id,
+        title,
+        price,
+        image_path
+      )`,
+      )
+      .eq('seller_id', userId)
+      .eq('status', 'paid')
+      .order('created_at', { ascending: false });
+  }
+
   async getPurchaseBySessionId(userId: string, sessionId: string) {
     return this.supabase
       .from('orders')

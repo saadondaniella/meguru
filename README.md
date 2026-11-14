@@ -1,90 +1,111 @@
-# Meguru
+# MEGURU — Wear it. Pass it on.
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.2.
+A secondhand fashion marketplace built with Angular, Supabase and Stripe.
 
-## Development server
+MEGURU is a C2C marketplace where users can buy, sell and give away pre-loved clothing. Sellers can create their own storefronts, publish listings and customize their profiles, while visitors can explore the marketplace without an account.
 
-To start a local development server, run:
+The name *MEGURU* (巡る) comes from the Japanese word meaning "to circulate", reflecting the idea of giving clothing a new life.
 
-```bash
-ng serve
-```
+**Live website:** https://meguru-secondhand.netlify.app/
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Features
 
-## Local Supabase
+- Browse, search, sort and filter secondhand clothing.
+- Create an account and manage a personal seller profile.
+- Create, edit and manage product listings with images.
+- Customize and share a public seller storefront.
+- Save favourite listings and ask sellers questions.
+- Purchase items securely through Stripe Checkout.
+- Choose between shipping and local pickup.
+- Manage purchases, sales and order statuses.
 
-Development uses a local Supabase stack in Docker, never the production project.
+## Tech Stack
 
-1. Start Docker Desktop, then start the local stack:
+- **Frontend:** Angular 22, TypeScript, HTML, CSS
+- **Backend:** Supabase (PostgreSQL, Auth, Storage, Edge Functions)
+- **Payments:** Stripe
+- **Testing:** Vitest
+- **Deployment:** Netlify
 
-   ```bash
-   npx supabase start
-   ```
+## Getting Started
 
-2. Start Angular in a second terminal:
+### Prerequisites
 
-   ```bash
-   ng serve
-   ```
+- Node.js and npm
+- Docker Desktop
+- Supabase CLI (available through `npx`)
 
-3. Open `http://localhost:4200/` (use `localhost`, not `127.0.0.1`: the local auth redirect list is configured for it).
+### Installation
 
-Useful local URLs: API `http://127.0.0.1:54321`, Studio `http://127.0.0.1:54323`, test emails (Mailpit) `http://127.0.0.1:54324`. Email confirmation is required, as in production, so open confirmation links from Mailpit.
-
-To rebuild the local database from the migrations in `supabase/migrations/`, run `npx supabase db reset`. It only affects the local stack unless you pass `--remote`, so never pass that flag.
-
-### Which Supabase project is used
-
-| Command | Supabase project |
-| --- | --- |
-| `ng serve`, `ng test`, `npm run watch` | Local (`src/environments/environment.ts`) |
-| `ng build` (production, the default) | Production (`src/environments/environment.production.ts` replaces `environment.ts`) |
-
-Only the publishable key belongs in frontend code. Never add a secret or service-role key to `src/`. In development, `src/app/services/supabase.ts` throws if the configured URL is not local. Do not deploy a build made with `--configuration development`.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Clone the repository and install dependencies:
 
 ```bash
-ng generate component component-name
+git clone <repository-url>
+cd meguru
+npm install
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Local development
+
+Start Docker Desktop, then start the local Supabase stack:
 
 ```bash
-ng generate --help
+npx supabase start
 ```
 
-## Building
-
-To build the project run:
+In a separate terminal, start Angular:
 
 ```bash
-ng build
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Open http://localhost:4200/ in your browser.
 
-## Running unit tests
+The application uses a local Supabase instance during development. Registration confirmation emails can be accessed through Mailpit at http://127.0.0.1:54324/.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Supabase Studio is available at http://127.0.0.1:54323/.
+
+### Database
+
+Database migrations are located in `supabase/migrations/`.
+
+To reset and rebuild the **local** database:
 
 ```bash
-ng test
+npx supabase db reset
 ```
 
-## Running end-to-end tests
+This resets local data. Do not use `--remote` unless you intentionally want to operate on a remote database.
 
-For end-to-end (e2e) testing, run:
+### Environment configuration
+
+MEGURU uses separate Supabase configurations for development and production:
+
+- `src/environments/environment.ts` — local development
+- `src/environments/environment.production.ts` — production
+
+The production configuration is used when building for deployment.
+
+Only public/publishable Supabase keys belong in frontend code. Never expose secret or service-role keys.
+
+Stripe payments require additional server-side configuration and credentials to work in a new environment.
+
+## Testing
+
+Run the unit and component tests:
 
 ```bash
-ng e2e
+npm test
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Build the application for production:
 
-## Additional Resources
+```bash
+npm run build
+```
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## About
+
+MEGURU was developed as a final degree project at Yrgo in Gothenburg, Sweden, with a focus on fullstack development, user experience and responsive design.
+
+**Wear it. Pass it on.**

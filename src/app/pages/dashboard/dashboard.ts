@@ -5,6 +5,7 @@ import { Profile } from '../../services/profile';
 import { EditorialFeature } from '../../components/editorial-feature/editorial-feature';
 import { ListingQuestionsService } from '../../services/listing-questions';
 import { Purchases } from '../../components/purchases/purchases';
+import { Sales } from '../../components/sales/sales';
 
 interface GuideItem {
   id: string;
@@ -16,7 +17,7 @@ interface GuideItem {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, EditorialFeature, Purchases],
+  imports: [RouterLink, EditorialFeature, Purchases, Sales],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })

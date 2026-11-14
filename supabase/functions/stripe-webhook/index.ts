@@ -2,9 +2,7 @@ import '@supabase/functions-js/edge-runtime.d.ts';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// -----------------------------------------
 // ENVIRONMENT VARIABLES
-// -----------------------------------------
 
 const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
@@ -20,16 +18,12 @@ if (!supabaseUrl || !serviceRoleKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-// -----------------------------------------
 // CLIENTS
-// -----------------------------------------
 
 const stripe = new Stripe(stripeSecretKey);
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-// -----------------------------------------
 // TYPES
-// -----------------------------------------
 
 type DeliveryMethod = 'shipping' | 'pickup';
 
@@ -52,9 +46,7 @@ type ShippingAddress = {
   country: string;
 };
 
-// -----------------------------------------
 // SHIPPING ADDRESS
-// -----------------------------------------
 
 function getShippingAddress(
   session: Stripe.Checkout.Session,
@@ -88,9 +80,7 @@ function getShippingAddress(
   };
 }
 
-// -----------------------------------------
 // EXPIRED CHECKOUT
-// -----------------------------------------
 
 async function handleExpiredCheckout(session: Stripe.Checkout.Session): Promise<void> {
   const reservationId = session.metadata?.reservation_id;
@@ -147,9 +137,7 @@ async function handleExpiredCheckout(session: Stripe.Checkout.Session): Promise<
   }
 }
 
-// -----------------------------------------
 // SUCCESSFUL PAYMENT
-// -----------------------------------------
 
 async function handleSuccessfulPayment(session: Stripe.Checkout.Session): Promise<void> {
   console.log('Checkout session:', session.id);
@@ -235,6 +223,9 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session): Promis
   // Collect shipping address only for shipping orders.
   const shippingAddress = getShippingAddress(verifiedSession, deliveryMethod);
 
+  // Get the buyer's email from the verified Stripe Checkout session.
+  const buyerEmail = verifiedSession.customer_details?.email ?? null;
+
   // The RPC handles idempotency and database transactions.
   // We also call it for completed reservations so it can
   // verify that the existing order is present.
@@ -249,6 +240,7 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session): Promis
     p_amount_ore: verifiedSession.amount_total,
     p_currency: verifiedSession.currency,
     p_shipping_address: shippingAddress,
+    p_buyer_email: buyerEmail,
   });
 
   if (orderError) {
@@ -258,9 +250,7 @@ async function handleSuccessfulPayment(session: Stripe.Checkout.Session): Promis
   console.log('MEGURU order completed:', orderId);
 }
 
-// -----------------------------------------
 // WEBHOOK
-// -----------------------------------------
 
 export default {
   async fetch(req: Request): Promise<Response> {
