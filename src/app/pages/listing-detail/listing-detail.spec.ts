@@ -1,9 +1,11 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
 import { ListingDetail } from './listing-detail';
 import { ListingService } from '../../services/listing';
 import { ListingQuestionsService } from '../../services/listing-questions';
+import { FavouriteService } from '../../services/favourite';
 import { Profile } from '../../services/profile';
 
 describe('ListingDetail', () => {
@@ -25,8 +27,18 @@ describe('ListingDetail', () => {
     getQuestions: vi.fn(),
   };
 
+  const favouriteServiceMock = {
+    favouriteIds: signal(new Set<string>()),
+    counts: signal(new Map<string, number>()),
+    loadCount: vi.fn(),
+  };
+
   beforeEach(async () => {
     vi.clearAllMocks();
+
+    favouriteServiceMock.favouriteIds.set(new Set<string>());
+    favouriteServiceMock.counts.set(new Map<string, number>());
+    favouriteServiceMock.loadCount.mockResolvedValue({ error: null });
 
     await TestBed.configureTestingModule({
       imports: [ListingDetail],
@@ -49,6 +61,10 @@ describe('ListingDetail', () => {
         {
           provide: ListingQuestionsService,
           useValue: listingQuestionsServiceMock,
+        },
+        {
+          provide: FavouriteService,
+          useValue: favouriteServiceMock,
         },
       ],
     }).compileComponents();
