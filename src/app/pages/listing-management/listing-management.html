@@ -175,10 +175,7 @@
                         <path
                           d="M21 11.5a8.38 8.38 0 0 1-.9 3.8
                              8.5 8.5 0 0 1-7.6 4.7
-                             8.38 8.38 0 0 1-3.8-.9L3 21
-                             l1.9-5.7a8.38 8.38 0 0 1-.9-3.8
-                             8.5 8.5 0 0 1 4.7-7.6
-                             8.38 8.38 0 0 1 3.8-.9L3 21
+                             8.38 8.38 8.38 0 0 1-3.8-.9L3 21
                              l1.9-5.7a8.38 8.38 0 0 1-.9-3.8
                              8.5 8.5 0 0 1 4.7-7.6
                              8.38 8.38 0 0 1 3.8-.9h.5
@@ -329,23 +326,29 @@
               </div>
 
               <div class="listing-card-actions">
-                <button
-                  class="listing-action-primary"
-                  #statusTrigger
-                  type="button"
-                  (click)="openStatusConfirmation(listing, 'published', statusTrigger)"
-                  [disabled]="isMarkingSold()"
-                >
-                  {{ isMarkingSold() ? 'UPDATING...' : 'Mark as available' }}
-                </button>
+                @if (!paidOrdersLoaded()) {
+                  <p class="listing-status" role="status">Order information unavailable</p>
+                } @else if (isPaidListing(listing.id)) {
+                  <p class="listing-status">SOLD VIA MEGURU</p>
+                } @else {
+                  <button
+                    class="listing-action-primary"
+                    #statusTrigger
+                    type="button"
+                    (click)="openStatusConfirmation(listing, 'published', statusTrigger)"
+                    [disabled]="isMarkingSold()"
+                  >
+                    {{ isMarkingSold() ? 'UPDATING...' : 'Mark as available' }}
+                  </button>
 
-                <button
-                  type="button"
-                  class="listing-action-secondary"
-                  (click)="onDeleteListing(listing.id, $event)"
-                >
-                  Delete listing
-                </button>
+                  <button
+                    type="button"
+                    class="listing-action-secondary"
+                    (click)="onDeleteListing(listing.id, $event)"
+                  >
+                    Delete listing
+                  </button>
+                }
               </div>
             </article>
           }
