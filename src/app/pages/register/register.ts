@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Auth } from '../../services/auth';
+import { Router } from '@angular/router';
 
 @Component({
   imports: [FormsModule],
@@ -20,6 +21,7 @@ export class Register {
   isLoading = signal(false);
 
   private auth = inject(Auth);
+  private router = inject(Router);
 
   async onSubmit() {
     if (this.isLoading()) return;
@@ -45,7 +47,7 @@ export class Register {
       }
 
       if (data.session) {
-        this.successMessage.set('Your account has been created and you are now logged in.');
+        await this.router.navigate(['/seller-profile']);
       } else {
         this.successMessage.set(
           'If email confirmation is required, please check your inbox for a confirmation link.',
