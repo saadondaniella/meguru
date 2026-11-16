@@ -17,6 +17,7 @@ import { Listing } from '../../models/listing';
 import { ListingForm, ListingSavedType } from './listing-form/listing-form';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ListingQuestionsService } from '../../services/listing-questions';
+import { Orders } from '../../services/orders';
 
 @Component({
   selector: 'app-listing-management',
@@ -29,9 +30,34 @@ export class ListingManagement implements OnInit {
 
   listingService = inject(ListingService);
   private listingQuestionsService = inject(ListingQuestionsService);
+  private ordersService = inject(Orders);
 
   listings = signal<Listing[]>([]);
   unansweredCounts = signal<Record<string, number>>({});
+  readonly paidListingIds = signal<ReadonlySet<string>>(new Set<string>());
+  readonly paidOrdersLoaded = signal(false);
+
+  isPaidListing(listingId: string): boolean {
+    return this.paidListingIds().has(listingId);
+  }
+
+  // Never treat an unavailable order lookup as proof that a listing is unpaid.
+  private async verifyListingIsNotPaid(listingId: string): Promise<boolean> {
+    const sellerId = this.currentSellerId();
+    if (!sellerId) return false;
+
+    const { data, error } = await this.ordersService.getMySales(sellerId);
+    if (error || !data) {
+      console.error('Could not verify paid orders:', error);
+      this.paidOrdersLoaded.set(false);
+      return false;
+    }
+
+    const paidIds = new Set<string>(data.map((order) => order.listing_id));
+    this.paidListingIds.set(paidIds);
+    this.paidOrdersLoaded.set(true);
+    return !paidIds.has(listingId);
+  }
 
   publishedListings = computed(() =>
     this.listings().filter((listing) => listing.status === 'published'),
@@ -124,6 +150,12 @@ export class ListingManagement implements OnInit {
   }
 
   openStatusConfirmation(listing: Listing, status: 'sold' | 'published', trigger: HTMLElement) {
+    if (status === 'published' && (!this.paidOrdersLoaded() || this.isPaidListing(listing.id))) {
+      this.soldErrorMessage.set(
+        'This listing cannot be made available until its order status is verified.',
+      );
+      return;
+    }
     this.statusTriggerElement = trigger;
     this.soldErrorMessage.set('');
     this.statusChangeTarget.set(listing);
@@ -203,6 +235,13 @@ export class ListingManagement implements OnInit {
     const listing = this.listings().find((item) => item.id === listingId);
     if (!listing) return;
 
+    if (!this.paidOrdersLoaded() || this.isPaidListing(listingId)) {
+      this.deleteErrorMessage.set(
+        'This listing cannot be deleted until its order status is verified.',
+      );
+      return;
+    }
+
     this.deleteTrigger =
       event?.currentTarget instanceof HTMLButtonElement ? event.currentTarget : null;
 
@@ -264,6 +303,14 @@ export class ListingManagement implements OnInit {
 
     this.isDeleting.set(true);
     this.deleteErrorMessage.set('');
+
+    if (!(await this.verifyListingIsNotPaid(listing.id))) {
+      this.deleteErrorMessage.set(
+        'This listing has a paid order, or its order status could not be verified.',
+      );
+      this.isDeleting.set(false);
+      return;
+    }
 
     try {
       const { error } = await this.listingService.deleteListing(listing.id);
@@ -391,6 +438,8 @@ export class ListingManagement implements OnInit {
   async onMarkAsAvailable(listing: Listing) {
     if (
       listing.status !== 'sold' ||
+      !this.paidOrdersLoaded() ||
+      this.isPaidListing(listing.id) ||
       this.isUploading() ||
       this.isDeleting() ||
       this.isMarkingSold()
@@ -402,6 +451,13 @@ export class ListingManagement implements OnInit {
     this.soldErrorMessage.set('');
 
     try {
+      if (!(await this.verifyListingIsNotPaid(listing.id))) {
+        this.soldErrorMessage.set(
+          'This listing has a paid order, or its order status could not be verified.',
+        );
+        return;
+      }
+
       const { error } = await this.listingService.updateListing(listing.id, {
         status: 'published',
       });
@@ -449,6 +505,18 @@ export class ListingManagement implements OnInit {
     }
 
     this.currentSellerId.set(userData.user.id);
+    this.paidOrdersLoaded.set(false);
+
+    const { data: sales, error: salesError } = await this.ordersService.getMySales(
+      userData.user.id,
+    );
+    if (salesError || !sales) {
+      console.error('Could not load paid orders:', salesError);
+      this.paidListingIds.set(new Set<string>());
+    } else {
+      this.paidListingIds.set(new Set<string>(sales.map((order) => order.listing_id)));
+      this.paidOrdersLoaded.set(true);
+    }
 
     const { data, error } = await this.listingService.getListingsBySeller(userData.user.id);
 
