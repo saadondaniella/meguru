@@ -11,6 +11,8 @@
   font-weight: 500;
   line-height: 0.95;
   letter-spacing: -0.06em;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .marketplace > p {
