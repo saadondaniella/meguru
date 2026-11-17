@@ -6,7 +6,7 @@
   --rust: #9e5a44;
 }
 
-/*  HOME LAYOUT */
+/* HOME LAYOUT */
 
 .home {
   min-height: 100dvh;
@@ -62,7 +62,7 @@
   outline-offset: 4px;
 }
 
-/*  HERO */
+/* HERO */
 
 .home-hero {
   position: relative;
@@ -202,7 +202,7 @@
 }
 
 .home-intro {
-  max-width: 360px;
+  max-width: 460px;
 }
 
 .home-intro-label {
@@ -213,11 +213,22 @@
   letter-spacing: 0.12em;
 }
 
-.home-intro p {
-  margin: 0;
+.home-intro-heading {
+  margin: 0 0 14px;
   font-family: 'Noto Serif', serif;
-  font-size: clamp(17px, 2vw, 23px);
-  line-height: 1.5;
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+
+.home-intro-description {
+  margin: 0;
+  max-width: 430px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.9;
+  letter-spacing: 0.01em;
 }
 
 .home-explore-links {
@@ -226,6 +237,7 @@
   align-items: flex-end;
   justify-content: flex-end;
   gap: 8px 40px;
+  margin-bottom: 70px;
 }
 
 .home-explore {
@@ -261,7 +273,7 @@
   outline-offset: 4px;
 }
 
-/*  MEGURU COLLECTIONS */
+/* MEGURU COLLECTIONS */
 
 .home-collections {
   padding: 100px clamp(24px, 4vw, 72px) 120px;
@@ -342,6 +354,8 @@
   outline-offset: 6px;
 }
 
+/* ACCESSIBILITY */
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -366,7 +380,7 @@
   }
 }
 
-/*  MOBILE / TABLET */
+/* MOBILE / TABLET */
 
 @media (max-width: 768px) {
   .home-login {
@@ -393,7 +407,7 @@
   }
 }
 
-/*  MOBILE */
+/* MOBILE */
 
 @media (max-width: 600px) {
   .home-inner {
@@ -443,7 +457,6 @@
     letter-spacing: 0.03em;
   }
 
-  /* Only the placeholder is smaller; the input keeps 16px to avoid iOS zoom */
   .home-search-field input::placeholder {
     font-size: 13px;
   }
@@ -451,11 +464,21 @@
   .home-bottom {
     flex-direction: column;
     align-items: flex-start;
-    gap: 28px;
+    gap: 60px;
   }
 
-  .home-intro p {
-    font-size: 18px;
+  .home-intro {
+    max-width: 100%;
+    margin-top: 30px;
+  }
+
+  .home-intro-heading {
+    font-size: 21px;
+  }
+
+  .home-intro-description {
+    font-size: 12px;
+    line-height: 1.8;
   }
 
   /* Two equal outlined buttons side by side */
@@ -464,6 +487,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
     gap: 10px;
+    margin-bottom: 0;
   }
 
   .home-explore {
